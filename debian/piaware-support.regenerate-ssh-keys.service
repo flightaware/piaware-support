@@ -1,0 +1,15 @@
+# This service runs on first boot to generate
+# host keys for a new install.
+
+[Unit]
+Description=Regenerate SSH host keys
+ConditionPathExistsGlob=!/etc/ssh/ssh_host_*_key
+Before=ssh.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/piaware-support/generate-missing-ssh-host-keys
+StandardOutput=journal+console
+
+[Install]
+WantedBy=ssh.service

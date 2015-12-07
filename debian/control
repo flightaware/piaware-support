@@ -1,0 +1,14 @@
+Source: piaware-support
+Section: embedded
+Priority: extra
+Maintainer: FlightAware Developers <adsb-devs@flightaware.com>
+Build-Depends: debhelper(>=9), dh-systemd
+Standards-Version: 3.9.3
+Homepage: https://github.com/flightaware
+
+Package: piaware-support
+Architecture: all
+Depends: ${misc:Depends}
+Description: Support package for Piaware sdcard images.
+ Handles boot-time configuration and the Flightaware
+ apt repository configuration.

@@ -1,0 +1,3 @@
+generate-missing-ssh-host-keys usr/lib/piaware-support/
+flightaware.list etc/apt/sources.list.d/
+flightaware-archive-keyring.gpg etc/apt/trusted.gpg.d/
