@@ -1,0 +1,72 @@
+#
+# This file configures the Piaware sdcard image.
+# Whenever the system boots, this file is read
+# and its contents are used to configure the
+# system.
+#
+# Lines beginning with a '#' are comment lines
+# and are ignored. Blank lines are also ignored.
+# All other lines specify configuration settings.
+#
+
+#
+# WIRED NETWORK CONFIGURATION
+#
+
+# Should piaware use the wired ethernet port
+# for network access?
+wired-network yes
+
+# Wired network configuration:
+# Most networks will use DHCP
+wired-type dhcp
+
+# Alternatively, a static address configuration
+# can be provided:
+#wired-type static
+#wired-address 192.168.1.10
+#wired-netmask 255.255.255.0
+#wired-broadcast 192.168.1.255
+#wired-gateway 192.168.1.254
+
+
+#
+# WIRELESS NETWORK CONFIGURATION
+#
+
+# Should piaware use a wifi adaptor
+# for network access? You will need to attach
+# a supported USB wifi adaptor for this to work.
+
+# change this to "yes" to enable wifi
+wireless-network no
+
+# Wifi SSID and password.
+# This should be changed to match your wireless
+# network SSID and, for networks that require
+# a passphrase, the passphrase.
+wireless-ssid "MyWifiNetwork"
+wireless-passphrase "s3cr3t"
+
+# Wifi network configuration:
+# Most networks will use DHCP
+wireless-type dhcp
+
+# Alternatively, a static address configuration
+# can be provided:
+#wireless-type static
+#wireless-address 192.168.1.10
+#wireless-netmask 255.255.255.0
+#wireless-broadcast 192.168.1.255
+#wireless-gateway 192.168.1.254
+
+
+#
+# OTHER CONFIGURATION
+#
+
+
+# To completely disable use of this config file,
+# set manage-config to no; the system configuration
+# won't be modified on boot.
+manage-config yes

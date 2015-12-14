@@ -1,0 +1,15 @@
+# This service generates a network configuration
+# based on the contents of /boot/piaware-config.txt
+
+[Unit]
+Description=Generate network configuration
+ConditionPathExistsGlob=/boot/piaware-config.txt
+Before=network-pre.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/piaware-support/configure-system.tcl -network
+StandardOutput=journal+console
+
+[Install]
+Wants=network-pre.target
