@@ -45,8 +45,8 @@ wireless-network no
 # This should be changed to match your wireless
 # network SSID and, for networks that require
 # a passphrase, the passphrase.
-wireless-ssid "MyWifiNetwork"
-wireless-passphrase "s3cr3t"
+wireless-ssid MyWifiNetwork
+wireless-password s3cr3t
 
 # Wifi network configuration:
 # Most networks will use DHCP
