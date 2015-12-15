@@ -60,7 +60,7 @@ proc configure_wired {} {
 
 	# override the ifplugd config
 	generate_file "/etc/default/ifplugd" {
-		{INTERFACES=""}
+		{INTERFACES="eth0"}
 		{HOTPLUG_INTERFACES=""}
 		{ARGS="-q -f -u0 -d10 -w -I"}
 		{SUSPEND_ACTION="stop"}
