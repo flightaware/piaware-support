@@ -5,6 +5,7 @@
 Description=Generate network configuration
 ConditionPathExistsGlob=/boot/piaware-config.txt
 Before=network-pre.target
+Wants=network-pre.target
 
 [Service]
 Type=oneshot
@@ -12,4 +13,4 @@ ExecStart=/usr/lib/piaware-support/configure-system.tcl -network
 StandardOutput=journal+console
 
 [Install]
-Wants=network-pre.target
+WantedBy=default.target
