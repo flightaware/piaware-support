@@ -77,7 +77,7 @@ proc replace_file {path mode lines} {
 
 	set f [open $tmp "w" $mode]
 	try {
-		chan configure $f -encoding ascii -translation crlf
+		chan configure $f -encoding ascii -translation lf
 		foreach line $lines {
 			puts $f $line
 		}
