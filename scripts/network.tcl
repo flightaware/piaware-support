@@ -62,7 +62,7 @@ proc configure_wired {} {
 	generate_file "/etc/default/ifplugd" {
 		{INTERFACES="eth0"}
 		{HOTPLUG_INTERFACES=""}
-		{ARGS="-q -f -u0 -d10 -w -I"}
+		{ARGS="-q -f -u10 -d10 -w -I"}
 		{SUSPEND_ACTION="stop"}
 	}
 
@@ -145,7 +145,7 @@ proc generate_network_config {} {
 	generate_file "/etc/default/ifplugd" {
 		{INTERFACES=""}
 		{HOTPLUG_INTERFACES=""}
-		{ARGS="-q -f -u0 -d10 -w -I"}
+		{ARGS="-q -f -u10 -d10 -w -I"}
 		{SUSPEND_ACTION="stop"}
 	}
 
