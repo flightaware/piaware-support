@@ -10,6 +10,8 @@ package require cmdline
 set scriptdir [file dirname [info script]]
 source [file join $scriptdir "helpers.tcl"]
 source [file join $scriptdir "network.tcl"]
+source [file join $scriptdir "dump1090.tcl"]
+source [file join $scriptdir "piaware.tcl"]
 
 proc update_system_config_files {} {
 	if {![config_bool manage-config]} {
@@ -18,15 +20,22 @@ proc update_system_config_files {} {
 	}
 
 	set didSomething 0
-	if {$::params(network)} {
+	if {$::params(network) && [generate_network_config]} {
 		set didSomething 1
-		generate_network_config
+	}
+
+	if {$::params(dump1090) && [generate_dump1090_config]} {
+		set didSomething 1		
+	}
+
+	if {$::params(piaware) && [generate_piaware_config]} {
+		set didSomething 1		
 	}
 
 	flush_generated_files
 
 	if {!$didSomething} {
-		log "No actions specified, nothing was done"
+		log "No config files generated"
 	}
 }
 
@@ -34,6 +43,8 @@ proc main {{argv ""}} {
 	set opts {
 		{config.arg "/boot/piaware-config.txt" "specify the config file to read"}
 		{network "generate network config"}
+		{dump1090 "generate dump1090 config"}
+		{piaware "generate piaware config"}
 		{dryrun "just show the new file contents, don't try to install them"}
     }
 

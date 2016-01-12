@@ -9,6 +9,11 @@
 # All other lines specify configuration settings.
 #
 
+# To completely disable use of this config file,
+# set manage-config to no; the system configuration
+# won't be modified on boot.
+manage-config yes
+
 #
 # WIRED NETWORK CONFIGURATION
 #
@@ -62,11 +67,44 @@ wireless-type dhcp
 
 
 #
+# RECEIVER CONFIGURATION
+#
+
+# Type of ADS-B receiver to use with piaware.
+# This is used when configuring dump1090-fa and piaware.
+# Supported types are:
+#
+#  rtlsdr:    a USB-connected RTL2832U DVB-T dongle using librtlsdr/dump1090.
+#  beast:     a USB-connected Mode-S Beast.
+#  radarcape: a network-connected Radarcape.
+#  other:     a network-connected receiver that produces Beast binary output. 
+#
+receiver-type rtlsdr
+
+# For a receiver type of 'rtlsdr', these control dongle settings
+rtlsdr-device-index 0
+rtlsdr-gain -10
+rtlsdr-ppm 0
+
+# For a receiver type of 'radarcape', radarcape-host should be set to
+# the IP or hostname of the Radarcape
+radarcape-host your-radarcape-hostname
+
+# For a receiver type of 'other', receiver-host and receiver-port should
+# set to the IP/hostname and port to connect to for data.
+receiver-host your-receiver-hostname
+receiver-port 30005
+
+
+#
 # OTHER CONFIGURATION
 #
 
+# Should automatic system updates (initiated by FlightAware) be allowed?
+allow-auto-updates yes
 
-# To completely disable use of this config file,
-# set manage-config to no; the system configuration
-# won't be modified on boot.
-manage-config yes
+# Should manual system updates (initiated by you from the website control
+# panel) be allowed?
+allow-manual-updates yes
+
+

@@ -156,6 +156,9 @@ proc generate_network_config {} {
 	if {$::networkInterfaces == 0} {
 		warn "No network interfaces were configured; not updating system network config"
 		restore_snapshot $ss
+		return 0
 	}
+
+	return 1
 }
 

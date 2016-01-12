@@ -1,0 +1,15 @@
+# This service generates piaware configuration
+# based on the contents of /boot/piaware-config.txt
+
+[Unit]
+Description=Generate piaware configuration
+ConditionPathExistsGlob=/boot/piaware-config.txt
+Before=piaware.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/piaware-support/configure-system.tcl -piaware
+StandardOutput=journal+console
+
+[Install]
+WantedBy=piaware.target

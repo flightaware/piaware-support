@@ -1,0 +1,15 @@
+# This service generates dump1090-fa configuration
+# based on the contents of /boot/piaware-config.txt
+
+[Unit]
+Description=Generate dump1090-fa configuration
+ConditionPathExistsGlob=/boot/piaware-config.txt
+Before=dump1090-fa.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/piaware-support/configure-system.tcl -dump1090
+StandardOutput=journal+console
+
+[Install]
+WantedBy=dump1090-fa.target
