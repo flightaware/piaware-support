@@ -4,7 +4,7 @@
 
 proc generate_dump1090_config {} {
 	set dump1090config {
-		{DECODER_OPTIONS="--max-range $MAX_RANGE"}
+		{DECODER_OPTIONS="--max-range 300"}
 		{NET_OPTIONS="--net --net-heartbeat 60 --net-ro-size 1000 --net-ro-interval 1 --net-http-port 0 --net-ri-port 0 --net-ro-port 30002 --net-sbs-port 30003 --net-bi-port 30104"}
 		{JSON_OPTIONS="--json-location-accuracy 2"}
 	}
