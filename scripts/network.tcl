@@ -54,8 +54,6 @@ proc configure_wired {} {
 
 	# the physical interface config fragment
 	add_network_interface wired eth0 {
-		{auto eth0}
-		{allow-hotplug eth0}
 	}
 
 	# override the ifplugd config
