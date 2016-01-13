@@ -9,7 +9,6 @@ Before=piaware.service
 [Service]
 Type=oneshot
 ExecStart=/usr/lib/piaware-support/configure-system.tcl -piaware
-StandardOutput=journal+console
 
 [Install]
 WantedBy=piaware.service

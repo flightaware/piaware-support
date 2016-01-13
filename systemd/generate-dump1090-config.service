@@ -9,7 +9,6 @@ Before=dump1090-fa.service
 [Service]
 Type=oneshot
 ExecStart=/usr/lib/piaware-support/configure-system.tcl -dump1090
-StandardOutput=journal+console
 
 [Install]
 WantedBy=dump1090-fa.service

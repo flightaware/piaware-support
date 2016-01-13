@@ -9,7 +9,6 @@ Before=ssh.service
 [Service]
 Type=oneshot
 ExecStart=/usr/lib/piaware-support/generate-missing-ssh-host-keys
-StandardOutput=journal+console
 
 [Install]
 WantedBy=ssh.service
