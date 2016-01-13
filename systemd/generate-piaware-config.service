@@ -4,7 +4,7 @@
 [Unit]
 Description=Generate piaware configuration
 ConditionPathExistsGlob=/boot/piaware-config.txt
-Before=piaware.target
+Before=piaware.service
 
 [Service]
 Type=oneshot
@@ -12,4 +12,4 @@ ExecStart=/usr/lib/piaware-support/configure-system.tcl -piaware
 StandardOutput=journal+console
 
 [Install]
-WantedBy=piaware.target
+WantedBy=piaware.service
