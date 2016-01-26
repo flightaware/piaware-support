@@ -27,12 +27,11 @@ wired-network yes
 wired-type dhcp
 
 # Alternatively, a static address configuration
-# can be provided:
-#wired-type static
-#wired-address 192.168.1.10
-#wired-netmask 255.255.255.0
-#wired-broadcast 192.168.1.255
-#wired-gateway 192.168.1.254
+# can be provided; set "wired-type" to static to use this.
+wired-address 192.168.1.10
+wired-netmask 255.255.255.0
+wired-broadcast 192.168.1.255
+wired-gateway 192.168.1.254
 
 
 #
@@ -58,12 +57,11 @@ wireless-password s3cr3t
 wireless-type dhcp
 
 # Alternatively, a static address configuration
-# can be provided:
-#wireless-type static
-#wireless-address 192.168.1.10
-#wireless-netmask 255.255.255.0
-#wireless-broadcast 192.168.1.255
-#wireless-gateway 192.168.1.254
+# can be provided; set "wireless-type" to static to use this.
+wireless-address 192.168.1.10
+wireless-netmask 255.255.255.0
+wireless-broadcast 192.168.1.255
+wireless-gateway 192.168.1.254
 
 
 #
