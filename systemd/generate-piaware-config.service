@@ -5,6 +5,8 @@
 Description=Generate piaware configuration
 ConditionPathExistsGlob=/boot/piaware-config.txt
 Before=piaware.service
+Wants=wait-for-usb-drives.service
+After=wait-for-usb-drives.service
 
 [Service]
 Type=oneshot

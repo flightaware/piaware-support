@@ -1,4 +1,6 @@
-scripts/* usr/lib/piaware-support/
+scripts/*.tcl usr/lib/piaware-support/
+scripts/generate-missing-ssh-keys usr/lib/piaware-support/
+scripts/generate-usb-mount lib/udev
 etc
 boot
 systemd/* lib/systemd/system/

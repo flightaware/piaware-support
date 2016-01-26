@@ -5,6 +5,8 @@
 Description=Generate dump1090-fa configuration
 ConditionPathExistsGlob=/boot/piaware-config.txt
 Before=dump1090-fa.service
+Wants=wait-for-usb-drives.service
+After=wait-for-usb-drives.service
 
 [Service]
 Type=oneshot

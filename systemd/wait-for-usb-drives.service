@@ -1,0 +1,15 @@
+# This service waits a little while on boot to allow
+# all USB drives to finish initialization and get
+# automounted. Services that want to read configuration
+# from USB will set After=wait-for-usb-drives.service
+
+[Unit]
+Description=Wait for removable USB drives
+DefaultDependencies=no
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sleep 5
+# set RemainAfterExit so that we only wait once
+RemainAfterExit=yes

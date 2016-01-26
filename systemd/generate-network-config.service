@@ -7,6 +7,8 @@ ConditionPathExistsGlob=/boot/piaware-config.txt
 Before=network-pre.target
 Wants=network-pre.target
 After=local-fs.target
+Wants=wait-for-usb-drives.service
+After=wait-for-usb-drives.service
 DefaultDependencies=no
 
 [Service]
