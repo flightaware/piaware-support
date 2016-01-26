@@ -1,5 +1,5 @@
 scripts/*.tcl usr/lib/piaware-support/
-scripts/generate-missing-ssh-keys usr/lib/piaware-support/
+scripts/generate-missing-ssh-host-keys usr/lib/piaware-support/
 scripts/generate-usb-mount lib/udev
 etc
 boot
