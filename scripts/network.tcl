@@ -7,7 +7,7 @@ proc configure_wireless {} {
 		return
 	}
 
-	if {![have_config wireless-ssid]} {
+	if {![piawareConfig exists wireless-ssid]} {
 		warn "wireless-network was set, but no wireless-ssid was given, no wireless network has been configured"
 		return
 	}
@@ -30,10 +30,10 @@ proc configure_wireless {} {
 	# so we lock down the permissions
 	set supplicant [list]
 	lappend supplicant "network={"
-	lappend supplicant "  ssid=\"[config_str wireless-ssid]\""
+	lappend supplicant "  ssid=\"[piawareConfig get wireless-ssid]\""
 	lappend supplicant "  id_str=\"wireless\""
-	if {[have_config wireless-password]} {
-		lappend supplicant "  psk=\"[config_str wireless-password]\""
+	if {[piawareConfig exists wireless-password]} {
+		lappend supplicant "  psk=\"[piawareConfig get wireless-password]\""
 	}
 	lappend supplicant "}"
 	generate_file "/etc/wpa_supplicant/wpa-roam.conf" $supplicant 0600
@@ -68,23 +68,23 @@ proc configure_wired {} {
 }
 
 proc valid_network_config {net} {
-	if {![config_bool ${net}-network]} {
+	if {![piawareConfig get ${net}-network]} {
 		return 0
 	}
 
-	if {![have_config ${net}-type]} {
+	if {![piawareConfig exists ${net}-type]} {
 		warn "Missing ${net}-type setting, not configuring the ${net} network"
 		return 0
 	}
 
-	set type [config_str ${net}-type]
+	set type [piawareConfig get ${net}-type]
 	switch -nocase $type {
 		dhcp {
 			return 1
 		}
 
 		static {
-			if {![have_config ${net}-address]} {
+			if {![piawareConfig exists ${net}-address]} {
 				warn "Missing ${net}-address setting, not configuring the ${net} network"
 				return 0
 			}
@@ -101,7 +101,7 @@ proc valid_network_config {net} {
 proc add_network_interface {net iface {prefix ""} {suffix ""}} {
 	set out $prefix
 
-	set type [config_str ${net}-type]
+	set type [piawareConfig get ${net}-type]
 	switch -nocase $type {
 		dhcp {
 			lappend out "iface $iface inet dhcp"
@@ -109,15 +109,15 @@ proc add_network_interface {net iface {prefix ""} {suffix ""}} {
 
 		static {
 			lappend out "iface $iface inet static"
-			lappend out "  address [config_str ${net}-address]"
-			if {[have_config ${net}-netmask]} {
-				lappend out "  netmask [config_str ${net}-netmask]"
+			lappend out "  address [piawareConfig get ${net}-address]"
+			if {[piawareConfig exists ${net}-netmask]} {
+				lappend out "  netmask [piawareConfig get ${net}-netmask]"
 			}
-			if {[have_config ${net}-broadcast]} {
-				lappend out "  broadcast [config_str ${net}-broadcast]"
+			if {[piawareConfig exists ${net}-broadcast]} {
+				lappend out "  broadcast [piawareConfig get ${net}-broadcast]"
 			}
-			if {[have_config ${net}-gateway]} {
-				lappend out "  gateway [config_str ${net}-gateway]"
+			if {[piawareConfig exists ${net}-gateway]} {
+				lappend out "  gateway [piawareConfig get ${net}-gateway]"
 			}
 		}
 

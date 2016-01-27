@@ -9,11 +9,11 @@ proc generate_dump1090_config {} {
 		{JSON_OPTIONS="--json-location-accuracy 2"}
 	}
 
-	switch -nocase [config_str receiver-type "rtlsdr"] {
+	switch -nocase [piawareConfig get receiver-type] {
 		rtlsdr {
-			set index [config_str rtlsdr-device-index 0]
-			set gain [config_str rtlsdr-gain -10]
-			set ppm [config_str rtlsdr-ppm 0]
+			set index [piawareConfig get rtlsdr-device-index]
+			set gain [piawareConfig get rtlsdr-gain]
+			set ppm [piawareConfig get rtlsdr-ppm]
 			lappend dump1090config "RECEIVER_OPTIONS=\"--device-index $index --gain $gain --ppm $ppm --oversample --phase-enhance --net-bo-port 30005 --fix\""
 		}
 
@@ -27,7 +27,7 @@ proc generate_dump1090_config {} {
 		}
 
 		default {
-			warn "unrecognized receiver type '[config_str receiver-type]', not configuring dump1090"
+			warn "unrecognized receiver type '[piawareConfig get receiver-type]', not configuring dump1090"
 			# no config
 			return 0
 		}

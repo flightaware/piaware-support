@@ -6,15 +6,15 @@
 #
 
 package require cmdline
+package require fa_piaware_config
 
 set scriptdir [file dirname [info script]]
 source [file join $scriptdir "helpers.tcl"]
 source [file join $scriptdir "network.tcl"]
 source [file join $scriptdir "dump1090.tcl"]
-source [file join $scriptdir "piaware.tcl"]
 
 proc update_system_config_files {} {
-	if {![config_bool manage-config]} {
+	if {![piawareConfig get manage-config]} {
 		log "manage-config is not set, nothing to do."
 		return
 	}
@@ -28,10 +28,6 @@ proc update_system_config_files {} {
 		set didSomething 1		
 	}
 
-	if {$::params(piaware) && [generate_piaware_config]} {
-		set didSomething 1		
-	}
-
 	flush_generated_files
 
 	if {!$didSomething} {
@@ -41,10 +37,8 @@ proc update_system_config_files {} {
 
 proc main {{argv ""}} {
 	set opts {
-		{config.arg "/boot/piaware-config.txt" "specify the config file to read"}
 		{network "generate network config"}
 		{dump1090 "generate dump1090 config"}
-		{piaware "generate piaware config"}
 		{dryrun "just show the new file contents, don't try to install them"}
     }
 
@@ -55,19 +49,8 @@ proc main {{argv ""}} {
         exit 1
     }
 
-	try {
-		set lines [read_file $::params(config)]
-		if {[llength $lines] == 0} {
-			log "Not updating system configuration, $::params(config) missing or empty"
-			return
-		}
-
-		parse_config_file $lines
-	} on error {result _options} {
-		array set options $_options
-		warn "Failed to read config file, not updating system configuration: $options(-errorinfo)"
-		return
-	}
+	::fa_piaware_config::new_combined_config piawareConfig
+	piawareConfig read_config
 
 	try {
 		update_system_config_files

@@ -10,55 +10,6 @@ proc log {msg} {
 	puts stderr "$msg"
 }
 
-proc read_file {path} {
-	if {![file exists $path]} {
-		return [list]
-	}
-
-	set f [open $path "r"]
-	chan configure $f -encoding ascii -translation auto
-
-	try {
-		while {[gets $f line] >= 0} {
-			lappend contents $line
-		}
-		return $contents
-	} finally {
-		catch {close $f}
-	}
-}
-
-set ::reCommentLine {^\s*#.*}
-set ::reOptionLine {^\s*([a-zA-Z0-9_-]+)\s*(.*?)\s*$}
-
-proc parse_config_file {lines} {
-	foreach line $lines {
-		if {[regexp $::reCommentLine $line]} {
-			continue
-		}
-
-		if {[regexp $::reOptionLine $line -> key value]} {
-			set ::config([string tolower $key]) $value
-		}
-	}
-}
-
-proc config_str {key {def ""}} {
-	if {![info exists ::config([string tolower $key])]} {
-		return $def
-	}
-
-	return $::config([string tolower $key])
-}
-
-proc config_bool {key {def ""}} {
-	return [string is true -strict [config_str $key $def]]
-}
-
-proc have_config {key} {
-	return [info exists ::config([string tolower $key])]
-}
-
 proc replace_file {path mode lines} {
 	if {$::params(dryrun)} {
 		puts stderr "Dryrun: new contents of $path (mode $mode):"
