@@ -65,6 +65,19 @@ wireless-gateway 192.168.1.254
 
 
 #
+# DNS CONFIGURATION
+#
+
+# For static address configurations, a space-separated list of DNS
+# nameservers to use should be provided here. The defaults use Google DNS.
+#
+# If DHCP is used, the nameservers provided by the DHCP server will
+# be used.
+
+dns-nameservers 8.8.8.8 8.8.4.4
+
+
+#
 # RECEIVER CONFIGURATION
 #
 
