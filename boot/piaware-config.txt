@@ -32,7 +32,7 @@ wired-address 192.168.1.10
 wired-netmask 255.255.255.0
 wired-broadcast 192.168.1.255
 wired-gateway 192.168.1.254
-
+wired-nameservers 8.8.8.8 8.8.4.4
 
 #
 # WIRELESS NETWORK CONFIGURATION
@@ -62,19 +62,7 @@ wireless-address 192.168.1.10
 wireless-netmask 255.255.255.0
 wireless-broadcast 192.168.1.255
 wireless-gateway 192.168.1.254
-
-
-#
-# DNS CONFIGURATION
-#
-
-# For static address configurations, a space-separated list of DNS
-# nameservers to use should be provided here. The defaults use Google DNS.
-#
-# If DHCP is used, the nameservers provided by the DHCP server will
-# be used.
-
-dns-nameservers 8.8.8.8 8.8.4.4
+wireless-nameservers 8.8.8.8 8.8.4.4
 
 
 #
