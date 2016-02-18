@@ -119,8 +119,8 @@ proc add_network_interface {net iface {prefix ""} {suffix ""}} {
 			if {[piawareConfig exists ${net}-gateway]} {
 				lappend out "  gateway [piawareConfig get ${net}-gateway]"
 			}
-			if {[piawareConfig exists dns-nameservers]} {
-				lappend out "  dns-nameservers [piawareConfig get dns-nameservers]"
+			if {[piawareConfig exists ${net}-nameservers]} {
+				lappend out "  dns-nameservers [piawareConfig get ${net}-nameservers]"
 			}
 		}
 
