@@ -1,0 +1,188 @@
+#!/usr/bin/env tclsh
+
+#
+# generate network configuration
+#
+
+package require fa_config_generator
+
+proc configure_wireless {config} {
+	if {![valid_network_config $config wireless]} {
+		return
+	}
+
+	if {![$config  exists wireless-ssid]} {
+		warn "wireless-network was set, but no wireless-ssid was given, no wireless network has been configured"
+		return
+	}
+
+	# the physical interface config fragment
+	# (this interface is brought up on boot and stays up
+	# even while there is no AP association; wpa_supplicant
+	# is started when the interface is brought up)
+	::fa_config_generator::generate_file_part "/etc/network/interfaces" {
+		{auto wlan0}
+		{allow-hotplug wlan0}
+		{iface wlan0 inet manual}
+		{wireless-power off}
+		{wpa-roam /etc/wpa_supplicant/wpa-roam.conf}
+	}
+
+	# the wpasupplicant config file
+	# this configures the actual association details
+	# and contains the PSK/passphrase in plaintext
+	# so we lock down the permissions
+	set supplicant [list]
+	lappend supplicant "network={"
+	lappend supplicant "  ssid=\"[$config get wireless-ssid]\""
+	lappend supplicant "  id_str=\"wireless\""
+	if {[$config exists wireless-password]} {
+		lappend supplicant "  psk=\"[$config get wireless-password]\""
+	}
+	lappend supplicant "}"
+	::fa_config_generator::generate_file "/etc/wpa_supplicant/wpa-roam.conf" $supplicant 0600
+
+	# the logical interface config fragment
+	# this interface is brought up or down when wpa_supplicant notices
+	# that the wireless is associated/disconnected; DHCP etc triggers
+	# at that point. it is named matching the "id_str" parameter above
+	add_network_interface $config wireless wireless
+}
+
+proc configure_wired {config} {
+	if {![valid_network_config $config wired]} {
+		return
+	}
+
+	# the physical interface config fragment
+	add_network_interface $config wired eth0
+
+	# override the ifplugd config
+	::fa_config_generator::generate_file "/etc/default/ifplugd" {
+		{INTERFACES="eth0"}
+		{HOTPLUG_INTERFACES=""}
+		{ARGS="-q -f -u10 -d0 -w -I"}
+		{SUSPEND_ACTION="stop"}
+	}
+}
+
+proc valid_network_config {config net} {
+	if {![$config get ${net}-network]} {
+		return 0
+	}
+
+	if {![$config exists ${net}-type]} {
+		warn "Missing ${net}-type setting, not configuring the ${net} network"
+		return 0
+	}
+
+	set type [$config get ${net}-type]
+	switch -nocase $type {
+		dhcp {
+			return 1
+		}
+
+		static {
+			if {![$config exists ${net}-address]} {
+				warn "Missing ${net}-address setting, not configuring the ${net} network"
+				return 0
+			}
+			return 1
+		}
+
+		default {
+			warn "${net}-type is set to '$type', which I don't understand (it should be dhcp or static)"
+			return 0
+		}
+	}
+}
+
+proc add_network_interface {config net iface} {
+	set out {}
+
+	set type [$config get ${net}-type]
+	switch -nocase $type {
+		dhcp {
+			lappend out "iface $iface inet dhcp"
+		}
+
+		static {
+			lappend out "iface $iface inet static"
+			lappend out "  address [$config get ${net}-address]"
+			if {[$config exists ${net}-netmask]} {
+				lappend out "  netmask [$config get ${net}-netmask]"
+			}
+			if {[$config exists ${net}-broadcast]} {
+				lappend out "  broadcast [$config get ${net}-broadcast]"
+			}
+			if {[$config exists ${net}-gateway]} {
+				lappend out "  gateway [$config get ${net}-gateway]"
+			}
+			if {[$config exists ${net}-nameservers]} {
+				lappend out "  dns-nameservers [$config get ${net}-nameservers]"
+			}
+		}
+
+		default {
+			error "add_network_interface called with an invalid config (type $type)"
+		}
+	}
+
+	::fa_config_generator::generate_file_part "/etc/network/interfaces" $out
+}
+
+proc configure_http_proxy {config} {
+	if {[$config exists http-proxy-host] && [$config exists http-proxy-port]} {
+		set proxyUrl "http://"
+		if {[$config exists http-proxy-user] || [$config exists http-proxy-password]} {
+			if {[$config exists http-proxy-user]} {
+				append proxyUrl [$config get http-proxy-user]
+			}
+
+			if {[$config exists http-proxy-password]} {
+				append proxyUrl ":" [$config get http-proxy-password]
+			}
+
+			append proxyUrl "@"
+		}
+
+		append proxyUrl [$config get http-proxy-host] ":" [$config get http-proxy-port] "/"
+	} else {
+		set proxyUrl ""
+	}
+
+	if {$proxyUrl ne ""} {
+		lappend contents "Acquire::http::Proxy \"$proxyUrl\";"
+		lappend contents "Acquire::https::Proxy \"$proxyUrl\";"
+	} else {
+		lappend contents "// No HTTP/HTTPS proxy configured"
+	}
+
+	::fa_config_generator::generate_file "/etc/apt/apt.conf.d/50http-proxy" $contents 0644 "//"
+}
+
+proc generate_network_config {config} {
+	# /etc/network/interfaces header
+	::fa_config_generator::generate_file "/etc/network/interfaces" {
+		{auto lo}
+		{iface lo inet loopback}
+	}
+
+	# default ifplugd config, unless overridden
+	::fa_config_generator::generate_file "/etc/default/ifplugd" {
+		{INTERFACES=""}
+		{HOTPLUG_INTERFACES=""}
+		{ARGS="-q -f -u10 -d0 -w -I"}
+		{SUSPEND_ACTION="stop"}
+	}
+
+	configure_wireless $config
+	configure_wired $config
+	configure_http_proxy $config
+
+	return 1
+}
+
+if {!$tcl_interactive} {
+	::fa_config_generator::generate_from_argv generate_network_config $argv 
+}

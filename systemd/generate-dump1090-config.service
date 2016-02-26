@@ -10,7 +10,7 @@ After=wait-for-usb-drives.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/lib/piaware-support/configure-system.tcl -dump1090
+ExecStart=/usr/lib/piaware-support/generate-dump1090-config
 
 [Install]
 WantedBy=dump1090-fa.service

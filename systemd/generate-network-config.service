@@ -13,7 +13,7 @@ DefaultDependencies=no
 
 [Service]
 Type=oneshot
-ExecStart=/usr/lib/piaware-support/configure-system.tcl -network
+ExecStart=/usr/lib/piaware-support/generate-network-config
 
 [Install]
 WantedBy=network.target

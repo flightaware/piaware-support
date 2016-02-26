@@ -1,6 +1,8 @@
-scripts/*.tcl usr/lib/piaware-support/
+package/*.tcl usr/lib/piaware-support/
+scripts/generate-network-config usr/lib/piaware-support/
+scripts/generate-dump1090-config usr/lib/piaware-support/
 scripts/generate-missing-ssh-host-keys usr/lib/piaware-support/
 scripts/generate-usb-mount lib/udev
 etc
-boot
+piaware-config.txt.example usr/lib/piaware-support/
 systemd/* lib/systemd/system/
