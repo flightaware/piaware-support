@@ -1,5 +1,6 @@
 package require cmdline
 package require fa_piaware_config
+catch {package require fa_flightfeeder_config}
 
 namespace eval ::fa_config_generator {
 	proc logger {msg} {
