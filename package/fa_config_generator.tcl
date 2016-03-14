@@ -20,7 +20,7 @@ namespace eval ::fa_config_generator {
 
 		logger "Updating $path .."
 
-		set backup ${path}.old
+		set backup ${path}.bak
 		set tmp ${path}.new
 
 		set f [open $tmp "w" $mode]
