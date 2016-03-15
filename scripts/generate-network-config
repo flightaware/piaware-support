@@ -100,10 +100,13 @@ proc valid_network_config {config net} {
 proc add_network_interface {config net iface} {
 	set out {}
 
+	incr ::metric
+
 	set type [$config get ${net}-type]
 	switch -nocase $type {
 		dhcp {
 			lappend out "iface $iface inet dhcp"
+			lappend out "  metric $::metric"
 		}
 
 		static {
@@ -121,6 +124,7 @@ proc add_network_interface {config net iface} {
 			if {[$config exists ${net}-nameservers]} {
 				lappend out "  dns-nameservers [$config get ${net}-nameservers]"
 			}
+			lappend out "  metric $::metric"
 		}
 
 		default {
@@ -176,8 +180,8 @@ proc generate_network_config {config} {
 		{SUSPEND_ACTION="stop"}
 	}
 
-	configure_wireless $config
 	configure_wired $config
+	configure_wireless $config
 	configure_http_proxy $config
 
 	return 1
