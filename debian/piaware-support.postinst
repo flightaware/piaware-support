@@ -19,20 +19,6 @@ set -e
 
 case "$1" in
     configure)
-        if ! getent group boot >/dev/null
-        then
-            addgroup --system boot
-        fi
-
-        # create /boot/piaware-config.txt from template copy if missing
-        # we can't run this as a regular conffile as dpkg does not like
-        # chmod failing (since /boot is vfat)
-        if [ ! -f /boot/piaware-config.txt ]
-        then
-            cp /usr/lib/piaware-support/piaware-config.txt.example /boot/piaware-config.txt
-            chown root:boot /boot/piaware-config.txt || true
-            chmod 0640 /boot/piaware-config.txt || true
-        fi
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
