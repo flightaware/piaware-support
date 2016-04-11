@@ -9,6 +9,11 @@ Homepage: https://github.com/flightaware
 Package: piaware-support
 Architecture: all
 Depends: piaware, wireless-tools, wpasupplicant, crda, ifplugd, ${misc:Depends}
-Description: Support package for Piaware sdcard images.
- Handles boot-time configuration and the Flightaware
- apt repository configuration.
+Recommends: piaware-repository
+Description: Support package for PiAware sdcard images.
+ Handles boot-time configuration.
+
+Package: piaware-repository
+Architecture: all
+Description: Installs the PiAware apt repository configuration.
+ This allows installation and upgrading of the PiAware packages via apt-get.

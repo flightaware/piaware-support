@@ -3,6 +3,6 @@ scripts/generate-network-config usr/lib/piaware-support/
 scripts/generate-dump1090-config usr/lib/piaware-support/
 scripts/generate-missing-ssh-host-keys usr/lib/piaware-support/
 scripts/generate-usb-mount lib/udev
-etc
+etc/modprobe.d/
 piaware-config.txt boot/
 systemd/* lib/systemd/system/

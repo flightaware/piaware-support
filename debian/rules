@@ -4,13 +4,13 @@
 export DH_VERBOSE=1
 
 override_dh_systemd_enable:
-	dh_systemd_enable --name=regenerate-ssh-keys systemd/regenerate-ssh-keys.service
-	dh_systemd_enable --name=generate-network-config systemd/generate-network-config.service
-	dh_systemd_enable --name=generate-dump1090-config systemd/generate-dump1090-config.service
-	dh_systemd_enable --name=wait-for-usb-drives systemd/wait-for-usb-drives.service
+	dh_systemd_enable -ppiaware-support --name=regenerate-ssh-keys systemd/regenerate-ssh-keys.service
+	dh_systemd_enable -ppiaware-support --name=generate-network-config systemd/generate-network-config.service
+	dh_systemd_enable -ppiaware-support --name=generate-dump1090-config systemd/generate-dump1090-config.service
+	dh_systemd_enable -ppiaware-support --name=wait-for-usb-drives systemd/wait-for-usb-drives.service
 
 override_dh_systemd_start:
-	dh_systemd_start --no-start
+	dh_systemd_start -ppiaware-support --no-start
 
 %:
 	dh $@ --with=systemd
