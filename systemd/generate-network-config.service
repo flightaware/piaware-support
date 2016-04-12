@@ -3,7 +3,6 @@
 
 [Unit]
 Description=Generate network configuration
-ConditionPathExistsGlob=/boot/piaware-config.txt
 Before=network-pre.target
 Wants=network-pre.target
 After=local-fs.target
