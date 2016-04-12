@@ -71,11 +71,6 @@ proc valid_network_config {config net} {
 		return 0
 	}
 
-	if {![$config exists ${net}-type]} {
-		warn "Missing ${net}-type setting, not configuring the ${net} network"
-		return 0
-	}
-
 	set type [$config get ${net}-type]
 	switch -nocase $type {
 		dhcp {
