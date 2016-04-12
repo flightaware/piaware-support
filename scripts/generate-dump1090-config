@@ -26,7 +26,7 @@ proc generate_dump1090_config {config} {
 		}
 
 		default {
-			warn "unrecognized receiver type '[$config get receiver-type]', not configuring dump1090"
+			::fa_config_generator::logger "unrecognized receiver type '[$config get receiver-type]', not configuring dump1090"
 			# no config
 			return 0
 		}

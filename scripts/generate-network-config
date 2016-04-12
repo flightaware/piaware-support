@@ -12,7 +12,7 @@ proc configure_wireless {config} {
 	}
 
 	if {![$config  exists wireless-ssid]} {
-		warn "wireless-network was set, but no wireless-ssid was given, no wireless network has been configured"
+		::fa_config_generator::logger "wireless-network was set, but no wireless-ssid was given, no wireless network has been configured"
 		return
 	}
 
@@ -79,14 +79,14 @@ proc valid_network_config {config net} {
 
 		static {
 			if {![$config exists ${net}-address]} {
-				warn "Missing ${net}-address setting, not configuring the ${net} network"
+				::fa_config_generator::logger "Missing ${net}-address setting, not configuring the ${net} network"
 				return 0
 			}
 			return 1
 		}
 
 		default {
-			warn "${net}-type is set to '$type', which I don't understand (it should be dhcp or static)"
+			::fa_config_generator::logger "${net}-type is set to '$type', which I don't understand (it should be dhcp or static)"
 			return 0
 		}
 	}
