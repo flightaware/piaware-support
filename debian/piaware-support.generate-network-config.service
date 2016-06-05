@@ -5,9 +5,8 @@
 Description=Generate network configuration
 Before=network-pre.target
 Wants=network-pre.target
-After=local-fs.target
-Wants=wait-for-usb-drives.service
-After=wait-for-usb-drives.service
+After=config-ready.target
+Wants=config-ready.target
 DefaultDependencies=no
 
 [Service]

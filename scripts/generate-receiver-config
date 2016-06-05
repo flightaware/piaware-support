@@ -1,10 +1,39 @@
 #!/usr/bin/env tclsh
 
 #
-# generate dump1090 configuration
+# generate dump1090 and beast-splitter configuration
 #
 
 package require fa_config_generator
+
+proc generate_receiver_config {config} {
+	generate_beast_splitter_config $config
+	generate_dump1090_config $config
+	return 1
+}
+
+proc generate_beast_splitter_config {config} {
+	switch -nocase [$config get receiver-type] {
+		beast {
+			lappend relayconfig "ENABLED=yes"
+			lappend relayconfig "INPUT_OPTIONS=\"--serial /dev/beast\""
+		}
+
+		relay {
+			lappend relayconfig "ENABLED=yes"
+			lappend relayconfig "INPUT_OPTIONS=\"--net [$config get receiver-host]:[$config get receiver-port]\""
+		}
+
+		default {
+			lappend relayconfig "# beast-splitter does not run when receiver-type=[$config get receiver-type]"
+			lappend relayconfig "ENABLED=no"
+		}
+	}
+
+	lappend relayconfig "OUTPUT_OPTIONS=\"--listen 30005:R --connect localhost:30104:R\""
+	::fa_config_generator::generate_file "/etc/default/beast-splitter" $relayconfig
+	return 1
+}
 
 proc generate_dump1090_config {config} {
 	set dump1090config {
@@ -21,7 +50,7 @@ proc generate_dump1090_config {config} {
 			lappend dump1090config "RECEIVER_OPTIONS=\"--device-index $index --gain $gain --ppm $ppm --oversample --phase-enhance --net-bo-port 30005 --fix\""
 		}
 
-		beast - radarcape - other {
+		beast - radarcape - relay - other {
 			lappend dump1090config "RECEIVER_OPTIONS=\"--net-only --net-bo-port 0\""
 		}
 
@@ -37,5 +66,5 @@ proc generate_dump1090_config {config} {
 }
 
 if {!$tcl_interactive} {
-	::fa_config_generator::generate_from_argv generate_dump1090_config $argv
+	::fa_config_generator::generate_from_argv generate_receiver_config $argv
 }
