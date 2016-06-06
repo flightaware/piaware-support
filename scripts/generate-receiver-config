@@ -24,6 +24,11 @@ proc generate_beast_splitter_config {config} {
 			lappend relayconfig "INPUT_OPTIONS=\"--net [$config get receiver-host]:[$config get receiver-port]\""
 		}
 
+		radarcape {
+			lappend relayconfig "ENABLED=yes"
+			lappend relayconfig "INPUT_OPTIONS=\"--net [$config get radarcape-host]:10003\""
+		}
+
 		default {
 			lappend relayconfig "# beast-splitter does not run when receiver-type=[$config get receiver-type]"
 			lappend relayconfig "ENABLED=no"
