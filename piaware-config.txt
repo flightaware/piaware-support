@@ -11,7 +11,7 @@
 
 # To completely disable use of this config file,
 # set manage-config to no; the system configuration
-# won't be modified on boot.
+# won't be modified on boot if this is set to no.
 manage-config yes
 
 #
@@ -77,6 +77,9 @@ wireless-nameservers 8.8.8.8 8.8.4.4
 #  beast:     a USB-connected Mode-S Beast.
 #  radarcape: a network-connected Radarcape.
 #  other:     a network-connected receiver that produces Beast binary output. 
+#  relay:     like "other", but will use a local relay so that only one
+#             connection to the receiver is needed, and also forwards output
+#             to the local dump1090 for map display.
 #
 receiver-type rtlsdr
 
@@ -89,8 +92,8 @@ rtlsdr-ppm 0
 # the IP or hostname of the Radarcape
 radarcape-host your-radarcape-hostname
 
-# For a receiver type of 'other', receiver-host and receiver-port should
-# set to the IP/hostname and port to connect to for data.
+# For a receiver type of 'other' or 'relay', receiver-host and receiver-port
+# should set to the IP/hostname and port to connect to for data.
 receiver-host your-receiver-hostname
 receiver-port 30005
 
