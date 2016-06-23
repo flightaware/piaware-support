@@ -1,0 +1,15 @@
+[Unit]
+Description=Set rfkill if configured
+Wants=config-ready.target
+After=config-ready.target
+Before=network-pre.target
+Wants=network-pre.target
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/lib/piaware-support/set-rfkill
+
+[Install]
+WantedBy=network.target

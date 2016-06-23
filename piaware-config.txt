@@ -109,4 +109,9 @@ allow-auto-updates yes
 # panel) be allowed?
 allow-manual-updates yes
 
-
+# Should rfkill ("airplane mode") be set on all wireless/bluetooth
+# devices on boot? This can reduce interference if you are using a Pi 3
+# but not using wireless and the receiver is in close proximity to the Pi.
+# For obvious reasons, this won't work if you are using a wireless network
+# configuration.
+rfkill no

@@ -2,6 +2,7 @@ package/*.tcl usr/lib/piaware-support/
 scripts/generate-network-config usr/lib/piaware-support/
 scripts/generate-receiver-config usr/lib/piaware-support/
 scripts/generate-missing-ssh-host-keys usr/lib/piaware-support/
+scripts/set-rfkill usr/lib/piaware-support/
 scripts/generate-usb-mount lib/udev
 etc/modprobe.d/
 piaware-config.txt boot/

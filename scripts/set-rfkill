@@ -1,0 +1,47 @@
+#!/usr/bin/env tclsh
+
+# Invokes rfkill if configured
+
+package require cmdline
+package require fa_piaware_config
+catch {package require fa_flightfeeder_config}
+
+proc main {argv} {
+	set opts {
+		{dryrun "just say what you'd do, don't do it"}
+	}
+
+	set usage ": $::argv0 ?-dryrun?"
+
+	if {[catch {array set params [::cmdline::getoptions argv $opts $usage]} catchResult] == 1} {
+		logger $catchResult
+		return
+	}
+
+	if {![file exists "/dev/rfkill"]} {
+		puts "No rfkill-capable devices found"
+		exit 0
+	}
+
+	set config [::fa_piaware_config::new_combined_config #auto]
+	$config read_config
+
+	if {[$config get rfkill]} {
+		puts "Setting rfkill on all devices"
+		set mode "block"
+	} else {
+		puts "Clearing rfkill on all devices"
+		set mode "unblock"
+	}
+
+	set cmd [list /usr/sbin/rfkill $mode all]
+	if {$params(dryrun)} {
+		puts "-dryrun was set, would have run: $cmd"
+	} else {
+		exec {*}$cmd >@stdout 2>@stderr
+	}
+}
+
+if {!$tcl_interactive} {
+	main $argv
+}
