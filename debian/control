@@ -21,7 +21,8 @@ Description: Installs the PiAware apt repository configuration.
 Package: piaware-release
 Architecture: all
 Depends: piaware-repository (= ${binary:Version}), piaware-support (= ${binary:Version}),
- piaware (= 3.0.1~dev), beast-splitter (= 3.0.1~dev), dump1090-fa (= 3.0.1~dev)
+ piaware (= 3.0.1~dev), beast-splitter (= 3.0.1~dev), dump1090-fa (= 3.0.1~dev),
+ piaware-web (= 3.0.1~dev)
 Description: Metapackage for PiAware sdcard releases.
  Metapackage that depends on the specific versions of the piaware
  packages that make up a PiAware sdcard release.
