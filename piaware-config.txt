@@ -1,18 +1,13 @@
 #
-# This file configures the Piaware sdcard image.
-# Whenever the system boots, this file is read
-# and its contents are used to configure the
-# system.
+# This file configures the Piaware sdcard image
+# configuration. Whenever the system boots, this
+# file is read and its contents are used to
+# configure the system.
 #
 # Lines beginning with a '#' are comment lines
 # and are ignored. Blank lines are also ignored.
 # All other lines specify configuration settings.
 #
-
-# To completely disable use of this config file,
-# set manage-config to no; the system configuration
-# won't be modified on boot if this is set to no.
-manage-config yes
 
 #
 # WIRED NETWORK CONFIGURATION

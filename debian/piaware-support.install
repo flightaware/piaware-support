@@ -6,4 +6,5 @@ scripts/set-rfkill usr/lib/piaware-support/
 scripts/generate-usb-mount lib/udev
 etc/modprobe.d/
 piaware-config.txt boot/
+piaware-image-config.txt usr/share/piaware-support/
 systemd/*.target lib/systemd/system/

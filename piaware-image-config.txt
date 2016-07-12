@@ -1,0 +1,5 @@
+# This file has global configuration defaults for all PiAware
+# sdcard images and should not be changed directly.
+
+manage-config yes
+image-type piaware
