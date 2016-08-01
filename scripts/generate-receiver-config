@@ -52,7 +52,7 @@ proc generate_dump1090_config {config} {
 			set index [$config get rtlsdr-device-index]
 			set gain [$config get rtlsdr-gain]
 			set ppm [$config get rtlsdr-ppm]
-			lappend dump1090config "RECEIVER_OPTIONS=\"--device-index $index --gain $gain --ppm $ppm --oversample --phase-enhance --net-bo-port 30005 --fix\""
+			lappend dump1090config "RECEIVER_OPTIONS=\"--device-index $index --gain $gain --ppm $ppm --net-bo-port 30005 --fix\""
 		}
 
 		beast - radarcape - relay - other {
