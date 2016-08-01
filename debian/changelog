@@ -1,10 +1,10 @@
-piaware-support (3.0.3) UNRELEASED; urgency=medium
+piaware-support (3.0.3) stable; urgency=medium
 
   * Configure dump1090-fa to avoid doing receiver-relative position decoding
   * Remove some obsolete dump1090-fa options
   * Update dependencies for PiAware 3.0.3 release
 
- -- Oliver Jowett <oliver@mutability.co.uk>  Mon, 01 Aug 2016 12:18:03 +0100
+ -- Oliver Jowett <oliver@mutability.co.uk>  Mon, 01 Aug 2016 15:13:35 +0100
 
 piaware-support (3.0.2) stable; urgency=medium
 
