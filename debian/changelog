@@ -1,3 +1,9 @@
+piaware-support (3.0.4~dev) UNRELEASED; urgency=medium
+
+  * in development
+
+ -- Oliver Jowett <oliver@mutability.co.uk>  Tue, 16 Aug 2016 15:50:09 +0100
+
 piaware-support (3.0.3) stable; urgency=medium
 
   * Configure dump1090-fa to avoid doing receiver-relative position decoding
