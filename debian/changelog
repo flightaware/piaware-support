@@ -1,8 +1,13 @@
-piaware-support (3.0.4~dev) UNRELEASED; urgency=medium
+piaware-support (3.0.4) stable; urgency=medium
 
-  * in development
+  * Add scan_ssid=1, key_mgmt=WPA-PSK to wpa_supplicant.conf to
+    handle wifi networks with hidden SSIDs
+  * Include various wifi firmware packages to try to support more USB dongles
+  * Fix up the piaware-testing repository listfile
+  * Make the included default piaware-config.txt have CRLF line endings
+  * Update to piaware 3.0.4
 
- -- Oliver Jowett <oliver@mutability.co.uk>  Tue, 16 Aug 2016 15:50:09 +0100
+ -- Oliver Jowett <oliver@mutability.co.uk>  Fri, 19 Aug 2016 14:08:57 +0100
 
 piaware-support (3.0.3) stable; urgency=medium
 
