@@ -40,6 +40,8 @@ proc configure_wireless {config} {
 	if {[$config exists wireless-password]} {
 		lappend supplicant "  key_mgmt=WPA-PSK"
 		lappend supplicant "  psk=\"[$config get wireless-password]\""
+	} else {
+		lappend supplicant "  key_mgmt=NONE"
 	}
 	lappend supplicant "}"
 	::fa_config_generator::generate_file "/etc/wpa_supplicant/wpa-roam.conf" $supplicant 0600
