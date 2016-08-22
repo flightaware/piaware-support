@@ -1,3 +1,9 @@
+piaware-support (3.0.5~dev) UNRELEASED; urgency=medium
+
+  * in development
+
+ -- Oliver Jowett <oliver@mutability.co.uk>  Mon, 22 Aug 2016 14:02:41 +0100
+
 piaware-support (3.0.4) stable; urgency=medium
 
   * Add scan_ssid=1, key_mgmt=WPA-PSK to wpa_supplicant.conf to
