@@ -1,1 +1,2 @@
 etc/apt/sources.list.d/piaware.list
+etc/apt/trusted.gpg.d/flightaware-archive-keyring.gpg

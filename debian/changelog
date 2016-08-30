@@ -1,6 +1,8 @@
 piaware-support (3.0.5~dev) UNRELEASED; urgency=medium
 
-  * in development
+  * Set key_mgmt=NONE in wpa_supplication.conf if no wireless-password is given
+  * Include the FlightAware repository keyring that got inadvertently left
+    out of 3.0.4
 
  -- Oliver Jowett <oliver@mutability.co.uk>  Mon, 22 Aug 2016 14:02:41 +0100
 
