@@ -1,8 +1,9 @@
-piaware-support (3.0.5~dev) UNRELEASED; urgency=medium
+piaware-support (3.0.5) stable; urgency=medium
 
   * Set key_mgmt=NONE in wpa_supplication.conf if no wireless-password is given
   * Include the FlightAware repository keyring that got inadvertently left
     out of 3.0.4
+  * Update to piaware 3.0.5, dump1090-fa 3.0.5 (for version numbering only)
 
  -- Oliver Jowett <oliver@mutability.co.uk>  Mon, 22 Aug 2016 14:02:41 +0100
 
