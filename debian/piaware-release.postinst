@@ -19,7 +19,7 @@ set -e
 
 case "$1" in
     configure)
-        if dpkg --compare-versions "$2" lt 3.1
+        if test -n "$2" && dpkg --compare-versions "$2" lt 3.1
         then
             # upgrade from pre-3.1
             # populate /etc/environment if empty
