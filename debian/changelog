@@ -1,3 +1,9 @@
+piaware-support (3.1.0~dev) UNRELEASED; urgency=medium
+
+  * In development.
+
+ -- Oliver Jowett <oliver@mutability.co.uk>  Mon, 12 Sep 2016 14:14:19 +0100
+
 piaware-support (3.0.5) stable; urgency=medium
 
   * Set key_mgmt=NONE in wpa_supplicant.conf if no wireless-password is given
