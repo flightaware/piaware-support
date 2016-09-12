@@ -29,7 +29,10 @@ Package: piaware-release
 Architecture: all
 Depends: piaware-repository (= ${binary:Version}), piaware-support (= ${binary:Version}),
  piaware (= 3.0.5), beast-splitter (= 3.0.3), dump1090-fa (= 3.0.5),
- piaware-web (= 3.0.3)
+ piaware-web (= 3.0.3),
+ raspi-config, logrotate, resolvconf, usbutils, nano, rtl-sdr,
+ socat, netcat-openbsd
+Recommends: piaware-sdcard (= ${binary:Version})
 Description: Metapackage for PiAware sdcard releases.
- Metapackage that depends on the specific versions of the piaware
- packages that make up a PiAware sdcard release.
+ Metapackage that depends on the specific packages that
+ make up a PiAware sdcard release.
