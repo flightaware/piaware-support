@@ -32,7 +32,6 @@ Depends: piaware-repository (= ${binary:Version}), piaware-support (= ${binary:V
  piaware-web (= 3.0.3),
  raspi-config, logrotate, resolvconf, usbutils, nano, rtl-sdr,
  socat, netcat-openbsd
-Recommends: piaware-sdcard (= ${binary:Version})
 Description: Metapackage for PiAware sdcard releases.
  Metapackage that depends on the specific packages that
  make up a PiAware sdcard release.
