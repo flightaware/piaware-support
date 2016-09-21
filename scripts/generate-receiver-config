@@ -16,7 +16,13 @@ proc generate_beast_splitter_config {config} {
 	switch -nocase [$config get receiver-type] {
 		beast {
 			lappend relayconfig "ENABLED=yes"
-			lappend relayconfig "INPUT_OPTIONS=\"--serial /dev/beast\""
+
+			set baud [$config get beast-baudrate]
+			if {$baud ne ""} {
+				lappend relayconfig "INPUT_OPTIONS=\"--serial /dev/beast --fixed-baud $baud\""
+			} else {
+				lappend relayconfig "INPUT_OPTIONS=\"--serial /dev/beast\""
+			}
 		}
 
 		relay {
