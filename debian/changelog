@@ -1,13 +1,12 @@
-piaware-support (3.1.0~dev) UNRELEASED; urgency=medium
+piaware-support (3.1.0) stable; urgency=medium
 
-  * In development
   * Include an /etc/environment that puts /sbin and /usr/bin in the PATH
     of non-root users; create this if missing/empty on upgrade
   * Add socat, netcat to the default image
   * Update to PiAware 3.1.0
   * Update to dump1090-fa 3.1.0
 
- -- Oliver Jowett <oliver@mutability.co.uk>  Mon, 12 Sep 2016 14:14:19 +0100
+ -- Oliver Jowett <oliver@mutability.co.uk>  Thu, 22 Sep 2016 17:12:51 +0100
 
 piaware-support (3.0.5) stable; urgency=medium
 
