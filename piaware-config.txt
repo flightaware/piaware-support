@@ -44,6 +44,15 @@ wireless-network no
 # This should be changed to match your wireless
 # network SSID and, for networks that require
 # a passphrase, the passphrase.
+#
+# If your SSID or password contains characters other than
+# numbers and letters, such as the # character or whitespace,
+# you should enclose the value in quotation marks. For example,
+# “pass word” or “pass#word”.
+#
+# To include quotation marks (") in a quoted value, use \"
+# To include a backslash (\) in a quoted value, use \\
+
 wireless-ssid MyWifiNetwork
 wireless-password s3cr3t
 
