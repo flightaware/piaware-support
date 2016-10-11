@@ -1,3 +1,9 @@
+piaware-support (3.2.0~dev) UNRELEASED; urgency=medium
+
+  * In development
+
+ -- Oliver Jowett <oliver@mutability.co.uk>  Tue, 11 Oct 2016 12:35:48 +0100
+
 piaware-support (3.1.0) stable; urgency=medium
 
   * Add socat, netcat to the default image
