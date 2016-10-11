@@ -41,7 +41,13 @@ proc generate_beast_splitter_config {config} {
 		}
 	}
 
-	lappend relayconfig "OUTPUT_OPTIONS=\"--listen 30005:R --connect localhost:30104:R\""
+	if {[$config get modeac]} {
+		set settings "RJ"
+	} else {
+		set settings "Rj"
+	}
+
+	lappend relayconfig "OUTPUT_OPTIONS=\"--listen 30005:$settings --connect localhost:30104:$settings\""
 	::fa_config_generator::generate_file "/etc/default/beast-splitter" $relayconfig
 	return 1
 }
@@ -53,16 +59,18 @@ proc generate_dump1090_config {config} {
 		{JSON_OPTIONS="--json-location-accuracy 2"}
 	}
 
+	set receiverOpts [list]
+
 	switch -nocase [$config get receiver-type] {
 		rtlsdr {
-			set index [$config get rtlsdr-device-index]
-			set gain [$config get rtlsdr-gain]
-			set ppm [$config get rtlsdr-ppm]
-			lappend dump1090config "RECEIVER_OPTIONS=\"--device-index $index --gain $gain --ppm $ppm --net-bo-port 30005 --fix\""
+			lappend receiverOpts "--net-bo-port 30005" "--fix"
+			lappend receiverOpts "--device-index" [$config get rtlsdr-device-index]
+			lappend receiverOpts "--gain" [$config get rtlsdr-gain]
+			lappend receiverOpts "--ppm" [$config get rtlsdr-ppm]
 		}
 
 		beast - radarcape - relay - other {
-			lappend dump1090config "RECEIVER_OPTIONS=\"--net-only --net-bo-port 0\""
+			lappend receiverOpts "--net-only" "--net-bo-port 0" "--fix"
 		}
 
 		default {
@@ -71,6 +79,12 @@ proc generate_dump1090_config {config} {
 			return 0
 		}
 	}
+
+	if {[$config get modeac]} {
+		lappend receiverOpts "--modeac"
+	}
+
+	lappend dump1090config "RECEIVER_OPTIONS=\"[join $receiverOpts " "]\""
 
 	::fa_config_generator::generate_file "/etc/default/dump1090-fa" $dump1090config
 	return 1
