@@ -5,7 +5,7 @@
 Description=Generate network configuration
 Before=network-pre.target
 Wants=network-pre.target
-After=config-ready.target
+After=config-ready.target set-rfkill.service
 Wants=config-ready.target
 DefaultDependencies=no
 
