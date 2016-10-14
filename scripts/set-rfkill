@@ -1,6 +1,11 @@
 #!/usr/bin/env tclsh
 
 # Invokes rfkill if configured
+#
+# This tries to turn off, specifically, the Pi 3 wifi & bluetooth
+# for environments where they would interfere with the receiver
+# (e.g. FlightFeeder v7) or where a separate USB wifi dongle is
+# preferred to using the Pi 3's built-in wifi.
 
 package require cmdline
 package require fa_piaware_config
@@ -14,12 +19,74 @@ proc main {argv} {
 	set usage ": $::argv0 ?-dryrun?"
 
 	if {[catch {array set params [::cmdline::getoptions argv $opts $usage]} catchResult] == 1} {
-		logger $catchResult
+		puts stderr $catchResult
 		return
 	}
 
-	if {![file exists "/dev/rfkill"]} {
-		puts "No rfkill-capable devices found"
+	# look for the Pi 3's wifi and bluetooth interfaces
+	# I wish this was easier..
+	set devices [list]
+	foreach dev [glob -nocomplain -tails -directory /sys/class/rfkill *] {
+		if {[catch {
+			set f [open "/sys/class/rfkill/$dev/index" "r"]
+			try {
+				gets $f devIndex
+			} finally {
+				catch {close $f}
+			}
+
+			set f [open "/sys/class/rfkill/$dev/type" "r"]
+			try {
+				gets $f devType
+			} finally {
+				catch {close $f}
+			}
+
+			switch -- $devType {
+				"wlan" {
+					set f [open "/sys/class/rfkill/$dev/device/macaddress" "r"]
+					try {
+						gets $f devAddress
+					} finally {
+						catch {close $f}
+					}
+
+					if {![string match -nocase "b8:27:eb:*" $devAddress]} {
+						# not Broadcom
+						continue
+					}
+				}
+
+				"bluetooth" {
+					set f [open "/sys/class/rfkill/$dev/device/address" "r"]
+					try {
+						gets $f devAddress
+					} finally {
+						catch {close $f}
+					}
+
+					if {![string match -nocase "b8:27:eb:*" $devAddress]} {
+						# not Broadcom
+						continue
+					}
+				}
+
+				default {
+					# not bluetooth/wlan
+					continue
+				}
+			}
+
+			# ok, this looks like this is one we want to work on
+			lappend devices $devIndex
+		} catchResult] == 1} {
+			# nb deliberately ignoring "continue" catch results here
+			puts stderr "Caught '$catchResult' processing $dev"
+		}
+	}
+
+	if {$devices eq ""} {
+		puts "No devices needing rfkill found"
 		exit 0
 	}
 
@@ -27,18 +94,20 @@ proc main {argv} {
 	$config read_config
 
 	if {[$config get rfkill]} {
-		puts "Setting rfkill on all devices"
+		puts "Setting rfkill on devices: $devices"
 		set mode "block"
 	} else {
-		puts "Clearing rfkill on all devices"
+		puts "Clearing rfkill on devices: $devices"
 		set mode "unblock"
 	}
 
-	set cmd [list /usr/sbin/rfkill $mode all]
-	if {$params(dryrun)} {
-		puts "-dryrun was set, would have run: $cmd"
-	} else {
-		exec {*}$cmd >@stdout 2>@stderr
+	foreach devIndex $devices {
+		set cmd [list /usr/sbin/rfkill $mode $devIndex]
+		if {$params(dryrun)} {
+			puts "-dryrun was set, would have run: $cmd"
+		} else {
+			exec {*}$cmd >@stdout 2>@stderr
+		}
 	}
 }
 
