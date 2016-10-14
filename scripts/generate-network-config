@@ -5,14 +5,22 @@
 #
 
 package require fa_config_generator
+package require fa_sysinfo
 
 proc configure_wireless {config} {
 	if {![valid_network_config $config wireless]} {
 		return
 	}
 
-	if {![$config  exists wireless-ssid]} {
+	if {![$config exists wireless-ssid]} {
 		::fa_config_generator::logger "wireless-network was set, but no wireless-ssid was given, no wireless network has been configured"
+		return
+	}
+
+	# pick the right interface
+	set wlan [::fa_sysinfo::wireless_interface]
+	if {$wlan eq ""} {
+		::fa_config_generator::logger "wireless-network was set, but no suitable wireless interface was found, no wireless network has been configured"
 		return
 	}
 
@@ -20,13 +28,14 @@ proc configure_wireless {config} {
 	# (this interface is brought up on boot and stays up
 	# even while there is no AP association; wpa_supplicant
 	# is started when the interface is brought up)
-	::fa_config_generator::generate_file_part "/etc/network/interfaces" {
-		{auto wlan0}
-		{allow-hotplug wlan0}
-		{iface wlan0 inet manual}
-		{wireless-power off}
-		{wpa-roam /etc/wpa_supplicant/wpa-roam.conf}
-	}
+	set interfaces [list]
+	lappend interfaces "auto $wlan"
+	lappend interfaces "allow-hotplug $wlan"
+	lappend interfaces "iface $wlan inet manual"
+	lappend interfaces "wireless-power off"
+	lappend interfaces "wpa-roam /etc/wpa_supplicant/wpa-roam.conf"
+
+	::fa_config_generator::generate_file_part "/etc/network/interfaces" $interfaces
 
 	# the wpasupplicant config file
 	# this configures the actual association details
