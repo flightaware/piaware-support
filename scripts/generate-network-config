@@ -126,7 +126,6 @@ proc add_network_interface {config net iface} {
 				lappend out "iface $iface inet manual"
 				lappend out "  up dhclient -v -pf /run/dhclient.\${IFACE}.pid -lf /var/lib/dhcp/dhclient.\${IFACE}.leases \${IFACE} -e IFACE_METRIC=$::metric"
 				lappend out "  down dhclient -v -x -pf /run/dhclient.\${IFACE}.pid -lf /var/lib/dhcp/dhclient.\${IFACE}.leases \${IFACE}"
-				lappend out "  down ip link set dev \${IFACE} down"
 			} else {
 				lappend out "iface $iface inet dhcp"
 				lappend out "  metric $::metric"
