@@ -1,6 +1,12 @@
 piaware-support (3.2.0~dev) UNRELEASED; urgency=medium
 
-  * In development
+  * Update to PiAware 3.2.0, dump1090-fa 3.2.0
+  * "rfkill" option now only affects the built-in Pi 3 wireless and bluetooth
+  * Wireless configuration looks for a non-disabled wifi interface rather than
+    always using wlan0; this allows using an external dongle on the Pi 3 by
+    using the "rfkill" option to disable the internal wifi
+  * When doing DHCP over wifi, don't send a DHCP RELEASE in response to
+    a disassociation as it interacts badly with some broadband modems
 
  -- Oliver Jowett <oliver@mutability.co.uk>  Tue, 11 Oct 2016 12:35:48 +0100
 
