@@ -1,3 +1,9 @@
+piaware-support (3.3.0~dev) UNRELEASED; urgency=medium
+
+  * In development
+
+ -- Oliver Jowett <oliver@mutability.co.uk>  Thu, 29 Dec 2016 18:04:19 +0000
+
 piaware-support (3.2.0) stable; urgency=medium
 
   * Update to PiAware 3.2.0, dump1090-fa 3.2.0
