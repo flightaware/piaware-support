@@ -13,26 +13,33 @@ proc generate_receiver_config {config} {
 }
 
 proc generate_beast_splitter_config {config} {
+	if {![$config get allow-modeac]} {
+		# disable A/C on the input side
+		set force "--force j"
+	} else {
+		set force ""
+	}
+
 	switch -nocase [$config get receiver-type] {
 		beast {
 			lappend relayconfig "ENABLED=yes"
 
 			set baud [$config get beast-baudrate]
 			if {$baud ne ""} {
-				lappend relayconfig "INPUT_OPTIONS=\"--serial /dev/beast --fixed-baud $baud\""
+				lappend relayconfig "INPUT_OPTIONS=\"--serial /dev/beast --fixed-baud $baud $force\""
 			} else {
-				lappend relayconfig "INPUT_OPTIONS=\"--serial /dev/beast\""
+				lappend relayconfig "INPUT_OPTIONS=\"--serial /dev/beast $force\""
 			}
 		}
 
 		relay {
 			lappend relayconfig "ENABLED=yes"
-			lappend relayconfig "INPUT_OPTIONS=\"--net [$config get receiver-host]:[$config get receiver-port]\""
+			lappend relayconfig "INPUT_OPTIONS=\"--net [$config get receiver-host]:[$config get receiver-port] $force\""
 		}
 
 		radarcape {
 			lappend relayconfig "ENABLED=yes"
-			lappend relayconfig "INPUT_OPTIONS=\"--net [$config get radarcape-host]:10003\""
+			lappend relayconfig "INPUT_OPTIONS=\"--net [$config get radarcape-host]:10003 $force\""
 		}
 
 		default {
@@ -41,13 +48,7 @@ proc generate_beast_splitter_config {config} {
 		}
 	}
 
-	if {[$config get modeac]} {
-		set settings "RJ"
-	} else {
-		set settings "Rj"
-	}
-
-	lappend relayconfig "OUTPUT_OPTIONS=\"--listen 30005:$settings --connect localhost:30104:$settings\""
+	lappend relayconfig "OUTPUT_OPTIONS=\"--listen 30005:R --connect localhost:30104:R\""
 	::fa_config_generator::generate_file "/etc/default/beast-splitter" $relayconfig
 	return 1
 }
@@ -80,8 +81,8 @@ proc generate_dump1090_config {config} {
 		}
 	}
 
-	if {[$config get modeac]} {
-		lappend receiverOpts "--modeac"
+	if {![$config get allow-modeac]} {
+		lappend receiverOpts "--no-modeac-auto"
 	}
 
 	lappend dump1090config "RECEIVER_OPTIONS=\"[join $receiverOpts " "]\""
