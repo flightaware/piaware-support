@@ -48,7 +48,7 @@ wireless-network no
 # If your SSID or password contains characters other than
 # numbers and letters, such as the # character or whitespace,
 # you should enclose the value in quotation marks. For example,
-# “pass word” or “pass#word”.
+# "pass word" or "pass#word".
 #
 # To include quotation marks (") in a quoted value, use \"
 # To include a backslash (\) in a quoted value, use \\
