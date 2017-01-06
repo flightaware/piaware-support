@@ -1,6 +1,8 @@
 piaware-support (3.3.0~dev) UNRELEASED; urgency=medium
 
-  * In development
+  * Update to PiAware 3.3.0, dump1090-fa 3.3.0, beast-splitter 3.3.0
+  * "modeac" option renamed to "allow-modeac"
+  * Removed stray 'smartquotes' in a comment in the default piaware config file
 
  -- Oliver Jowett <oliver@mutability.co.uk>  Thu, 29 Dec 2016 18:04:19 +0000
 
