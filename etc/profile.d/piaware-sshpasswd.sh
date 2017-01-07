@@ -5,7 +5,7 @@
 check_hash ()
 {
    test -x /usr/bin/mkpasswd || return 0
-   if [ $(id -un) != "pi"; ]; then return 0; fi
+   if [ $(id -un) != "pi" ]; then return 0; fi
    if grep -q "^PasswordAuthentication\s*no" /etc/ssh/sshd_config ;then return 0 ; fi
 
    HASH=$(sudo -n getent shadow pi 2>/dev/null | cut -f2 -d:)
