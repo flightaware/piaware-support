@@ -8,5 +8,4 @@ etc/modprobe.d/
 piaware-config.txt boot/
 piaware-image-config.txt usr/share/piaware-support/
 systemd/*.target lib/systemd/system/
-plymouth/* /usr/share/plymouth/themes/piaware/
 etc/profile.d/

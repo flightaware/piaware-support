@@ -31,7 +31,7 @@ Depends: piaware-repository (= ${binary:Version}), piaware-support (= ${binary:V
  piaware (= 3.3.0~dev), beast-splitter (= 3.3.0~dev), dump1090-fa (= 3.3.0~dev),
  piaware-web (= 3.2.0),
  raspi-config, logrotate, resolvconf, usbutils, nano, rtl-sdr,
- socat, netcat-openbsd
+ socat, netcat-openbsd, plymouth, plymouth-themes
 Description: Metapackage for PiAware sdcard releases.
  Metapackage that depends on the specific packages that
  make up a PiAware sdcard release.
