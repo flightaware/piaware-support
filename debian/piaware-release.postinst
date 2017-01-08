@@ -17,21 +17,45 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
+splashscreen_setup() {
+    test -f /boot/cmdline.txt || return 0
+
+    newargs=""
+    for arg in $(cat /boot/cmdline.txt)
+    do
+        case "$arg" in
+            splash|quiet|plymouth.ignore-serial-consoles)
+                ;;
+
+            nosplash)
+                return 0
+                ;;
+
+            *)
+                newargs="${newargs}${arg} "
+                ;;
+        esac
+    done
+
+    echo "Configuring boot splashscreen.."
+    /usr/sbin/plymouth-set-default-theme piaware
+    echo "${newargs}quiet splash plymouth.ignore-serial-consoles" >/boot/cmdline.txt.new
+    mv /boot/cmdline.txt.new /boot/cmdline.txt
+    return 0
+}
+
 case "$1" in
     configure)
         if dpkg --compare-versions "$2" lt "3.3.0"
         then
-            # first time install or upgrade from pre-3.3
-            # install the plymouth config
-            echo "Installing plymouth configuration.."
-            cat >/etc/plymouth/plymouthd.conf <<EOF
-[Daemon]
-Theme=piaware
-EOF
+            splashscreen_setup
         fi
 
-        # splashscreen has probably changed
-        update-initramfs -u
+        # splashscreen contents change on every version
+        if grep -q " splash" /boot/cmdline.txt && [ $(/usr/sbin/plymouth-set-default-theme) = "piaware" ]
+        then
+            update-initramfs -u
+        fi
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
