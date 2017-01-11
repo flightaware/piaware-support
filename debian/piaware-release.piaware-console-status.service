@@ -15,9 +15,9 @@ RestartSec=60
 TTYPath=/dev/tty1
 TTYReset=yes
 TTYVHangup=yes
-TTYVTDisallocate=yes
 StandardInput=tty-force
 StandardOutput=tty
+StandardError=tty
 
 [Install]
 WantedBy=default.target
