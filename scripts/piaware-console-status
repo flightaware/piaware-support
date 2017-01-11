@@ -51,8 +51,8 @@ proc init_info {} {
 proc refresh_info {} {
 	set ::wifiInterface [::fa_sysinfo::wireless_interface]
 	if {$::wifiInterface ne ""} {
-		set ::wifiState [::fa_sysinfo::interface_state $wifi]
-		set ::wifiIP [::fa_sysinfo::interface_ip_address $wifi]
+		set ::wifiState [::fa_sysinfo::interface_state $::wifiInterface]
+		set ::wifiIP [::fa_sysinfo::interface_ip_address $::wifiInterface]
 	} else {
 		set ::wifiState ""
 		set ::wifiIP ""
