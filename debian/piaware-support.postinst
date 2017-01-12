@@ -17,8 +17,20 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
+disable_dhcp_duid() {
+    # upgrading from an old version; default to the old DHCP behaviour
+    echo "Disabling use of DHCP DUIDs to retain pre-upgrade behaviour.."
+    piaware-config allow-dhcp-duid no
+}
+
 case "$1" in
     configure)
+        if test -n "$2" && dpkg --compare-versions "$2" lt "3.3"
+        then
+            # it's an upgrade from pre-3.3
+            # retain the old DHCP behavior
+            disable_dhcp_duid
+        fi
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
