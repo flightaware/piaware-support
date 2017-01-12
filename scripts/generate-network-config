@@ -113,23 +113,25 @@ proc add_network_interface {config net iface} {
 	set type [$config get ${net}-type]
 	switch -nocase $type {
 		dhcp {
-			# This is a bit unfortunate;
-			# we want to pass -x (stop without releasing lease)
-			# not -r (stop and release lease) when stopping dhclient,
-			# as releasing the lease interacts badly with some wifi
-			# routers, but ifupdown provides no way to change that
-			# so we have to put the interface in manual mode and
-			# provide up/down commands
-
-			if {$net eq "wireless"} {
-				lappend out "# DHCP, but ifupdown's dhcp mode does not do quite what we want"
-				lappend out "iface $iface inet manual"
-				lappend out "  up dhclient -v -pf /run/dhclient.\${IFACE}.pid -lf /var/lib/dhcp/dhclient.\${IFACE}.leases \${IFACE} -e IFACE_METRIC=$::metric"
-				lappend out "  down dhclient -v -x -pf /run/dhclient.\${IFACE}.pid -lf /var/lib/dhcp/dhclient.\${IFACE}.leases \${IFACE}"
-			} else {
-				lappend out "iface $iface inet dhcp"
-				lappend out "  metric $::metric"
+			# Use manual interface configuration so we can customize the dhclient commands
+			set command "dhclient -pf /run/dhclient.\${IFACE}.pid -lf /var/lib/dhcp/dhclient.\${IFACE}.leases \${IFACE} -e IFACE_METRIC=$::metric"
+			if {$::usingDUID} {
+				append command " -i -D LL -df /var/lib/dhcp/dhclient.duid.conf"
 			}
+
+			set up $command
+			if {$net eq "wireless"} {
+				# releasing the lease seems to interact badly with some wireless routers
+				# so just silently exit
+				set down "$command -x"
+			} else {
+				set down "$command -r"
+			}
+
+			lappend out "# DHCP, but ifupdown's dhcp mode does not do quite what we want"
+			lappend out "iface $iface inet manual"
+			lappend out "  up $up"
+			lappend out "  down $down"
 		}
 
 		static {
@@ -188,6 +190,37 @@ proc configure_http_proxy {config} {
 	::fa_config_generator::generate_file "/etc/apt/apt.conf.d/50http-proxy" $contents 0644 "//"
 }
 
+proc generate_duid {config} {
+	# Use a link-layer DUID based on the built-in interface address
+	# We use LL, not LLT, so that this plays nicely on FlightFeeders in
+	# readonly mode (they can't persist a LLT)
+	if {![$config get allow-dhcp-duid]} {
+		set ::usingDUID 0
+		return
+	}
+
+	set mac [::fa_sysinfo::mac_address]
+	if {$mac eq ""} {
+		set ::usingDUID 0
+		return
+	}
+
+	set out [list]
+	lappend out "# DUID generated from MAC address $mac"
+
+	# type 3 (LL), hardware address type 1 (ethernet)
+	# then the link-layer address
+	set duid "\\x00\\x03\\x00\\x01"
+	for {set i 0} {$i < 18} {incr i 3} {
+		append duid "\\x" [string range $mac $i $i+1]
+	}
+
+	lappend out "default-duid \"$duid\";"
+
+	::fa_config_generator::generate_file "/var/lib/dhcp/dhclient.duid.conf" $out
+	set ::usingDUID 1
+}
+
 proc generate_network_config {config} {
 	# /etc/network/interfaces header
 	::fa_config_generator::generate_file "/etc/network/interfaces" {
@@ -203,6 +236,7 @@ proc generate_network_config {config} {
 		{SUSPEND_ACTION="stop"}
 	}
 
+	generate_duid $config
 	configure_wired $config
 	configure_wireless $config
 	configure_http_proxy $config
