@@ -44,66 +44,12 @@ splashscreen_setup() {
     return 0
 }
 
-fast_enough_for_modeac() {
-    # see if the CPU is fast enough to allow mode A/C
-    # this is a blacklist against certain Pi hardware only,
-    # other slow CPUs will need hand-configuring
-
-    if ! test -f /proc/cpuinfo; then return 0; fi
-
-    # see http://elinux.org/RPi_HardwareHistory#Board_Revision_History
-    revision=$(grep "^Revision" /proc/cpuinfo | awk '{ print $3 }' | sed 's@^1000@@')
-    case "$revision" in
-        0002|0003|0004|0005|0006|000d|000e|000f)
-            # 1B
-            return 1
-            ;;
-
-        0007|0008|0009)
-            # 1A
-            return 1
-            ;;
-
-        0010|0013)
-            # 1B+
-            return 1
-            ;;
-
-        0011|0014)
-            # compute module
-            return 1
-            ;;
-
-        0012|0015)
-            # 1A+
-            return 1
-            ;;
-
-        900092|900093)
-            # Zero
-            return 1
-            ;;
-    esac
-
-    # anything else, assume it's OK
-    return 0
-}
-
-modeac_setup() {
-    if ! fast_enough_for_modeac
-    then
-        echo "Disabling Mode A/C by default due to a slow CPU."
-        piaware-config allow-modeac no
-    fi
-}
-
 case "$1" in
     configure)
         if dpkg --compare-versions "$2" lt "3.3.0"
         then
             # one-time setup on upgrade to 3.3.0
             splashscreen_setup
-            modeac_setup
         fi
 
         # splashscreen contents change on every version
