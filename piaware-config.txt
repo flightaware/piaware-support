@@ -9,36 +9,28 @@
 # All other lines specify configuration settings.
 #
 
+# For simplicity, this file only shows the most common options.
+# For a complete list of options, see
+# https://flightaware.com/adsb/piaware/advanced_configuration
+
 #
-# WIRED NETWORK CONFIGURATION
+# NETWORK CONFIGURATION
 #
+
+# By default, PiAware will use DHCP when connecting to your network.
+# For other configurations, see the Advanced Configuration page
+# linked at the top of this file.
 
 # Should piaware use the wired ethernet port
 # for network access?
+
 wired-network yes
 
-# Wired network configuration:
-# Most networks will use DHCP
-wired-type dhcp
+# Should piaware use a wifi adaptor for network access?
+# If you are using a Pi 3, this will use the built-in wifi.
+# Otherwise, you will need to attach a supported USB wifi adaptor.
 
-# Alternatively, a static address configuration
-# can be provided; set "wired-type" to static to use this.
-wired-address 192.168.1.10
-wired-netmask 255.255.255.0
-wired-broadcast 192.168.1.255
-wired-gateway 192.168.1.254
-wired-nameservers 8.8.8.8 8.8.4.4
-
-#
-# WIRELESS NETWORK CONFIGURATION
-#
-
-# Should piaware use a wifi adaptor
-# for network access? You will need to attach
-# a supported USB wifi adaptor for this to work.
-
-# change this to "yes" to enable wifi
-wireless-network no
+wireless-network yes
 
 # Wifi SSID and password.
 # This should be changed to match your wireless
@@ -56,51 +48,16 @@ wireless-network no
 wireless-ssid MyWifiNetwork
 wireless-password s3cr3t
 
-# Wifi network configuration:
-# Most networks will use DHCP
-wireless-type dhcp
-
-# Alternatively, a static address configuration
-# can be provided; set "wireless-type" to static to use this.
-wireless-address 192.168.1.10
-wireless-netmask 255.255.255.0
-wireless-broadcast 192.168.1.255
-wireless-gateway 192.168.1.254
-wireless-nameservers 8.8.8.8 8.8.4.4
-
-
 #
 # RECEIVER CONFIGURATION
 #
 
-# Type of ADS-B receiver to use with piaware.
-# This is used when configuring dump1090-fa and piaware.
-# Supported types are:
-#
-#  rtlsdr:    a USB-connected RTL2832U DVB-T dongle using librtlsdr/dump1090.
-#  beast:     a USB-connected Mode-S Beast.
-#  radarcape: a network-connected Radarcape.
-#  other:     a network-connected receiver that produces Beast binary output. 
-#  relay:     like "other", but will use a local relay so that only one
-#             connection to the receiver is needed, and also forwards output
-#             to the local dump1090 for map display.
-#
-receiver-type rtlsdr
+# For a complete list of receiver types and their associated settings,
+# see the Advanced Configuration page linked at the top of this file.
 
-# For a receiver type of 'rtlsdr', these control dongle settings
-rtlsdr-device-index 0
+# For a receiver type of 'rtlsdr', this setting controls the dongle gain.
+# -10 means AGC / maximum gain; other values mean a gain value in dB.
 rtlsdr-gain -10
-rtlsdr-ppm 0
-
-# For a receiver type of 'radarcape', radarcape-host should be set to
-# the IP or hostname of the Radarcape
-radarcape-host your-radarcape-hostname
-
-# For a receiver type of 'other' or 'relay', receiver-host and receiver-port
-# should set to the IP/hostname and port to connect to for data.
-receiver-host your-receiver-hostname
-receiver-port 30005
-
 
 #
 # OTHER CONFIGURATION
@@ -113,9 +70,14 @@ allow-auto-updates yes
 # panel) be allowed?
 allow-manual-updates yes
 
-# Should rfkill ("airplane mode") be set on all wireless/bluetooth
-# devices on boot? This can reduce interference if you are using a Pi 3
-# but not using wireless and the receiver is in close proximity to the Pi.
-# For obvious reasons, this won't work if you are using a wireless network
-# configuration.
-rfkill no
+# Should PiAware enable multilateration where possible?
+# You may need to disable this if multilateration overloads your receiver.
+allow-mlat yes
+
+# Should PiAware enable reception of Mode A/C messages when requested?
+# You may need to disable this if processing Mode A/C overloads your receiver.
+allow-modeac yes
+
+
+# Additional settings can be added below.
+
