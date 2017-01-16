@@ -1,11 +1,19 @@
-piaware-support (3.3.0~dev) UNRELEASED; urgency=medium
+piaware-support (3.3.0) stable; urgency=medium
 
   * Update to PiAware 3.3.0, dump1090-fa 3.3.0, beast-splitter 3.3.0
-  * "modeac" option renamed to "allow-modeac"
+  * "modeac" option renamed to "allow-modeac". Disable Mode A/C by default when
+    upgrading from older versions on a Pi Zero or Pi 1.
   * Removed stray 'smartquotes' in a comment in the default piaware config file
   * Run a text-mode status display on tty1.
+  * Include a boot splashscreen.
+  * Warn if ssh is enabled but the default password has not been changed.
+  * Simplify the default config file.
+  * New installs will use DUIDs during DHCP; this works better with some DHCP
+    servers when both wired and wireless interfaces are used together. Existing
+    installs retain the old behavior to avoid assigning new leases (see
+    the "allow-dhcp-duid" configuration option)
 
- -- Oliver Jowett <oliver@mutability.co.uk>  Thu, 29 Dec 2016 18:04:19 +0000
+ -- Oliver Jowett <oliver@mutability.co.uk>  Mon, 16 Jan 2017 16:04:56 +0000
 
 piaware-support (3.2.0) stable; urgency=medium
 
