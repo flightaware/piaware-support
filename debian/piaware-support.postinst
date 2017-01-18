@@ -76,6 +76,10 @@ modeac_setup() {
     fi
 }
 
+fix_initramfs_config() {
+    echo "Changing update-initramfs config to regenerate all initrds"
+    sed -i 's@^update_initramfs=yes@update_initramfs=all@g' /etc/initramfs-tools/update-initramfs.conf
+}
 
 case "$1" in
     configure)
@@ -86,6 +90,13 @@ case "$1" in
             disable_dhcp_duid
             # maybe disable mode a/c on slow cpus
             modeac_setup
+        fi
+
+        if dpkg --compare-versions "$2" lt "3.3"
+           # new install or upgrade
+           # tweak config so that we rebuild both pi1 and pi2 initrds
+           # as we don't know what we're booting on next
+           fix_initramfs_config
         fi
     ;;
 
