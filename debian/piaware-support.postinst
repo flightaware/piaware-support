@@ -93,6 +93,7 @@ case "$1" in
         fi
 
         if dpkg --compare-versions "$2" lt "3.3"
+        then
            # new install or upgrade
            # tweak config so that we rebuild both pi1 and pi2 initrds
            # as we don't know what we're booting on next
