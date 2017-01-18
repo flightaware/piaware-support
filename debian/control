@@ -8,7 +8,7 @@ Homepage: https://github.com/flightaware
 
 Package: piaware-support
 Architecture: all
-Depends: piaware, wireless-tools, wpasupplicant, crda, ifplugd, rfkill, atmel-firmware, firmware-atheros, firmware-brcm80211, firmware-intelwimax, firmware-iwlwifi, libertas-firmware, firmware-linux, firmware-ralink, firmware-realtek, firmware-ti-connectivity, firmware-zd1211, ${misc:Depends}
+Depends: piaware, wireless-tools, wpasupplicant, crda, ifplugd, rfkill, atmel-firmware, firmware-atheros, firmware-brcm80211, firmware-intelwimax, firmware-iwlwifi, libertas-firmware, firmware-linux, firmware-ralink, firmware-realtek, firmware-ti-connectivity, firmware-zd1211, whois, ${misc:Depends}
 Recommends: piaware-repository
 Description: Support package for PiAware sdcard images.
  Handles boot-time configuration.
