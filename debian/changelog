@@ -1,3 +1,9 @@
+piaware-support (3.4.0~dev) UNRELEASED; urgency=medium
+
+  * In development.
+
+ -- Oliver Jowett <oliver@mutability.co.uk>  Mon, 30 Jan 2017 22:45:29 +0000
+
 piaware-support (3.3.0) stable; urgency=medium
 
   * Update to PiAware 3.3.0, dump1090-fa 3.3.0, beast-splitter 3.3.0
