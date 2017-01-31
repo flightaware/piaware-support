@@ -70,6 +70,16 @@ proc generate_dump1090_config {config} {
 			lappend receiverOpts "--ppm" [$config get rtlsdr-ppm]
 		}
 
+		bladerf {
+			lappend receiverOpts "--net-bo-port 30005" "--fix"
+			lappend receiverOpts "--device-type" "bladerf"
+			lappend receiverOpts "--gain" "66"
+			lappend receiverOpts "--bladerf-fpga" "/usr/share/dump1090-fa/bladerf/decimate8-x40.rbf"
+			lappend receiverOpts "--bladerf-decimation" "8"
+			lappend receiverOpts "--bladerf-bandwidth" "14000000"
+			lappend receiverOpts "--freq" "1085200000"
+		}
+
 		beast - radarcape - relay - other {
 			lappend receiverOpts "--net-only" "--net-bo-port 0" "--fix"
 		}
