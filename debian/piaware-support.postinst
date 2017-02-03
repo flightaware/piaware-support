@@ -81,9 +81,23 @@ fix_initramfs_config() {
     sed -i 's@^update_initramfs=yes@update_initramfs=all@g' /etc/initramfs-tools/update-initramfs.conf
 }
 
+remove_wpa_action_symlink() {
+    if [ -h /etc/ifplugd/action.d/action_wpa ]
+    then
+        rm -f /etc/ifplugd/action.d/action_wpa
+    fi
+}
+
 case "$1" in
     configure)
-        if test -n "$2" && dpkg --compare-versions "$2" lt "3.3"
+        if dpkg --compare-versions "$2" lt "3.0.2"
+        then
+            # new install or upgrade from very old version,
+            # sort out wpa_action hook
+            remove_wpa_action_symlink
+        fi
+
+        if dpkg --compare-versions "$2" lt-nl "3.3"
         then
             # it's an upgrade from pre-3.3
             # retain the old DHCP behavior
