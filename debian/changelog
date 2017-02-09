@@ -1,8 +1,9 @@
-piaware-support (3.4.0~dev) UNRELEASED; urgency=medium
+piaware-support (3.4.0) stable; urgency=medium
 
-  * In development.
+  * bladeRF configuration support
+  * Move wpa_action cleanup out of image building into piaware-support.
 
- -- Oliver Jowett <oliver@mutability.co.uk>  Mon, 30 Jan 2017 22:45:29 +0000
+ -- Oliver Jowett <oliver@mutability.co.uk>  Thu, 09 Feb 2017 17:44:42 +0000
 
 piaware-support (3.3.0) stable; urgency=medium
 
