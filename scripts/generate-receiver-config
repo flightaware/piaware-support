@@ -81,7 +81,9 @@ proc generate_dump1090_config {config} {
 		}
 	}
 
-	if {![$config get allow-modeac]} {
+	if {[$config get allow-modeac]} {
+		lappend receiverOpts "--modeac"
+	} else {
 		lappend receiverOpts "--no-modeac-auto"
 	}
 
