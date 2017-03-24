@@ -1,3 +1,9 @@
+piaware-support (3.4.0~dev) UNRELEASED; urgency=medium
+
+  * in development
+
+ -- Oliver Jowett <oliver@mutability.co.uk>  Fri, 24 Mar 2017 11:26:02 +0000
+
 piaware-support (3.4.0) stable; urgency=medium
 
   * bladeRF configuration support
