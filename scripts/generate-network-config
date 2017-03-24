@@ -114,7 +114,7 @@ proc add_network_interface {config net iface} {
 	switch -nocase $type {
 		dhcp {
 			# Use manual interface configuration so we can customize the dhclient commands
-			set command "dhclient -pf /run/dhclient.\${IFACE}.pid -lf /var/lib/dhcp/dhclient.\${IFACE}.leases \${IFACE} -e IFACE_METRIC=$::metric"
+			set command "dhclient -pf /run/dhclient.\${IFACE}.pid -lf /var/lib/dhcp/dhclient.\${IFACE}.leases \${IFACE} -e IF_METRIC=$::metric"
 			if {$::usingDUID} {
 				append command " -i -D LL -df /var/lib/dhcp/dhclient.duid.conf"
 			}
