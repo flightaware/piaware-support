@@ -28,8 +28,8 @@ Description: PiAware apt repository configuration (testing environment)
 Package: piaware-release
 Architecture: all
 Depends: piaware-repository (= ${binary:Version}), piaware-support (= ${binary:Version}),
- piaware (= 3.4.0), beast-splitter (= 3.4.0), dump1090-fa (= 3.4.0),
- piaware-web (= 3.4.0),
+ piaware (= 3.5.0~dev), beast-splitter (= 3.4.0), dump1090-fa (= 3.5.0~dev),
+ piaware-web (= 3.5.0~dev),
  raspi-config, logrotate, resolvconf, usbutils, nano, rtl-sdr,
  socat, netcat-openbsd, plymouth, plymouth-themes
 Description: Metapackage for PiAware sdcard releases.
