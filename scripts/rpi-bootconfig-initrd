@@ -1,0 +1,51 @@
+#!/bin/sh -e
+
+# rpi-bootconfig-initrd: initramfs hook that updates /boot/config.txt
+# when the initrd image is updated
+
+# called as: rpi-bootconfig-initrd <kernel-version> <path-to-initrd>
+
+BOOTCONFIG=/boot/config.txt
+
+if [ $# -lt 2 ]
+then
+    echo "$0: insufficient arguments" >&2
+    exit 1
+fi
+
+case "$1" in
+    *-v7+)
+        vx=v7
+        types="pi2 pi3"
+        ;;
+    *+)
+        vx=v6
+        types="pi0 pi1"
+        ;;
+    *)
+        echo "$0: unrecognized kernel version, not updating $BOOTCONFIG" >&2
+        exit 0
+        ;;
+esac
+
+echo -n "Updating $BOOTCONFIG for kernel $1, initrd $2 .. " >&2
+
+rm -f $BOOTCONFIG.new
+(
+    sed -e "/^## start of rpi-bootconfig initrd section for $vx kernels/,/^## end of rpi-bootconfig initrd section for $vx kernels/ d" <$BOOTCONFIG
+
+    echo "## start of rpi-bootconfig initrd section for $vx kernels. Do not modify or remove this line."
+    for type in $types
+    do
+        echo "[$type]"
+        echo "initramfs $(basename $2) followkernel"
+    done
+    echo "## end of rpi-bootconfig initrd section for $vx kernels. Do not modify or remove this line."
+) >$BOOTCONFIG.new
+
+sync
+mv $BOOTCONFIG.new $BOOTCONFIG
+sync
+
+echo "done." >&2
+exit 0

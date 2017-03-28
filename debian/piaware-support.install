@@ -5,8 +5,12 @@ scripts/generate-missing-ssh-host-keys usr/lib/piaware-support/
 scripts/set-rfkill usr/lib/piaware-support/
 scripts/generate-usb-mount lib/udev
 scripts/piaware-console-status usr/lib/piaware-support/
+scripts/rpi-bootconfig-initrd usr/lib/piaware-support/
+scripts/rpi-bootconfig-kernel usr/lib/piaware-support/
 etc/modprobe.d/
 piaware-config.txt boot/
 piaware-image-config.txt usr/share/piaware-support/
 systemd/*.target lib/systemd/system/
 etc/profile.d/
+etc/initramfs/
+etc/kernel/
