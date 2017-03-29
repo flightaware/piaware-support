@@ -9,7 +9,7 @@
 . /etc/default/rpi-bootconfig
 [ "$ENABLED" = "yes" ] || exit 0
 
-/usr/lib/piaware-support/rpi-bootconfig-kernel -d "$@"
+/usr/lib/piaware-support/rpi-bootconfig remove "$@"
 
 # Horrible hack. The raspberrypi-kernel packaging sets
 # INITRD=No which inhibits the usual initrd generation;

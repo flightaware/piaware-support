@@ -9,4 +9,4 @@
 . /etc/default/rpi-bootconfig
 [ "$ENABLED" = "yes" ] || exit 0
 
-/usr/lib/piaware-support/rpi-bootconfig-initrd "$@"
+/usr/lib/piaware-support/rpi-bootconfig initramfs "$@"
