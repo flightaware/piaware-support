@@ -68,6 +68,8 @@ proc refresh_info {} {
 	set ::uptime [::fa_sysinfo::uptime]
 
 	unset -nocomplain ::piawareStatus
+	unset -nocomplain ::statsURL
+	unset -nocomplain ::unclaimedID
 	if {[catch {
 		set f [open "/run/piaware/status.json" r]
 		try {
@@ -87,8 +89,26 @@ proc refresh_info {} {
 				set ::piawareStatus($thing) [list [dict get $result $thing status] [dict get $result $thing message]]
 			}
 		}
+
+		if {[dict exists $result site_url]} {
+			set ::statsURL [dict get $result site_url]
+		}
+
+		if {[dict exists $result unclaimed_feeder_id]} {
+			set ::unclaimedID [dict get $result unclaimed_feeder_id]
+		}
 	} result]} {
 		set ::piawareStatus(piaware) [list red "Could not read piaware status file (piaware may not be running)"]
+	}
+
+	unset -nocomplain ::uuid
+	catch {
+		set f [open "/var/cache/piaware/feeder_id" r]
+		try {
+			set ::uuid [read $f]
+		} finally {
+			catch {close $f}
+		}
 	}
 }
 
@@ -140,6 +160,9 @@ proc refresh_screen {} {
 	if {$::mac ne ""} {
 		puts [format "%-20s %s" "Site MAC address:" $::mac]
 	}
+	if {[info exists ::uuid] && $::uuid ne ""} {
+		puts [format "%-20s %s" "Site feeder ID:" $::uuid]
+	}
 
 	puts ""
 	puts [format "%-20s %s" "Wired network:" [pretty_print_netstatus eth0 $::wiredState $::wiredIP]]
@@ -172,6 +195,18 @@ proc refresh_screen {} {
 		puts ""
 		puts "To access a status page and a map of nearby aircraft,"
 		puts "visit http://$::IP/ from another computer on your local network."
+	}
+
+	if {[info exists ::statsURL]} {
+		puts ""
+		puts "To view your site statistics online,"
+		puts "visit $::statsURL"
+	}
+
+	if {[info exists ::unclaimedID]} {
+		puts ""
+		puts "To associate this site with your FlightAware user, claim it by visiting"
+		puts "https://flightaware.com/adsb/piaware/claim/${::unclaimedID}"
 	}
 
 	puts ""
