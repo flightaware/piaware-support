@@ -4,7 +4,7 @@
 # is removed. Only enabled if ENABLED=yes in
 # /etc/default/rpi-bootconfig
 
-[ -x /usr/lib/piaware-support/rpi-bootconfig-kernel ] || exit 0
+[ -x /usr/lib/piaware-support/rpi-bootconfig ] || exit 0
 [ -f /etc/default/rpi-bootconfig ] || exit 0
 . /etc/default/rpi-bootconfig
 [ "$ENABLED" = "yes" ] || exit 0
