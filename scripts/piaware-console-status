@@ -13,6 +13,10 @@ namespace eval ::term {
 	set color(CYAN) 6
 	set color(WHITE) 7
 
+	proc blank {val} {
+		catch {exec -- setterm -blank $val 2>/dev/null}
+	}
+
 	proc tput {cap args} {
 		variable tputCache
 
@@ -214,6 +218,8 @@ proc refresh_screen {} {
 	puts "[::term::bold Alt+F2:]  Command line login"
 	puts "           (see https://flightaware.com/adsb/piaware/build/optional)"
 	puts "[::term::bold Alt+F10:] System logs"
+
+	::term::blank poke
 }
 
 set ::interval 1000
