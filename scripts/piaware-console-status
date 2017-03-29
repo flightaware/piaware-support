@@ -209,7 +209,7 @@ proc refresh_screen {} {
 
 	if {[info exists ::unclaimedID]} {
 		puts ""
-		puts "To associate this site with your FlightAware user, claim it by visiting"
+		puts "To associate this site with your FlightAware account, claim it by visiting"
 		puts "https://flightaware.com/adsb/piaware/claim/${::unclaimedID}"
 	}
 
