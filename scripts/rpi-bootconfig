@@ -4,158 +4,227 @@
 # kernels or initrd/initramfs images are modified
 
 # call as:
-#   rpi-bootconfig install <kernel-version> [<path-to-installed-kernel>]
-#   rpi-bootconfig remove <kernel-version> [<path-to-removed-kernel>]
-#   rpi-bootconfig initramfs <kernel-version> <path-to-initramfs>
-#   rpi-bootconfig update
-
-if [ $# -lt 2 ]; then
-    echo "$0: insufficient arguments" >&2
-    exit 1
-fi
+#   rpi-bootconfig install <kernel-version> [<path-to-installed-kernel>]   # record a newly installed kernel
+#   rpi-bootconfig remove <kernel-version> [<path-to-removed-kernel>]      # record removal of an existing kernel
+#   rpi-bootconfig initramfs <kernel-version> <path-to-initramfs>          # record update of an initramfs
+#   rpi-bootconfig scan                                                    # look for installed kernels/initramfs and record them
+#   rpi-bootconfig update                                                  # rewrite /boot/config.txt based on currently recorded state
 
 : ${BOOTCONFIG:=/boot/config.txt}
 : ${STATEDIR:=/var/lib/rpi-bootconfig}
 
-mode="$1"
-kver="$2"
+set_kernel_version() {
+    kver="$1"
+    case "$kver" in
+        *-v7+)
+            kpath=kernel7.img
+            ;;
+        *+)
+            kpath=kernel.img
+            ;;
+        *)
+            echo "$0: unrecognized kernel version $1, skipping"
+            exit 0
+            ;;
+    esac
+}
 
-case "$kver" in
-    *-v7+)
-        kpath=kernel7.img
-        ;;
-    *+)
-        kpath=kernel.img
-        ;;
-    *)
-        echo "$0: unrecognized kernel version ${kver}, not updating $BOOTCONFIG" >&2
-        exit 0
-esac
+set_initramfs() {
+    if [ -z "$1" ]; then
+        echo "$0: missing initramfs path" >&2
+        exit 1
+    fi
 
-# update state
-case "$mode" in
+    if [ "$(dirname $1)" != "/boot" ]; then
+        echo "$0: initramfs must be in /boot" >&2
+        exit 1
+    fi
+
+    initramfs=$(basename "$1")
+}
+
+set_kernel_image() {
+    if [ -n "$1" ]; then
+        if [ "$(dirname $1)" != "/boot" ]; then
+            echo "$0: kernel image must be in /boot" >&2
+            exit 1
+        fi
+        kpath=$(basename "$1")
+    fi
+}
+
+do_install() {
+    echo "rpi-bootconfig: recording installation of kernel ${kver}" >&2
+    echo "$kpath" >${STATEDIR}/${kver}
+}
+
+do_remove() {
+    echo "rpi-bootconfig: recording removal of kernel ${kver}" >&2
+    rm -f ${STATEDIR}/${kver}
+}
+
+do_initramfs() {
+    echo "rpi-bootconfig: recording update of initramfs for kernel ${kver}" >&2
+    echo ${initramfs} >${STATEDIR}/${kver}_initramfs
+}
+
+do_scan() {
+    # find existing kernels
+    for v in /lib/modules/*; do
+        v=$(basename $v)
+        unset kpath kver
+        case "$v" in
+            *-v7+)
+                # raspberrypi-kernel style version
+                kver="$v"
+                kpath="kernel7.img"
+                ;;
+
+            *+)
+                # raspberrypi-kernel style version
+                kver="$v"
+                kpath="kernel.img"
+                ;;
+
+            *-rpi|*-rpi2)
+                # Raspbian linux-image style version
+                kver="$v"
+                kpath="vmlinuz-${kver}"
+                ;;
+
+            *)
+                # unknown, skip
+                ;;
+        esac
+
+        if [ -n "$kver" ] && [ -f "/boot/$kpath" ]; then
+            do_install
+
+            # look for an initramfs too
+            initramfs="initrd.img-${kver}"
+            if [ -f "/boot/${initramfs}" ]; then
+                do_initramfs
+            fi
+        fi
+    done
+}
+
+do_update() {
+    echo "rpi-bootconfig: updating $BOOTCONFIG" >&2
+
+    # find target kernels
+    best_v7=""
+    best_v6=""
+
+    for v in /var/lib/rpi-bootconfig/*; do
+        v=$(basename $v)
+        case "$v" in
+            *-v7+|*-rpi2)
+                if dpkg --compare-versions "$v" gt "$best_v7" 2>/dev/null; then
+                    best_v7="$v"
+                fi
+                ;;
+
+            *+|*-rpi)
+                if dpkg --compare-versions "$v" gt "$best_v6" 2>/dev/null; then
+                    best_v6="$v"
+                fi
+                ;;
+        esac
+    done
+
+    unset kernel_pi0 kernel_pi1 kernel_pi2 kernel_pi3
+    unset initramfs_pi0 initramfs_pi1 initramfs_pi2 initramfs_pi3
+    if [ -n "$best_v6" ]; then
+        kver_pi0=${best_v6}
+        kver_pi1=${best_v6}
+
+        if [ -e ${STATEDIR}/${best_v6}_initramfs ]; then
+            initramfs_pi0=$(cat ${STATEDIR}/${best_v6}_initramfs)
+            initramfs_pi1=$(cat ${STATEDIR}/${best_v6}_initramfs)
+        fi
+    fi
+
+    if [ -n "$best_v7" ]; then
+        kver_pi2=${best_v7}
+        kver_pi3=${best_v7}
+
+        if [ -e ${STATEDIR}/${best_v7}_initramfs ]; then
+            initramfs_pi2=$(cat ${STATEDIR}/${best_v7}_initramfs)
+            initramfs_pi3=$(cat ${STATEDIR}/${best_v7}_initramfs)
+        fi
+    fi
+
+    rm -f $BOOTCONFIG.new
+    (
+        sed -e "/^## start of rpi-bootconfig autogenerated section/,/^## end of rpi-bootconfig autogenerated section/ d" <$BOOTCONFIG
+        echo "## start of rpi-bootconfig autogenerated section. Do not modify or remove this line."
+        echo "[all]"
+
+        for hw in pi0 pi1 pi2 pi3; do
+            eval kver=\${kver_${hw}}
+            if [ -n "${kver}" ]; then
+                kernel=$(cat ${STATEDIR}/${kver})
+                if [ -f "/boot/${kernel}" ]; then
+                    echo -n "rpi-bootconfig: ${hw} using kernel ${kver} (${kernel}) " >&2
+                    echo "[${hw}]"
+                    echo "kernel=${kernel}"
+
+                    eval initramfs=\${initramfs_${hw}}
+                    if [ -f "/boot/${initramfs}" ]; then
+                        echo "and initramfs ${initramfs}" >&2
+                        echo "initramfs ${initramfs} followkernel"
+                    else
+                        echo "and no initramfs" >&2
+                    fi
+                else
+                    echo "rpi-bootconfig: ${hw} kernel ${kver} (/boot/${kernel}) is missing, skipped" >&2
+                fi
+            else
+                echo "rpi-bootconfig: ${hw} has no suitable kernel, skipped" >&2
+            fi
+        done
+
+        echo "[all]"
+        echo "## end of rpi-bootconfig autogenerated section. Do not modify or remove this line."
+    ) >$BOOTCONFIG.new
+
+    sync
+    mv $BOOTCONFIG.new $BOOTCONFIG
+    sync
+}
+
+case "$1" in
     initramfs)
-        if [ -z "$3" ]; then
-            echo "$0: missing initramfs path" >&2
-            exit 1
-        fi
-
-        if [ "$(dirname $3)" != "/boot" ]; then
-            echo "$0: initramfs must be in /boot" >&2
-            exit 1
-        fi
-
-        echo "rpi-bootconfig: recording update of initramfs for kernel ${kver}" >&2
-        echo $(basename "$3") >${STATEDIR}/${kver}_initramfs
+        set_kernel_version "$2"
+        set_initramfs "$3"
+        do_initramfs
         ;;
 
     install)
-        if [ -n "$3" ]; then
-            if [ "$(dirname $3)" != "/boot" ]; then
-                echo "$0: kernel image must be in /boot" >&2
-                exit 1
-            fi
-            kpath=$(basename "$3")
-        fi
-
-        echo "rpi-bootconfig: recording installation of kernel ${kver}" >&2
-        echo "$kpath" >${STATEDIR}/${kver}
+        set_kernel_version "$2"
+        set_kernel_image "$3"
+        do_install
         ;;
 
     remove)
-        echo "rpi-bootconfig: recording removal of kernel ${kver}" >&2
-        rm -f ${STATEDIR}/${kver}
+        set_kernel_version "$2"
+        # optional image path ignored
+        do_remove
+        ;;
+
+    scan)
+        do_scan
         ;;
 
     update)
-        # just regenerate
+        do_update
         ;;
 
     *)
-        echo "$0: unrecognized mode $mode (should be install/remove/initramfs/update)" >&2
+        echo "$0: unrecognized mode $1 (should be install/remove/initramfs/scan/update)" >&2
         exit 1
+        ;;
 esac
 
-# find target kernels
-best_v7=""
-best_v6=""
-
-for v in /var/lib/rpi-bootconfig/*
-do
-    v=$(basename $v)
-    case "$v" in
-        *-v7+)
-            if dpkg --compare-versions "$v" gt "$best_v7" 2>/dev/null; then
-                best_v7="$v"
-            fi
-            ;;
-
-        *+)
-            if dpkg --compare-versions "$v" gt "$best_v6" 2>/dev/null; then
-                best_v6="$v"
-            fi
-            ;;
-    esac
-done
-
-unset kernel_pi0 kernel_pi1 kernel_pi2 kernel_pi3
-unset initramfs_pi0 initramfs_pi1 initramfs_pi2 initramfs_pi3
-if [ -n "$best_v6" ]; then
-    kver_pi0=${best_v6}
-    kver_pi1=${best_v6}
-
-    if [ -e ${STATEDIR}/${best_v6}_initramfs ]; then
-        initramfs_pi0=$(cat ${STATEDIR}/${best_v6}_initramfs)
-        initramfs_pi1=$(cat ${STATEDIR}/${best_v6}_initramfs)
-    fi
-fi
-
-if [ -n "$best_v7" ]; then
-    kver_pi2=${best_v7}
-    kver_pi3=${best_v7}
-
-    if [ -e ${STATEDIR}/${best_v7}_initramfs ]; then
-        initramfs_pi2=$(cat ${STATEDIR}/${best_v7}_initramfs)
-        initramfs_pi3=$(cat ${STATEDIR}/${best_v7}_initramfs)
-    fi
-fi
-
-echo "rpi-bootconfig: updating $BOOTCONFIG" >&2
-
-rm -f $BOOTCONFIG.new
-(
-    sed -e "/^## start of rpi-bootconfig autogenerated section/,/^## end of rpi-bootconfig autogenerated section/ d" <$BOOTCONFIG
-    echo "## start of rpi-bootconfig autogenerated section. Do not modify or remove this line."
-    echo "[all]"
-
-    for hw in pi0 pi1 pi2 pi3; do
-        eval kver=\${kver_${hw}}
-        if [ -n "${kver}" ]; then
-            kernel=$(cat ${STATEDIR}/${kver})
-            if [ -f "/boot/${kernel}" ]; then
-                echo -n "rpi-bootconfig: ${hw} using kernel ${kver} (${kernel}) " >&2
-                echo "[${hw}]"
-                echo "kernel=${kernel}"
-
-                eval initramfs=\${initramfs_${hw}}
-                if [ -f "/boot/${initramfs}" ]; then
-                    echo "and initramfs ${initramfs}" >&2
-                    echo "initramfs ${initramfs} followkernel"
-                else
-                    echo "and no initramfs" >&2
-                fi
-            else
-                echo "rpi-bootconfig: ${hw} kernel ${kver} (/boot/${kernel}) is missing, skipped" >&2
-            fi
-        else
-            echo "rpi-bootconfig: ${hw} has no suitable kernel, skipped" >&2
-        fi
-    done
-
-    echo "[all]"
-    echo "## end of rpi-bootconfig autogenerated section. Do not modify or remove this line."
-) >$BOOTCONFIG.new
-
-sync
-mv $BOOTCONFIG.new $BOOTCONFIG
-sync
+exit 0

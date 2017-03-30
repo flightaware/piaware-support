@@ -90,8 +90,6 @@ remove_wpa_action_symlink() {
 
 case "$1" in
     configure)
-        mkdir -p /var/lib/rpi-bootconfig
-
         if dpkg --compare-versions "$2" lt "3.0.2"
         then
             # new install or upgrade from very old version,
@@ -114,6 +112,14 @@ case "$1" in
            # tweak config so that we rebuild both pi1 and pi2 initrds
            # as we don't know what we're booting on next
            fix_initramfs_config
+        fi
+
+        if dpkg --compare-versions "$2" lt "3.5"
+        then
+            # populate initial rpi-bootconfig state based on what is
+            # currently installed
+            mkdir -p /var/lib/rpi-bootconfig
+            /usr/lib/piaware-support/rpi-bootconfig scan
         fi
     ;;
 

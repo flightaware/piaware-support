@@ -1,23 +1,8 @@
 #!/bin/sh -e
 
-# Updates the Pi's /boot/config.txt when a kernel
-# is removed. Only enabled if ENABLED=yes in
-# /etc/default/rpi-bootconfig
+# Record removal of a kernel so that rpi-bootconfig
+# can later use it to regenerate the Pi's /boot/config.txt.
 
 [ -x /usr/lib/piaware-support/rpi-bootconfig ] || exit 0
-[ -f /etc/default/rpi-bootconfig ] || exit 0
-. /etc/default/rpi-bootconfig
-[ "$ENABLED" = "yes" ] || exit 0
 
 /usr/lib/piaware-support/rpi-bootconfig remove "$@"
-
-# Horrible hack. The raspberrypi-kernel packaging sets
-# INITRD=No which inhibits the usual initrd generation;
-# but we do want to run it, so reset that setting and
-# rerun the hook..
-
-if [ "$INITRD" = 'No' ] && [ -x /etc/kernel/postrm.d/initramfs-tools ]
-then
-    unset INITRD
-    /etc/kernel/postrm.d/initramfs-tools "$@"
-fi

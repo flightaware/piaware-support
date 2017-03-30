@@ -1,23 +1,9 @@
 #!/bin/sh -e
 
-# Updates the Pi's /boot/config.txt when a new kernel
-# is installed. Only enabled if ENABLED=yes in
-# /etc/default/rpi-bootconfig
+# Record installation of a new kernel so that
+# rpi-bootconfig can later use it to regenerate the Pi's
+# /boot/config.txt.
 
 [ -x /usr/lib/piaware-support/rpi-bootconfig ] || exit 0
-[ -f /etc/default/rpi-bootconfig ] || exit 0
-. /etc/default/rpi-bootconfig
-[ "$ENABLED" = "yes" ] || exit 0
 
 /usr/lib/piaware-support/rpi-bootconfig install "$@"
-
-# Horrible hack. The raspberrypi-kernel packaging sets
-# INITRD=No which inhibits the usual initrd generation;
-# but we do want to run it, so reset that setting and
-# rerun the hook..
-
-if [ "$INITRD" = 'No' ] && [ -x /etc/kernel/postinst.d/initramfs-tools ]
-then
-    unset INITRD
-    /etc/kernel/postinst.d/initramfs-tools "$@"
-fi
