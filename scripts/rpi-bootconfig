@@ -22,6 +22,9 @@ set_kernel_version() {
         *+)
             kpath=kernel.img
             ;;
+        *-rpi|*-rpi2)
+            kpath=vmlinuz-${kver}
+            ;;
         *)
             echo "$0: unrecognized kernel version $1, skipping"
             exit 0
@@ -74,22 +77,8 @@ do_scan() {
         v=$(basename $v)
         unset kpath kver
         case "$v" in
-            *-v7+)
-                # raspberrypi-kernel style version
-                kver="$v"
-                kpath="kernel7.img"
-                ;;
-
-            *+)
-                # raspberrypi-kernel style version
-                kver="$v"
-                kpath="kernel.img"
-                ;;
-
-            *-rpi|*-rpi2)
-                # Raspbian linux-image style version
-                kver="$v"
-                kpath="vmlinuz-${kver}"
+            *+|*-rpi|*-rpi2)
+                set_kernel_version "$v"
                 ;;
 
             *)
