@@ -120,6 +120,11 @@ case "$1" in
             # currently installed
             mkdir -p /var/lib/rpi-bootconfig
             /usr/lib/piaware-support/rpi-bootconfig scan
+
+            # maybe regenerate config.txt
+            if [ -x /etc/kernel/postinst.d/zz-update-bootconfig ]; then
+                /etc/kernel/postinst.d/zz-update-bootconfig
+            fi
         fi
     ;;
 
