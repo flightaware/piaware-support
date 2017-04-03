@@ -1,6 +1,14 @@
-piaware-support (3.5.0~dev) UNRELEASED; urgency=medium
+piaware-support (3.5.0) stable; urgency=medium
 
-  * in development
+  * Update to PiAware 3.5.0, dump1090-fa 3.5.0, beast-splitter 3.5.0.
+  * Fix simultaneous wifi+wireless default routes.
+  * Support for newer kernel/bootloader packages (raspberrypi-{kernel,bootloader})
+    (new images only, or see docs)
+  * Support for automatic updating of config.txt on kernel upgrade
+    (new images only, or see docs)
+  * Report feeder ID, stats URL, claim URL in piaware-console-status.
+  * Don't blank the VT while piaware-console-status is running.
+  * Doc updates.
 
  -- Oliver Jowett <oliver@mutability.co.uk>  Fri, 24 Mar 2017 11:26:02 +0000
 
