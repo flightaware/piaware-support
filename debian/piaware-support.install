@@ -13,3 +13,4 @@ systemd/*.target lib/systemd/system/
 etc/profile.d/
 etc/initramfs/
 etc/kernel/
+etc/apt/preferences.d/

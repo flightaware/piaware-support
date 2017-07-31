@@ -1,0 +1,3 @@
+Package: raspberrypi-kernel raspberrypi-bootloader libraspberrypi0 libraspberrypi-bin
+Pin: origin "flightaware.com"
+Pin-Priority: 995

@@ -1,4 +1,17 @@
-# Upgrading to the raspberrypi.org kernels / firmware
+# Upgrading to kernel 4.9
+
+The default sdcard configuration from 3.5.1 pins the kernel package to the
+last released 4.4.x kernel package.
+
+This is due to a problem with the 4.9.x packages that makes multilateration
+stop working on Pi 2 hardware.
+
+If you want to upgrade to 4.9.x kernel (for example, if you are not using
+a Pi 2) then remove /etc/apt/preferences.d/50-pin-kernel.pref and then upgrade
+as you usually would.
+
+
+# Upgrading sdcards older than 3.5.0 to the raspberrypi.org kernels / firmware
 
 PiAware sdcard images starting with 3.5.0 use the Pi Foundation kernels
 (raspberrypi-kernel package). These are generally the most up to date
