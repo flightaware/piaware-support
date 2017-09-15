@@ -101,6 +101,12 @@ do_scan() {
 }
 
 do_update() {
+    # extra paranoia
+    if [ "$ENABLED" != "yes"  ]; then
+        echo "rpi-bootconfig: not enabled in /etc/default/rpi-bootconfig" >&2
+        return
+    fi
+
     echo "rpi-bootconfig: updating $BOOTCONFIG" >&2
 
     # find target kernels
