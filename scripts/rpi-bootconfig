@@ -10,6 +10,8 @@
 #   rpi-bootconfig scan                                                    # look for installed kernels/initramfs and record them
 #   rpi-bootconfig update                                                  # rewrite /boot/config.txt based on currently recorded state
 
+[ -f /etc/default/rpi-bootconfig ] && . /etc/default/rpi-bootconfig
+
 : ${BOOTCONFIG:=/boot/config.txt}
 : ${STATEDIR:=/var/lib/rpi-bootconfig}
 
