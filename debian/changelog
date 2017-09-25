@@ -1,3 +1,9 @@
+piaware-support (3.5.2) stable; urgency=medium
+
+  * Add rpi-bootconfig TEMPLATE setting to support FlightFeeders
+
+ -- Oliver Jowett <oliver@mutability.co.uk>  Mon, 25 Sep 2017 16:05:46 +0100
+
 piaware-support (3.5.1) stable; urgency=medium
 
   * Update to PiAware 3.5.1, dump1090-fa 3.5.1
