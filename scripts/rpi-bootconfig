@@ -113,6 +113,11 @@ do_update() {
         echo "rpi-bootconfig: using template config $TEMPLATE" >&2
     fi
 
+    if [ ! -e "$TEMPLATE" ]; then
+        echo "rpi-bootconfig: can't find template config $TEMPLATE, giving up" >&2
+        exit 1
+    fi
+
     # find target kernels
     best_v7=""
     best_v6=""
