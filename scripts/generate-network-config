@@ -48,7 +48,13 @@ proc configure_wireless {config} {
 	lappend supplicant "  scan_ssid=1"
 	if {[$config exists wireless-password]} {
 		lappend supplicant "  key_mgmt=WPA-PSK"
-		lappend supplicant "  psk=\"[$config get wireless-password]\""
+		# wpa_supplicant wants quotes around a PSK, but no quotes around a precalculated hash, go figure
+		set psk [$config get wireless-password]
+		if {[string length $psk] == 64 && [string is xdigit $psk]} {
+			lappend supplicant "  psk=$psk"
+		} else {
+			lappend supplicant "  psk=\"$psk\""
+		}
 	} else {
 		lappend supplicant "  key_mgmt=NONE"
 	}
