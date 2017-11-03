@@ -1,11 +1,11 @@
-piaware-support (3.5.3~dev) UNRELEASED; urgency=medium
+piaware-support (3.5.3) stable; urgency=medium
 
-  * in development
   * Accept 64-character prehashed keys in wireless-password
-  * Make the wpasupplicant dependency versions, so that upgrades pick up
-    a version that deals with KRACK
+  * Depend on a specific minimum version of wpasupplicant, so that sdcard
+    upgrades pick up a version that deals with KRACK
+  * Update to PiAware 3.5.3, dump1090-fa 3.5.3
 
- -- Oliver Jowett <oliver@mutability.co.uk>  Thu, 02 Nov 2017 12:44:32 +0000
+ -- Oliver Jowett <oliver@mutability.co.uk>  Fri, 03 Nov 2017 22:47:36 +0000
 
 piaware-support (3.5.2) stable; urgency=medium
 
