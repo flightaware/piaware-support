@@ -1,3 +1,9 @@
+piaware-support (3.6.0) stable; urgency=medium
+
+  * Update to PiAware 3.6.0, dump1090-fa 3.6.0
+
+ -- Oliver Jowett <oliver@mutability.co.uk>  Fri, 11 May 2018 15:11:36 +0100
+
 piaware-support (3.5.3) stable; urgency=medium
 
   * Accept 64-character prehashed keys in wireless-password
