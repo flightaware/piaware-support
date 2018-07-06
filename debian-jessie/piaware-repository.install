@@ -1,2 +1,2 @@
-etc/apt/sources.list.d/piaware-stretch.list
+etc/apt/sources.list.d/piaware-jessie.list
 etc/apt/trusted.gpg.d/flightaware-archive-keyring.gpg
