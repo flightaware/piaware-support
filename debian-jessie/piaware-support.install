@@ -1,6 +1,7 @@
 package/*.tcl usr/lib/piaware-support/
 scripts/generate-network-config usr/lib/piaware-support/
 scripts/generate-receiver-config usr/lib/piaware-support/
+scripts/generate-missing-ssh-host-keys usr/lib/piaware-support/
 scripts/set-rfkill usr/lib/piaware-support/
 scripts/generate-usb-mount lib/udev
 scripts/piaware-console-status usr/lib/piaware-support/
@@ -11,5 +12,6 @@ piaware-image-config.txt usr/share/piaware-support/
 systemd/*.target lib/systemd/system/
 etc/profile.d/
 etc/initramfs/post-update.d/rpi-bootconfig
+etc/initramfs/post-update.d/zz-update-bootconfig
 etc/kernel/
 etc/apt/preferences.d/
