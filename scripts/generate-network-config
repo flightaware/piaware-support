@@ -42,6 +42,7 @@ proc configure_wireless {config} {
 	# and contains the PSK/passphrase in plaintext
 	# so we lock down the permissions
 	set supplicant [list]
+	lappend supplicant "country=[$config get wireless-country]"
 	lappend supplicant "network={"
 	lappend supplicant "  ssid=\"[$config get wireless-ssid]\""
 	lappend supplicant "  id_str=\"wireless\""
