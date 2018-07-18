@@ -10,4 +10,4 @@ all:
 # (you should install imagemagick / ghostscript if you need to run
 # this target)
 splash:
-	splashscreen/make-splashscreen.sh $(shell dpkg-parsechangelog | sed -n 's/^Version: //p') plymouth/splash.png
+	splashscreen/make-splashscreen.sh $(shell dpkg-parsechangelog -S Version) plymouth/splash.png
