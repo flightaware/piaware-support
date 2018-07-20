@@ -1,3 +1,9 @@
+piaware-support (3.6.2~dev) UNRELEASED; urgency=medium
+
+  * in development
+
+ -- Oliver Jowett <oliver@mutability.co.uk>  Fri, 20 Jul 2018 20:52:07 +0100
+
 piaware-support (3.6.1) stable; urgency=medium
 
   * Support for building on Stretch
