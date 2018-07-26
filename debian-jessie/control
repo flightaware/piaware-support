@@ -32,6 +32,7 @@ Depends: piaware-repository (= ${binary:Version}), piaware-support (= ${binary:V
  piaware-web (= 3.6.1~bpo8+1),
  raspi-config, logrotate, resolvconf, usbutils, nano, rtl-sdr,
  socat, netcat-openbsd, plymouth, plymouth-themes
+Breaks: piaware-repository-testing (<< ${binary:Version})
 Description: Metapackage for PiAware sdcard releases.
  Metapackage that depends on the specific packages that
  make up a PiAware sdcard release.
