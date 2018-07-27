@@ -1,8 +1,11 @@
-piaware-support (3.6.2~dev) UNRELEASED; urgency=medium
+piaware-support (3.6.2) stable; urgency=medium
 
-  * in development
+  * Update to piaware 3.6.2, dump1090-fa 3.6.2
+  * Update splashscreen for 3.6.2 (missed in 3.6.1)
+  * On upgrade, switch to using FA mirrors of raspbian.org / raspberrypi.org repositories
+  * Handle various upgrade paths more cleanly
 
- -- Oliver Jowett <oliver@mutability.co.uk>  Fri, 20 Jul 2018 20:52:07 +0100
+ -- Oliver Jowett <oliver@mutability.co.uk>  Fri, 27 Jul 2018 18:37:06 +0100
 
 piaware-support (3.6.1) stable; urgency=medium
 
