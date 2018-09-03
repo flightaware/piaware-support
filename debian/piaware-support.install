@@ -11,5 +11,9 @@ piaware-image-config.txt usr/share/piaware-support/
 systemd/*.target lib/systemd/system/
 etc/profile.d/
 etc/initramfs/post-update.d/rpi-bootconfig
-etc/kernel/
+etc/initramfs/post-update.d/zz-update-bootconfig
+etc/kernel/postinst.d/rpi-bootconfig
+etc/kernel/postinst.d/zz-update-bootconfig
+etc/kernel/postrm.d/rpi-bootconfig
+etc/kernel/postrm.d/zz-update-bootconfig
 etc/apt/preferences.d/

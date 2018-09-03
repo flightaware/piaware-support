@@ -1,0 +1,2 @@
+rm_conffile /etc/kernel/postinst.d/initramfs-tools-hack 3.6.3~
+rm_conffile /etc/kernel/postrm.d/initramfs-tools-hack 3.6.3~
