@@ -59,8 +59,11 @@ modeac_setup() {
 }
 
 fix_initramfs_config() {
-    echo "Changing update-initramfs config to regenerate all initrds"
-    sed -i 's@^update_initramfs=yes@update_initramfs=all@g' /etc/initramfs-tools/update-initramfs.conf
+    if [ -f /etc/initramfs-tools/update-initramfs.conf ]
+    then
+        echo "Changing update-initramfs config to regenerate all initrds"
+        sed -i 's@^update_initramfs=yes@update_initramfs=all@g' /etc/initramfs-tools/update-initramfs.conf
+    fi
 }
 
 remove_wpa_action_symlink() {
