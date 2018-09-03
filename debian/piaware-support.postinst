@@ -33,39 +33,21 @@ fast_enough_for_modeac() {
     # see http://elinux.org/RPi_HardwareHistory#Board_Revision_History
     revision=$(grep "^Revision" /proc/cpuinfo | awk '{ print $3 }' | sed 's@^1000@@')
     case "$revision" in
-        0002|0003|0004|0005|0006|000d|000e|000f)
-            # 1B
-            return 1
-            ;;
-
-        0007|0008|0009)
-            # 1A
-            return 1
-            ;;
-
-        0010|0013)
-            # 1B+
-            return 1
-            ;;
-
-        0011|0014)
-            # compute module
-            return 1
-            ;;
-
-        0012|0015)
-            # 1A+
-            return 1
-            ;;
-
-        900092|900093)
-            # Zero
-            return 1
-            ;;
+        0002|0003|0004|0005|0006|000d|000e|000f) return 1 ;;   # old style, 1B
+        0007|0008|0009) return 1 ;;   # old style, 1A
+        0010|0013)      return 1 ;;   # old style, 1B+
+        0011|0014)      return 1 ;;   # old style, CM1
+        0012|0015)      return 1 ;;   # old style, 1A+
+        [89a-f]??00?)   return 1 ;;   # new style, 1A
+        [89a-f]??01?)   return 1 ;;   # new style, 1B
+        [89a-f]??02?)   return 1 ;;   # new style, 1A+
+        [89a-f]??03?)   return 1 ;;   # new style, 1B+
+        [89a-f]??06?)   return 1 ;;   # new style, CM1
+        [89a-f]??09?)   return 1 ;;   # new style, Zero
+        [89a-f]??0c?)   return 1 ;;   # new style, Zero W
+        [89a-f]?0???)   return 1 ;;   # new style, other BCM2835
+        *)              return 0 ;;   # anything else is OK
     esac
-
-    # anything else, assume it's OK
-    return 0
 }
 
 modeac_setup() {
