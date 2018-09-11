@@ -1,8 +1,13 @@
-piaware-support (3.6.3~dev) UNRELEASED; urgency=medium
+piaware-support (3.6.3) stable; urgency=medium
 
-  * in development
+  * Update to piaware 3.6.3, piaware-web 3.6.3, dump1090-fa 3.6.3, beast-splitter 3.6.3
+  * Add Zero W to postinst hardware detection, futureproof the detection logic
+  * Don't install initramfs-tools-hack on Stretch; this should fix problems with a
+    kernel upgrade trying to build an initramfs and then running out of space on /boot
+  * Increase default /boot filesystem size in sdcard images
+  * Tweaks to support build automation
 
- -- Oliver Jowett <oliver@mutability.co.uk>  Thu, 23 Aug 2018 20:51:29 +0100
+ -- Oliver Jowett <oliver@mutability.co.uk>  Tue, 11 Sep 2018 15:20:42 +0100
 
 piaware-support (3.6.2) stable; urgency=medium
 
