@@ -9,6 +9,7 @@ package require fa_config_generator
 proc generate_receiver_config {config} {
 	generate_beast_splitter_config $config
 	generate_dump1090_config $config
+	generate_dump978_config $config
 	return 1
 }
 
@@ -84,6 +85,11 @@ proc generate_dump1090_config {config} {
 			lappend receiverOpts "--net-only" "--net-bo-port 0" "--fix"
 		}
 
+		none {
+			::fa_config_generator::logger "receiver type set to none, not configuring dump1090"
+			return 0
+		}
+
 		default {
 			::fa_config_generator::logger "unrecognized receiver type '[$config get receiver-type]', not configuring dump1090"
 			# no config
@@ -98,6 +104,36 @@ proc generate_dump1090_config {config} {
 	lappend dump1090config "RECEIVER_OPTIONS=\"[join $receiverOpts " "]\""
 
 	::fa_config_generator::generate_file "/etc/default/dump1090-fa" $dump1090config
+	return 1
+}
+
+proc generate_dump978_config {config} {
+	set dump978config {}
+
+	set receiverOpts [list]
+
+	switch -nocase [$config get uat-receiver-type] {
+		rtlsdr {
+			lappend receiverOpts "--format CS8"
+			lappend receiverOpts "--sdr driver=rtlsdr"
+			lappend receiverOpts "--raw-port 30978"
+			lappend receiverOpts "--json-port 30979"
+		}
+
+		none {
+			::fa_config_generator::logger "uat receiver type set to none, not configuring dump978"
+			return 0
+		}
+
+		default {
+			::fa_config_generator::logger "unrecognized uat receiver type '[$config get uat-receiver-type]', not configuring dump978"
+			return 0
+		}
+	}
+
+	lappend dump978config "RECEIVER_OPTIONS=\"[join $receiverOpts " "]\"
+
+	::fa_config_generator::generate_file "/etc/default/dump978-fa" $dump978config
 	return 1
 }
 
