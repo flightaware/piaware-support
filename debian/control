@@ -28,7 +28,7 @@ Description: PiAware apt repository configuration (testing environment)
 Package: piaware-release
 Architecture: all
 Depends: piaware-repository (= ${binary:Version}), piaware-support (= ${binary:Version}),
- piaware (= 3.7.0~dev), beast-splitter (= 3.6.3), dump1090-fa (= 3.6.3), dump978-fa (= 3.7.0~dev), skyview978 (= 3.7.0~dev),
+ piaware (= 3.7.0~dev), beast-splitter (= 3.6.3), dump1090-fa (= 3.7.0~dev), dump978-fa (= 3.7.0~dev), skyview978 (= 3.7.0~dev),
  piaware-web (= 3.6.3),
  raspi-config, logrotate, resolvconf, usbutils, nano, rtl-sdr,
  socat, netcat-openbsd, plymouth, plymouth-themes
