@@ -1,3 +1,9 @@
+piaware-support (3.7.0~dev) UNRELEASED; urgency=medium
+
+  * Development version
+
+ -- Oliver Jowett <oliver@mutability.co.uk>  Fri, 08 Mar 2019 16:35:47 +0000
+
 piaware-support (3.6.3) stable; urgency=medium
 
   * Update to piaware 3.6.3, piaware-web 3.6.3, dump1090-fa 3.6.3, beast-splitter 3.6.3
