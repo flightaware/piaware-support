@@ -62,7 +62,12 @@ proc generate_dump1090_config {config} {
 		rtlsdr {
 			lappend receiverOpts "--net-bo-port 30005" "--fix"
 			lappend receiverOpts "--device-index" [$config get rtlsdr-device-index]
-			lappend receiverOpts "--gain" [$config get rtlsdr-gain]
+			set gain [$config get rtlsdr-gain]
+			if {$gain eq "auto"} {
+				lappend receiverOpts "--gain" -10
+			} else {
+				lappend receiverOpts "--gain" $gain
+			}
 			lappend receiverOpts "--ppm" [$config get rtlsdr-ppm]
 		}
 
@@ -80,7 +85,12 @@ proc generate_dump1090_config {config} {
 			lappend receiverOpts "--net-only" "--net-bo-port 0" "--fix"
 		}
 
+		other {
+			set enabled 0
+		}
+
 		default {
+			::fa_config_generator::logger "unrecognized receiver-type '[$config get receiver-type]', not configuring dump1090"
 			set enabled 0
 		}
 	}
@@ -110,14 +120,29 @@ proc generate_dump978_config {config} {
 	set enabled 1
 
 	switch -nocase [$config get uat-receiver-type] {
-		rtlsdr {
+		sdr {
+			set gain [$config get uat-sdr-gain]
+			if {$gain eq "auto"} {
+				lappend receiverOpts "--sdr-auto-gain"
+			} else {
+				lappend receiverOpts "--sdr-gain" $gain
+			}
+			set ppm [$config get uat-sdr-ppm]
+			if {$ppm ne 0} {
+				lappend receiverOpts "--sdr-ppm" $ppm
+			}
 			lappend receiverOpts "--format CS8"
-			lappend receiverOpts "--sdr driver=rtlsdr"
+			lappend receiverOpts "--sdr" [$config get uat-sdr-device]
 			lappend receiverOpts "--raw-port 30978"
 			lappend receiverOpts "--json-port 30979"
 		}
 
+		none {
+			set enabled 0
+		}
+
 		default {
+			::fa_config_generator::logger "unrecognized uat-receiver-type '[$config get uat-receiver-type]', not configuring dump978"
 			set enabled 0
 		}
 	}
