@@ -42,7 +42,7 @@ namespace eval ::fa_config_generator {
 
 	proc generate_file {path text {mode 0644} {comment "#"}} {
 		if {$comment ne ""} {
-			lappend ::newfiletext($path) "$comment Generated automatically by fa_config_generator"
+			lappend ::newfiletext($path) "$comment Generated automatically by $::argv0"
 			lappend ::newfiletext($path) "$comment This file will be overwritten on reboot."
 		}
 		lappend ::newfiletext($path) {*}$text
