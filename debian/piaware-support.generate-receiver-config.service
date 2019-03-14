@@ -3,7 +3,7 @@
 
 [Unit]
 Description=Generate receiver configuration
-Before=dump1090-fa.service beast-splitter.service
+Before=dump1090-fa.service beast-splitter.service dump978-fa.service skyview978.service
 Wants=config-ready.target
 After=config-ready.target
 
@@ -12,4 +12,4 @@ Type=oneshot
 ExecStart=/usr/lib/piaware-support/generate-receiver-config
 
 [Install]
-WantedBy=dump1090-fa.service beast-splitter.service
+WantedBy=dump1090-fa.service beast-splitter.service dump978-fa.service skyview978.service
