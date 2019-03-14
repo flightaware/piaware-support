@@ -16,4 +16,3 @@ etc/kernel/postinst.d/rpi-bootconfig
 etc/kernel/postinst.d/zz-update-bootconfig
 etc/kernel/postrm.d/rpi-bootconfig
 etc/kernel/postrm.d/zz-update-bootconfig
-etc/apt/preferences.d/
