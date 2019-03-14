@@ -154,6 +154,8 @@ proc generate_dump978_config {config} {
 		lappend dump978config "RECEIVER_OPTIONS=\"[join $receiverOpts " "]\""
 
 		lappend skyview978config "ENABLED=yes"
+		lappend skyview978config {NET_OPTIONS="--connect localhost:30978 --reconnect-interval 30"}
+		lappend skyview978config {HISTORY_OPTIONS="--history-count 120 --history-interval 30"}
 	} else {
 		lappend dump978config "# dump978-fa does not run when uat-receiver-type=[$config get uat-receiver-type]"
 		lappend dump978config "ENABLED=no"
