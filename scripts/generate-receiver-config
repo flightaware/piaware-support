@@ -85,7 +85,7 @@ proc generate_dump1090_config {config} {
 			lappend receiverOpts "--net-only" "--net-bo-port 0" "--fix"
 		}
 
-		other {
+		none - other {
 			set enabled 0
 		}
 
