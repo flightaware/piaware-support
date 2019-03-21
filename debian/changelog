@@ -1,6 +1,8 @@
-piaware-support (3.7.0~dev) UNRELEASED; urgency=medium
+piaware-support (3.7.0) UNRELEASED; urgency=medium
 
-  * Development version
+  * Update to piaware 3.7.0, piaware-web 3.7.0, dump978-fa 3.7.0, beast-splitter 3.7.0
+  * Include dump978-fa and SoapySDR for UAT support (stretch images only)
+  * Kernel/bootloader updates to support Pi 3A+
 
  -- Oliver Jowett <oliver@mutability.co.uk>  Fri, 08 Mar 2019 16:35:47 +0000
 
