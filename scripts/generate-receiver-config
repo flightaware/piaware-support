@@ -130,7 +130,6 @@ proc generate_dump978_config {config} {
 			if {$ppm ne 0} {
 				lappend receiverOpts "--sdr-ppm" $ppm
 			}
-			lappend receiverOpts "--format CS8"
 			lappend receiverOpts "--sdr" [$config get uat-sdr-device]
 			lappend receiverOpts "--raw-port 30978"
 			lappend receiverOpts "--json-port 30979"
