@@ -63,7 +63,7 @@ proc generate_dump1090_config {config} {
 			lappend receiverOpts "--net-bo-port 30005" "--fix"
 			lappend receiverOpts "--device-index" [$config get rtlsdr-device-index]
 			set gain [$config get rtlsdr-gain]
-			if {$gain eq "auto"} {
+			if {$gain eq "max"} {
 				lappend receiverOpts "--gain" -10
 			} else {
 				lappend receiverOpts "--gain" $gain
@@ -122,9 +122,8 @@ proc generate_dump978_config {config} {
 	switch -nocase [$config get uat-receiver-type] {
 		sdr {
 			set gain [$config get uat-sdr-gain]
-			if {$gain eq "auto"} {
-				lappend receiverOpts "--sdr-auto-gain"
-			} else {
+			if {$gain ne "max"} {
+				# default is max gain, only need to override if different
 				lappend receiverOpts "--sdr-gain" $gain
 			}
 			set ppm [$config get uat-sdr-ppm]
