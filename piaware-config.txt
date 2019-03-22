@@ -49,15 +49,15 @@ wireless-ssid MyWifiNetwork
 wireless-password s3cr3t99
 
 #
-# RECEIVER CONFIGURATION
+# 1090MHZ RECEIVER CONFIGURATION
 #
 
 # For a complete list of receiver types and their associated settings,
 # see the Advanced Configuration page linked at the top of this file.
 
 # For a receiver type of 'rtlsdr', this setting controls the dongle gain.
-# -10 means AGC / maximum gain; other values mean a gain value in dB.
-rtlsdr-gain -10
+# Use "max" for maximum gain. Other values are interpreted as a gain in dB.
+rtlsdr-gain max
 
 #
 # OTHER CONFIGURATION
