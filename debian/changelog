@@ -1,6 +1,6 @@
 piaware-support (3.7.0) stable; urgency=medium
 
-  * Update to piaware 3.7.0, piaware-web 3.7.0, dump978-fa 3.7.0, beast-splitter 3.7.0
+  * Update to piaware 3.7.0, piaware-web 3.7.0, dump978-fa 3.7.0.1, beast-splitter 3.7.0
   * Include dump978-fa and SoapySDR for UAT support (stretch images only)
   * Kernel/bootloader updates to support Pi 3A+
 
