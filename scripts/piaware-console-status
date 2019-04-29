@@ -88,7 +88,7 @@ proc refresh_info {} {
 			error "status file out of date"
 		}
 
-		foreach thing {piaware mlat adept radio} {
+		foreach thing {piaware mlat adept radio uat_radio no_radio} {
 			if {[dict exists $result $thing]} {
 				set ::piawareStatus($thing) [list [dict get $result $thing status] [dict get $result $thing message]]
 			}
@@ -173,7 +173,7 @@ proc refresh_screen {} {
 	puts [format "%-20s %s" "Wireless network:" [pretty_print_netstatus $::wifiInterface $::wifiState $::wifiIP]]
 
 	puts ""
-	foreach {thing description} [list piaware "PiAware feeder" radio "Receiver" adept "FlightAware feed" mlat "Multilateration"] {
+	foreach {thing description} [list piaware "PiAware feeder" radio "1090 Receiver" adept "FlightAware feed" mlat "Multilateration" uat_radio "978 UAT Receiver" no_radio "Receiver"] {
 		if {[info exists ::piawareStatus($thing)]} {
 			lassign $::piawareStatus($thing) status message
 			switch -- $status {
