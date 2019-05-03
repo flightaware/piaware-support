@@ -1,8 +1,9 @@
-piaware-support (3.7.1~dev) UNRELEASED; urgency=medium
+piaware-support (3.7.1) stable; urgency=medium
 
-  * In development
+  * Update to piaware 3.7.1, piaware-web 3.7.1, dump978-fa 3.7.1, dump1090-fa 3.7.1
+  * Update piaware-console screen for UAT support
 
- -- Eric Tran <eric.tran@flightaware.com>  Mon, 15 Apr 2019 15:06:00 -6000
+ -- Eric Tran <eric.tran@flightaware.com>  Fri, 03 May 2019 03:47:00 -6000
 
 piaware-support (3.7.0.1) stable; urgency=medium
 
