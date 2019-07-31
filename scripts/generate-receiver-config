@@ -146,24 +146,24 @@ proc generate_dump978_config {config} {
 	}
 
 	set dump978config [list]
-	set skyview978config [list]
+	set skyaware978config [list]
 	if {$enabled} {
 		lappend dump978config "ENABLED=yes"
 		lappend dump978config "RECEIVER_OPTIONS=\"[join $receiverOpts " "]\""
 
-		lappend skyview978config "ENABLED=yes"
-		lappend skyview978config {NET_OPTIONS="--connect localhost:30978 --reconnect-interval 30"}
-		lappend skyview978config {HISTORY_OPTIONS="--history-count 120 --history-interval 30"}
+		lappend skyaware978config "ENABLED=yes"
+		lappend skyaware978config {NET_OPTIONS="--connect localhost:30978 --reconnect-interval 30"}
+		lappend skyaware978config {HISTORY_OPTIONS="--history-count 120 --history-interval 30"}
 	} else {
 		lappend dump978config "# dump978-fa does not run when uat-receiver-type=[$config get uat-receiver-type]"
 		lappend dump978config "ENABLED=no"
 
-		lappend skyview978config "# skyview978 does not run when uat-receiver-type=[$config get uat-receiver-type]"
-		lappend skyview978config "ENABLED=no"
+		lappend skyaware978config "# skyaware978 does not run when uat-receiver-type=[$config get uat-receiver-type]"
+		lappend skyaware978config "ENABLED=no"
 	}
 
 	::fa_config_generator::generate_file "/etc/default/dump978-fa" $dump978config
-	::fa_config_generator::generate_file "/etc/default/skyview978" $skyview978config
+	::fa_config_generator::generate_file "/etc/default/skyaware978" $skyaware978config
 
 	return 1
 }
