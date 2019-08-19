@@ -29,7 +29,7 @@ Package: piaware-release
 Architecture: all
 Depends: piaware-repository (= ${binary:Version}), piaware-support (= ${binary:Version}),
  piaware (= 3.7.2~dev),
- beast-splitter (= 3.7.2),
+ beast-splitter (= 3.7.2~dev),
  dump1090-fa (= 3.7.2~dev),
  dump978-fa (= 3.7.2~dev), skyaware978 (= 3.7.2~dev),
  piaware-web (= 3.7.2~dev),
