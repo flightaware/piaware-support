@@ -116,7 +116,7 @@ proc generate_dump1090_config {config} {
 }
 
 proc generate_dump978_config {config} {
-	set receiverOpts [list]
+	set receiverOpts [list "--raw-port" "30978" "--json-port" "30979"]
 	set enabled 1
 
 	switch -nocase [$config get uat-receiver-type] {
@@ -131,11 +131,13 @@ proc generate_dump978_config {config} {
 				lappend receiverOpts "--sdr-ppm" $ppm
 			}
 			lappend receiverOpts "--sdr" [$config get uat-sdr-device]
-			lappend receiverOpts "--raw-port 30978"
-			lappend receiverOpts "--json-port 30979"
 		}
 
-		none {
+		stratuxv3 {
+			lappend receiverOpts "--stratuxv3" "/dev/uatradio"
+		}
+
+		none - other {
 			set enabled 0
 		}
 
