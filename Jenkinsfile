@@ -1,4 +1,14 @@
 node(label: 'raspberrypi') {
+    properties([
+        pipelineTriggers([
+            upstream(threshold: 'SUCCESS', upstreamProjects: "../piaware/${env.BRANCH_NAME}"),
+            upstream(threshold: 'SUCCESS', upstreamProjects: "../beast-splitter/${env.BRANCH_NAME}"),
+            upstream(threshold: 'SUCCESS', upstreamProjects: "../dump1090/${env.BRANCH_NAME}"),
+            upstream(threshold: 'SUCCESS', upstreamProjects: "../dump978/${env.BRANCH_NAME}"),
+            upstream(threshold: 'SUCCESS', upstreamProjects: "../piaware-web/${env.BRANCH_NAME}")
+        ])
+    ])
+
     def dists = ["stretch", "jessie"]
     def srcdir = "${WORKSPACE}/src"
 
