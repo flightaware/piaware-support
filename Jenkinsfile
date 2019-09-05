@@ -2,8 +2,10 @@ node(label: 'raspberrypi') {
     properties([
         pipelineTriggers([
             upstream(threshold: 'SUCCESS',
-                     upstreamProjects: "../piaware/${env.BRANCH_NAME} ../beast-splitter/${env.BRANCH_NAME} ../dump1090/${env.BRANCH_NAME} ../dump978/${env.BRANCH_NAME} ../piaware-web/${env.BRANCH_NAME}")
-        ])
+                     upstreamProjects: "../piaware/${env.BRANCH_NAME} ../beast-splitter/${env.BRANCH_NAME} ../dump1090/${env.BRANCH_NAME} ../dump978/${env.BRANCH_NAME} piaware-web/${env.BRANCH_NAME}")
+        ]),
+        disableConcurrentBuilds(),
+        durabilityHint(hint: 'PERFORMANCE_OPTIMIZED')
     ])
 
     def dists = ["stretch", "jessie"]
