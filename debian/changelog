@@ -1,3 +1,9 @@
+piaware-support (3.8.0~dev) UNRELEASED; urgency=medium
+
+  * in development
+
+ -- Oliver Jowett <oliver@mutability.co.uk>  Thu, 07 Nov 2019 17:45:35 +0800
+
 piaware-support (3.7.2) stable; urgency=medium
 
   * Update to piaware 3.7.2, piaware-web 3.7.2, dump978-fa 3.7.2, dump1090-fa 3.7.2

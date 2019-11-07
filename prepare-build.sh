@@ -44,6 +44,12 @@ case "$DIST" in
         ;;
 
     stretch)
+        cp -a $TOP/debian-stretch/* $OUT/debian/
+        echo "Updating changelog for stretch backport build" >&2
+        dch --changelog $OUT/debian/changelog --local ~bpo9+ --force-distribution --distribution stretch-backports "Automated backport build for stretch"
+        ;;
+
+    buster)
         ;;
 
     *)
