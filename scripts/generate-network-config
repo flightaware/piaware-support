@@ -7,85 +7,6 @@
 package require fa_config_generator
 package require fa_sysinfo
 
-proc configure_wireless {config} {
-	if {![valid_network_config $config wireless]} {
-		return
-	}
-
-	if {![$config exists wireless-ssid]} {
-		::fa_config_generator::logger "wireless-network was set, but no wireless-ssid was given, no wireless network has been configured"
-		return
-	}
-
-	# pick the right interface
-	set wlan [::fa_sysinfo::wireless_interface]
-	if {$wlan eq ""} {
-		::fa_config_generator::logger "wireless-network was set, but no suitable wireless interface was found, no wireless network has been configured"
-		return
-	}
-
-	# the physical interface config fragment
-	# (this interface is brought up on boot and stays up
-	# even while there is no AP association; wpa_supplicant
-	# is started when the interface is brought up)
-	set interfaces [list]
-	lappend interfaces "auto $wlan"
-	lappend interfaces "allow-hotplug $wlan"
-	lappend interfaces "iface $wlan inet manual"
-	lappend interfaces "wireless-power off"
-	lappend interfaces "wpa-roam /etc/wpa_supplicant/wpa-roam.conf"
-
-	::fa_config_generator::generate_file_part "/etc/network/interfaces" $interfaces
-
-	# the wpasupplicant config file
-	# this configures the actual association details
-	# and contains the PSK/passphrase in plaintext
-	# so we lock down the permissions
-	set supplicant [list]
-	lappend supplicant "country=[$config get wireless-country]"
-	lappend supplicant "network={"
-	lappend supplicant "  ssid=\"[$config get wireless-ssid]\""
-	lappend supplicant "  id_str=\"wireless\""
-	lappend supplicant "  scan_ssid=1"
-	if {[$config exists wireless-password]} {
-		lappend supplicant "  key_mgmt=WPA-PSK"
-		# wpa_supplicant wants quotes around a PSK, but no quotes around a precalculated hash, go figure
-		set psk [$config get wireless-password]
-		if {[string length $psk] == 64 && [string is xdigit $psk]} {
-			lappend supplicant "  psk=$psk"
-		} else {
-			lappend supplicant "  psk=\"$psk\""
-		}
-	} else {
-		lappend supplicant "  key_mgmt=NONE"
-	}
-	lappend supplicant "}"
-	::fa_config_generator::generate_file "/etc/wpa_supplicant/wpa-roam.conf" $supplicant 0600
-
-	# the logical interface config fragment
-	# this interface is brought up or down when wpa_supplicant notices
-	# that the wireless is associated/disconnected; DHCP etc triggers
-	# at that point. it is named matching the "id_str" parameter above
-	add_network_interface $config wireless wireless
-}
-
-proc configure_wired {config} {
-	if {![valid_network_config $config wired]} {
-		return
-	}
-
-	# the physical interface config fragment
-	add_network_interface $config wired eth0
-
-	# override the ifplugd config
-	::fa_config_generator::generate_file "/etc/default/ifplugd" {
-		{INTERFACES="eth0"}
-		{HOTPLUG_INTERFACES=""}
-		{ARGS="-q -f -u10 -d0 -w -I"}
-		{SUSPEND_ACTION="stop"}
-	}
-}
-
 proc valid_network_config {config net} {
 	if {![$config get ${net}-network]} {
 		return 0
@@ -112,60 +33,333 @@ proc valid_network_config {config net} {
 	}
 }
 
-proc add_network_interface {config net iface} {
-	set out {}
+namespace eval ::buster {
+	proc configure_wireless {config} {
+		if {![valid_network_config $config wireless]} {
+			return
+		}
 
-	incr ::metric
+		if {![$config exists wireless-ssid]} {
+			::fa_config_generator::logger "wireless-network was set, but no wireless-ssid was given, no wireless network has been configured"
+			return
+		}
 
-	set type [$config get ${net}-type]
-	switch -nocase $type {
-		dhcp {
-			# Use manual interface configuration so we can customize the dhclient commands
-			set command "dhclient -pf /run/dhclient.\${IFACE}.pid -lf /var/lib/dhcp/dhclient.\${IFACE}.leases \${IFACE} -e IF_METRIC=$::metric"
-			if {$::usingDUID} {
-				append command " -i -D LL -df /var/lib/dhcp/dhclient.duid.conf"
-			}
+		# pick the right interface
+		set wlan [::fa_sysinfo::wireless_interface]
+		if {$wlan eq ""} {
+			::fa_config_generator::logger "wireless-network was set, but no suitable wireless interface was found, no wireless network has been configured"
+			return
+		}
 
-			set up $command
-			if {$net eq "wireless"} {
-				# releasing the lease seems to interact badly with some wireless routers
-				# so just silently exit
-				set down "$command -x"
+		# the wpasupplicant config file
+		# this configures the actual association details
+		# and contains the PSK/passphrase in plaintext
+		# so we lock down the permissions
+		set supplicant [list]
+		lappend supplicant "country=[$config get wireless-country]"
+		lappend supplicant "network={"
+		lappend supplicant "  ssid=\"[$config get wireless-ssid]\""
+		if {[$config exists wireless-password]} {
+			lappend supplicant "  key_mgmt=WPA-PSK"
+			# wpa_supplicant wants quotes around a PSK, but no quotes around a precalculated hash, go figure
+			set psk [$config get wireless-password]
+			if {[string length $psk] == 64 && [string is xdigit $psk]} {
+				lappend supplicant "  psk=$psk"
 			} else {
-				set down "$command -r"
+				lappend supplicant "  psk=\"$psk\""
 			}
+		} else {
+			lappend supplicant "  key_mgmt=NONE"
+		}
+		lappend supplicant "}"
+		::fa_config_generator::generate_file "/etc/wpa_supplicant/wpa_supplicant.conf" $supplicant 0600
 
-			lappend out "# DHCP, but ifupdown's dhcp mode does not do quite what we want"
-			lappend out "iface $iface inet manual"
-			lappend out "  up $up"
-			lappend out "  down $down"
+		add_network_interface $config wireless $wlan
+	}
+
+	proc configure_wired {config} {
+		if {![valid_network_config $config wired]} {
+			return
 		}
 
-		static {
-			lappend out "iface $iface inet static"
-			lappend out "  address [$config get ${net}-address]"
-			if {[$config exists ${net}-netmask]} {
-				lappend out "  netmask [$config get ${net}-netmask]"
+		# the physical interface config fragment
+		add_network_interface $config wired eth0
+	}
+
+	proc add_network_interface {config net iface} {
+		set type [$config get ${net}-type]
+		set dhcpcd [list]
+
+		lappend dhcpcd "interface $iface"
+		switch -nocase $type {
+			static {
+				lappend dhcpcd "# static address, no DHCP"
+				lappend dhcpcd "static ip_address=[[$config get ${net}-address]"
+				if {[$config exists ${net}-netmask]} {
+					lappend dhcpcd "static subnet_netmask=[$config get ${net}-netmask]"
+				}
+				if {[$config exists ${net}-broadcast]} {
+					lappend dhcpcd "static broadcast_address=[$config get ${net}-broadcast]"
+				}
+				if {[$config exists ${net}-gateway]} {
+					lappend dhcpcd "static routers=[$config get ${net}-gateway]"
+				}
+				if {[$config exists ${net}-nameservers]} {
+					lappend dhcpcd "static domain_name_servers=[$config get ${net}-nameservers]"
+				}
 			}
-			if {[$config exists ${net}-broadcast]} {
-				lappend out "  broadcast [$config get ${net}-broadcast]"
+
+			dhcp {
+				lappend dhcpcd "# do normal DHCP"
 			}
-			if {[$config exists ${net}-gateway]} {
-				lappend out "  gateway [$config get ${net}-gateway]"
+
+			default {
+				error "add_network_interface called with an invalid config (type $type)"
 			}
-			if {[$config exists ${net}-nameservers]} {
-				lappend out "  dns-nameservers [$config get ${net}-nameservers]"
-			}
-			lappend out "  metric $::metric"
 		}
 
-		default {
-			error "add_network_interface called with an invalid config (type $type)"
+		::fa_config_generator::generate_file_part "/etc/dhcpcd.conf" $dhcpcd
+	}
+
+	proc generate_network_config {config} {
+		# /etc/dhcpcd.conf base config
+
+		set dhcpcd_boilerplate {
+# Defaults based on those shipped with Raspbian.
+
+# Inform the DHCP server of our hostname for DDNS.
+hostname
+
+# Persist interface configuration when dhcpcd exits.
+persistent
+
+# Rapid commit support
+option rapid_commit
+
+# A list of options to request from the DHCP server.
+option domain_name_servers, domain_name, domain_search, host_name
+option classless_static_routes
+# Respect the network MTU. This is applied to DHCP routes.
+option interface_mtu
+
+# Most distributions have NTP support.
+option ntp_servers
+
+# A ServerID is required by RFC2131.
+require dhcp_server_identifier
+
+# Generate Stable Private IPv6 Addresses based from the DUID
+slaac private
+}
+
+		set dhcpcd [split $dhcpcd_boilerplate "\n"]
+
+		if {[$config get allow-dhcp-duid]} {
+			lappend dhcpcd "# Use the same DUID + IAID as set in DHCPv6 for DHCPv4 ClientID as per RFC4361."
+			lappend dhcpcd "# Some non-RFC compliant DHCP servers do not reply with this set."
+			lappend dhcpcd "# In this case, set 'allow-dhcp-duid no' in piaware-config.txt"
+			lappend dhcpcd "duid"
+		} else {
+			lappend dhcpcd "# Use the hardware address of the interface for the Client ID."
+			lappend dhcpcd "clientid"
+		}
+
+		::fa_config_generator::generate_file "/etc/dhcpcd.conf" $dhcpcd
+
+		configure_wireless $config
+		configure_wired $config
+	}
+} ;# buster
+
+
+namespace eval ::stretch {
+	proc configure_wireless {config} {
+		if {![valid_network_config $config wireless]} {
+			return
+		}
+
+		if {![$config exists wireless-ssid]} {
+			::fa_config_generator::logger "wireless-network was set, but no wireless-ssid was given, no wireless network has been configured"
+			return
+		}
+
+		# pick the right interface
+		set wlan [::fa_sysinfo::wireless_interface]
+		if {$wlan eq ""} {
+			::fa_config_generator::logger "wireless-network was set, but no suitable wireless interface was found, no wireless network has been configured"
+			return
+		}
+
+		# the physical interface config fragment
+		# (this interface is brought up on boot and stays up
+		# even while there is no AP association; wpa_supplicant
+		# is started when the interface is brought up)
+		set interfaces [list]
+		lappend interfaces "auto $wlan"
+		lappend interfaces "allow-hotplug $wlan"
+		lappend interfaces "iface $wlan inet manual"
+		lappend interfaces "wireless-power off"
+		lappend interfaces "wpa-roam /etc/wpa_supplicant/wpa-roam.conf"
+
+		::fa_config_generator::generate_file_part "/etc/network/interfaces" $interfaces
+
+		# the wpasupplicant config file
+		# this configures the actual association details
+		# and contains the PSK/passphrase in plaintext
+		# so we lock down the permissions
+		set supplicant [list]
+		lappend supplicant "country=[$config get wireless-country]"
+		lappend supplicant "network={"
+		lappend supplicant "  ssid=\"[$config get wireless-ssid]\""
+		lappend supplicant "  id_str=\"wireless\""
+		lappend supplicant "  scan_ssid=1"
+		if {[$config exists wireless-password]} {
+			lappend supplicant "  key_mgmt=WPA-PSK"
+			# wpa_supplicant wants quotes around a PSK, but no quotes around a precalculated hash, go figure
+			set psk [$config get wireless-password]
+			if {[string length $psk] == 64 && [string is xdigit $psk]} {
+				lappend supplicant "  psk=$psk"
+			} else {
+				lappend supplicant "  psk=\"$psk\""
+			}
+		} else {
+			lappend supplicant "  key_mgmt=NONE"
+		}
+		lappend supplicant "}"
+		::fa_config_generator::generate_file "/etc/wpa_supplicant/wpa-roam.conf" $supplicant 0600
+
+		# the logical interface config fragment
+		# this interface is brought up or down when wpa_supplicant notices
+		# that the wireless is associated/disconnected; DHCP etc triggers
+		# at that point. it is named matching the "id_str" parameter above
+		add_network_interface $config wireless wireless
+	}
+
+	proc configure_wired {config} {
+		if {![valid_network_config $config wired]} {
+			return
+		}
+
+		# the physical interface config fragment
+		add_network_interface $config wired eth0
+
+		# override the ifplugd config
+		::fa_config_generator::generate_file "/etc/default/ifplugd" {
+			{INTERFACES="eth0"}
+			{HOTPLUG_INTERFACES=""}
+			{ARGS="-q -f -u10 -d0 -w -I"}
+			{SUSPEND_ACTION="stop"}
 		}
 	}
 
-	::fa_config_generator::generate_file_part "/etc/network/interfaces" $out
-}
+	proc add_network_interface {config net iface} {
+		set out {}
+
+		incr ::metric
+
+		set type [$config get ${net}-type]
+		switch -nocase $type {
+			dhcp {
+				# Use manual interface configuration so we can customize the dhclient commands
+				set command "dhclient -pf /run/dhclient.\${IFACE}.pid -lf /var/lib/dhcp/dhclient.\${IFACE}.leases \${IFACE} -e IF_METRIC=$::metric"
+				if {$::usingDUID} {
+					append command " -i -D LL -df /var/lib/dhcp/dhclient.duid.conf"
+				}
+
+				set up $command
+				if {$net eq "wireless"} {
+					# releasing the lease seems to interact badly with some wireless routers
+					# so just silently exit
+					set down "$command -x"
+				} else {
+					set down "$command -r"
+				}
+
+				lappend out "# DHCP, but ifupdown's dhcp mode does not do quite what we want"
+				lappend out "iface $iface inet manual"
+				lappend out "  up $up"
+				lappend out "  down $down"
+			}
+
+			static {
+				lappend out "iface $iface inet static"
+				lappend out "  address [$config get ${net}-address]"
+				if {[$config exists ${net}-netmask]} {
+					lappend out "  netmask [$config get ${net}-netmask]"
+				}
+				if {[$config exists ${net}-broadcast]} {
+					lappend out "  broadcast [$config get ${net}-broadcast]"
+				}
+				if {[$config exists ${net}-gateway]} {
+					lappend out "  gateway [$config get ${net}-gateway]"
+				}
+				if {[$config exists ${net}-nameservers]} {
+					lappend out "  dns-nameservers [$config get ${net}-nameservers]"
+				}
+				lappend out "  metric $::metric"
+			}
+
+			default {
+				error "add_network_interface called with an invalid config (type $type)"
+			}
+		}
+
+		::fa_config_generator::generate_file_part "/etc/network/interfaces" $out
+	}
+
+	proc generate_duid {config} {
+		# Use a link-layer DUID based on the built-in interface address
+		# We use LL, not LLT, so that this plays nicely on FlightFeeders in
+		# readonly mode (they can't persist a LLT)
+		if {![$config get allow-dhcp-duid]} {
+			set ::usingDUID 0
+			return
+		}
+
+		set mac [::fa_sysinfo::mac_address]
+		if {$mac eq ""} {
+			set ::usingDUID 0
+			return
+		}
+
+		set out [list]
+		lappend out "# DUID generated from MAC address $mac"
+
+		# type 3 (LL), hardware address type 1 (ethernet)
+		# then the link-layer address
+		set duid "\\x00\\x03\\x00\\x01"
+		for {set i 0} {$i < 18} {incr i 3} {
+			append duid "\\x" [string range $mac $i $i+1]
+		}
+
+		lappend out "default-duid \"$duid\";"
+
+		::fa_config_generator::generate_file "/var/lib/dhcp/dhclient.duid.conf" $out
+		set ::usingDUID 1
+	}
+
+	proc generate_network_config {config} {
+		# /etc/network/interfaces header
+		::fa_config_generator::generate_file "/etc/network/interfaces" {
+			{auto lo}
+			{iface lo inet loopback}
+		}
+
+		# default ifplugd config, unless overridden
+		::fa_config_generator::generate_file "/etc/default/ifplugd" {
+			{INTERFACES=""}
+			{HOTPLUG_INTERFACES=""}
+			{ARGS="-q -f -u10 -d0 -w -I"}
+			{SUSPEND_ACTION="stop"}
+		}
+
+		generate_duid $config
+		configure_wired $config
+		configure_wireless $config
+
+		return 1
+	}
+} ;# stretch
 
 proc configure_http_proxy {config} {
 	if {[$config exists http-proxy-host] && [$config exists http-proxy-port]} {
@@ -197,58 +391,27 @@ proc configure_http_proxy {config} {
 	::fa_config_generator::generate_file "/etc/apt/apt.conf.d/50http-proxy" $contents 0644 "//"
 }
 
-proc generate_duid {config} {
-	# Use a link-layer DUID based on the built-in interface address
-	# We use LL, not LLT, so that this plays nicely on FlightFeeders in
-	# readonly mode (they can't persist a LLT)
-	if {![$config get allow-dhcp-duid]} {
-		set ::usingDUID 0
-		return
-	}
-
-	set mac [::fa_sysinfo::mac_address]
-	if {$mac eq ""} {
-		set ::usingDUID 0
-		return
-	}
-
-	set out [list]
-	lappend out "# DUID generated from MAC address $mac"
-
-	# type 3 (LL), hardware address type 1 (ethernet)
-	# then the link-layer address
-	set duid "\\x00\\x03\\x00\\x01"
-	for {set i 0} {$i < 18} {incr i 3} {
-		append duid "\\x" [string range $mac $i $i+1]
-	}
-
-	lappend out "default-duid \"$duid\";"
-
-	::fa_config_generator::generate_file "/var/lib/dhcp/dhclient.duid.conf" $out
-	set ::usingDUID 1
-}
-
 proc generate_network_config {config} {
-	# /etc/network/interfaces header
-	::fa_config_generator::generate_file "/etc/network/interfaces" {
-		{auto lo}
-		{iface lo inet loopback}
+	switch -- [$config get network-config-style] {
+		buster {
+			::buster::generate_network_config $config
+			configure_http_proxy $config
+		}
+
+		jessie - stretch {
+			::stretch::generate_network_config $config
+			configure_http_proxy $config
+		}
+
+		manual {
+			::fa_config_generator::logger "network-config-style is manual, not configuring the network"
+			# don't touch anything
+		}
+
+		default {
+			::fa_config_generator::logger "Unrecognized network-config-style, not configuring the network"
+		}
 	}
-
-	# default ifplugd config, unless overridden
-	::fa_config_generator::generate_file "/etc/default/ifplugd" {
-		{INTERFACES=""}
-		{HOTPLUG_INTERFACES=""}
-		{ARGS="-q -f -u10 -d0 -w -I"}
-		{SUSPEND_ACTION="stop"}
-	}
-
-	generate_duid $config
-	configure_wired $config
-	configure_wireless $config
-	configure_http_proxy $config
-
-	return 1
 }
 
 if {!$tcl_interactive} {
