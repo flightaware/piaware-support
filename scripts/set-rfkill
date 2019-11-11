@@ -51,7 +51,8 @@ proc main {argv} {
 						catch {close $f}
 					}
 
-					if {![string match -nocase "b8:27:eb:*" $devAddress]} {
+					if {![string match -nocase "b8:27:eb:*" $devAddress] &&
+						![string match -nocase "dc:a6:32:*" $devAddress]} {
 						# not Broadcom
 						continue
 					}
