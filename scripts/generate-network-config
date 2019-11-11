@@ -56,6 +56,7 @@ namespace eval ::buster {
 		# and contains the PSK/passphrase in plaintext
 		# so we lock down the permissions
 		set supplicant [list]
+		lappend supplicant "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev"
 		lappend supplicant "country=[$config get wireless-country]"
 		lappend supplicant "network={"
 		lappend supplicant "  ssid=\"[$config get wireless-ssid]\""
@@ -208,6 +209,7 @@ namespace eval ::stretch {
 		# and contains the PSK/passphrase in plaintext
 		# so we lock down the permissions
 		set supplicant [list]
+		lappend supplicant "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev"
 		lappend supplicant "country=[$config get wireless-country]"
 		lappend supplicant "network={"
 		lappend supplicant "  ssid=\"[$config get wireless-ssid]\""
