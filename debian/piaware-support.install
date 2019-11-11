@@ -7,7 +7,7 @@ scripts/piaware-console-status usr/lib/piaware-support/
 scripts/rpi-bootconfig usr/lib/piaware-support/
 etc/modprobe.d/
 piaware-config.txt boot/
-piaware-image-config.txt usr/share/piaware-support/
+debian/piaware-image-config.txt usr/share/piaware-support/
 systemd/*.target lib/systemd/system/
 etc/profile.d/
 etc/initramfs/post-update.d/rpi-bootconfig
