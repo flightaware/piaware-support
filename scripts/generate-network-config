@@ -60,6 +60,7 @@ namespace eval ::buster {
 		lappend supplicant "country=[$config get wireless-country]"
 		lappend supplicant "network={"
 		lappend supplicant "  ssid=\"[$config get wireless-ssid]\""
+		lappend supplicant "  scan_ssid=1"
 		if {[$config exists wireless-password]} {
 			lappend supplicant "  key_mgmt=WPA-PSK"
 			# wpa_supplicant wants quotes around a PSK, but no quotes around a precalculated hash, go figure
