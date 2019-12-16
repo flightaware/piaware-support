@@ -1,8 +1,15 @@
-piaware-support (3.8.0~dev) UNRELEASED; urgency=medium
+piaware-support (3.8.0) UNRELEASED; urgency=medium
 
-  * in development
+  * Update to piaware, piaware-web, dump1090-fa, dump978-fa, beast-splitter 3.8.0
+  * Support for building on Buster
+  * sdcard image: use Buster; Pi 4 support
+  * sdcard image: configure the network following the upstream Raspbain conventions
+    (configure dhcpcd and let it run everything) rather than the old strategy dating
+    back to jessie (/etc/network/interfaces, ifplugd, and copious duct tape)
+  * sdcard image: update generated dump1090-fa options to match the package defaults
+  * sdcard image: do not automount removable USB media
 
- -- Oliver Jowett <oliver@mutability.co.uk>  Thu, 07 Nov 2019 17:45:35 +0800
+ -- Oliver Jowett <oliver.jowett@flightaware.com>  Thu, 07 Nov 2019 17:45:35 +0800
 
 piaware-support (3.7.2) stable; urgency=medium
 
