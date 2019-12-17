@@ -1,6 +1,18 @@
-#!/bin/bash
+#!/bin/bash -e
 
 here=$(dirname $0)
+
+convert=$(which convert)
+if [ -z "$convert" ]
+then
+  convert=$(which convert-im6)
+fi
+
+if [ -z "$convert" ]
+then
+  echo "can't find 'convert' or 'convert-im6'" >&2
+  exit 1
+fi
 
 # output image size
 width=1024
@@ -57,13 +69,16 @@ rpitext_x=$rpilogo_x
 rpitext_y=$(( rpilogo_y + rpilogo_h + rpitext_hspace ))
 rpitext_pos=$( printf '%+d%+d' $rpitext_x $rpitext_y )
 
-convert-im6 -size 1024x768 -colorspace sRGB \
+# this seems more reliable if we rasterize in a separate step
+convert -density 150 $here/raspberry-pi-logo.svg -resize "${rpilogo_w}x${rpilogo_h}" $here/rpi-logo.png
+convert -density 150 $here/FA_logo_2c_with_tag.eps -resize "${falogo_w}x${falogo_h}" $here/fa-logo.png
+convert -size 1024x768 -colorspace sRGB \
         'canvas:#000000' \
         -fill '#ffffff' -stroke '#adadad' -strokewidth 2 -draw "rectangle ${interior_x1},${interior_y1} ${interior_x2},${interior_y2}" \
-        -font 'Gillius-ADF-Regular----' -style Normal -fill '#002f5d' -stroke none \
+        -font $here/Lato-Regular.ttf -style Normal -fill '#002f5d' -stroke none \
         -pointsize 48 -gravity Center -annotate ${line1_center} "PiAware $1 is starting.." \
         -pointsize 26 -gravity Center -annotate ${line2_center} "For more information, visit https://flightaware.com/adsb/piaware/" \
         -pointsize 16 -gravity North  -annotate ${rpitext_pos}  "Powered by Raspbian" \
-        -density 150 $here/raspberry-pi-logo.svg   -gravity North -geometry ${rpilogo_geom} -compose SrcOver -composite \
-        -density 150 $here/FA_logo_2c_with_tag.eps -gravity NorthWest -geometry ${falogo_geom}  -compose SrcOver -composite \
+        $here/rpi-logo.png -gravity North -geometry ${rpilogo_geom} -compose SrcOver -composite \
+        $here/fa-logo.png -gravity NorthWest -geometry ${falogo_geom}  -compose SrcOver -composite \
         "$2"
