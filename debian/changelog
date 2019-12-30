@@ -3,7 +3,7 @@ piaware-support (3.8.0) UNRELEASED; urgency=medium
   * Update to piaware, piaware-web, dump1090-fa, dump978-fa, beast-splitter 3.8.0
   * Support for building on Buster
   * sdcard image: use Buster; Pi 4 support
-  * sdcard image: configure the network following the upstream Raspbain conventions
+  * sdcard image: configure the network following the upstream Raspbian conventions
     (configure dhcpcd and let it run everything) rather than the old strategy dating
     back to jessie (/etc/network/interfaces, ifplugd, and copious duct tape)
   * sdcard image: update generated dump1090-fa options to match the package defaults
