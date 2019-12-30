@@ -1,4 +1,4 @@
-piaware-support (3.8.0) UNRELEASED; urgency=medium
+piaware-support (3.8.0) stable; urgency=medium
 
   * Update to piaware, piaware-web, dump1090-fa, dump978-fa, beast-splitter 3.8.0
   * Support for building on Buster
@@ -9,7 +9,7 @@ piaware-support (3.8.0) UNRELEASED; urgency=medium
   * sdcard image: update generated dump1090-fa options to match the package defaults
   * sdcard image: do not automount removable USB media
 
- -- Oliver Jowett <oliver.jowett@flightaware.com>  Thu, 07 Nov 2019 17:45:35 +0800
+ -- Oliver Jowett <oliver.jowett@flightaware.com>  Mon, 30 Dec 2019 22:13:04 +0800
 
 piaware-support (3.7.2) stable; urgency=medium
 
