@@ -1,3 +1,9 @@
+piaware-support (3.8.1~dev) UNRELEASED; urgency=medium
+
+  * in development
+
+ -- Oliver Jowett <oliver.jowett@flightaware.com>  Sat, 04 Jan 2020 12:16:33 +0800
+
 piaware-support (3.8.0) stable; urgency=medium
 
   * Update to piaware, piaware-web, dump1090-fa, dump978-fa, beast-splitter 3.8.0
