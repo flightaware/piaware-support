@@ -1,8 +1,10 @@
-piaware-support (3.8.1~dev) UNRELEASED; urgency=medium
+piaware-support (3.8.1) stable; urgency=medium
 
-  * in development
+  * Fix buster-style static IP configuration
+  * Add dependency on dhcpcd5 to pick up the address-defend patch on Buster
+    only
 
- -- Oliver Jowett <oliver.jowett@flightaware.com>  Sat, 04 Jan 2020 12:16:33 +0800
+ -- Eric Tran <eric.tran@flightaware.com>  Thu, 19 Mar 2020 11:45:00 -6000
 
 piaware-support (3.8.0) stable; urgency=medium
 
