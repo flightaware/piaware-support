@@ -98,7 +98,7 @@ namespace eval ::buster {
 				lappend dhcpcd "# static address, no DHCP"
 				lappend dhcpcd "static ip_address=[$config get ${net}-address]"
 				if {[$config exists ${net}-netmask]} {
-					lappend dhcpcd "static subnet_netmask=[$config get ${net}-netmask]"
+					lappend dhcpcd "static subnet_mask=[$config get ${net}-netmask]"
 				}
 				if {[$config exists ${net}-broadcast]} {
 					lappend dhcpcd "static broadcast_address=[$config get ${net}-broadcast]"

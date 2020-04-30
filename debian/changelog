@@ -1,3 +1,10 @@
+piaware-support (3.8.2~dev) UNRELEASED; urgency=medium
+
+  * in development
+  * fix netmask option typo when generating dhcpcd static network configurations
+
+ -- Oliver Jowett <oliver.jowett@flightaware.com>  Thu, 30 Apr 2020 22:43:45 +0800
+
 piaware-support (3.8.1) stable; urgency=medium
 
   * Fix buster-style static IP configuration
