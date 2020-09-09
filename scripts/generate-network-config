@@ -123,6 +123,15 @@ namespace eval ::buster {
 		::fa_config_generator::generate_file_part "/etc/dhcpcd.conf" $dhcpcd
 	}
 
+	# Adds "nohook wpa_supplicant" option to dhcpcd.conf to disable wpa_supplicant for particular interface
+	proc disable_wpa_supplicant {config interface} {
+		::fa_config_generator::logger "Disabling wpa_supplicant for $interface..."
+		set dhcpcd [list]
+		lappend dhcpcd "interface $interface"
+		lappend dhcpcd "nohook wpa_supplicant"
+		::fa_config_generator::generate_file_part "/etc/dhcpcd.conf" $dhcpcd
+	}
+
 	proc generate_network_config {config} {
 		# /etc/dhcpcd.conf base config
 
@@ -168,8 +177,18 @@ slaac private
 
 		::fa_config_generator::generate_file "/etc/dhcpcd.conf" $dhcpcd
 
-		configure_wireless $config
-		configure_wired $config
+		if {![$config get wireless-network]} {
+			set wlan [::fa_sysinfo::wireless_interface]
+			disable_wpa_supplicant $config $wlan
+		} else {
+			configure_wireless $config
+		}
+
+		if {![$config get wired-network]} {
+			disable_wpa_supplicant $config eth0
+		} else {
+			configure_wired $config
+		}
 	}
 } ;# buster
 
