@@ -6,5 +6,8 @@ FILES=fa_config_generator.tcl
 
 all: pkgIndex.tcl
 
+install:
+	$(MAKE) -C helpers install
+
 pkgIndex.tcl: $(FILES)
 	echo 'pkg_mkIndex .' | $(TCLSH)

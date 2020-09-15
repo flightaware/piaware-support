@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Tries to reconfigure and restart networking.
+
+status=0
+
+/bin/systemctl --quiet stop networking
+
+/bin/systemctl --quiet restart set-rfkill || status=1
+/bin/systemctl --quiet restart generate-network-config || status=1
+/bin/systemctl --quiet daemon-reload || status=1
+/sbin/dhcpcd --quiet --release || status=1
+/bin/systemctl --quiet restart dhcpcd || status=1
+/bin/systemctl --quiet restart rsyslog || status=1
+
+/bin/systemctl --quiet start networking || status=1
+
+exit $status

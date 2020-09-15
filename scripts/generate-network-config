@@ -166,6 +166,27 @@ slaac private
 			lappend dhcpcd "clientid"
 		}
 
+		lappend dhcpcd ""
+
+		set wireless_enabled [$config get wireless-network]
+		set wired_enabled [$config get wired-network]
+
+		# generate denyinterfaces line if needed
+		if {!$wireless_enabled || !$wired_enabled} {
+			set denyOpt "denyinterfaces"
+
+			if {!$wireless_enabled} {
+				set wlan [::fa_sysinfo::wireless_interface]
+				lappend denyOpt $wlan
+			}
+
+			if {!$wired_enabled} {
+				lappend denyOpt eth0
+			}
+
+			lappend dhcpcd $denyOpt
+		}
+
 		::fa_config_generator::generate_file "/etc/dhcpcd.conf" $dhcpcd
 
 		configure_wireless $config
