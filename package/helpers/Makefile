@@ -1,10 +1,9 @@
 PREFIX=/usr
-LIB=$(PREFIX)/lib/piaware-support/helpers
+BIN=$(PREFIX)/bin
 FILES=piaware-restart-network
 
 all:
 
 install: $(FILES)
-	install -d $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(LIB)
-	install -m 0755 $(FILES) $(DESTDIR)$(PREFIX)/bin
-	install $(FILES) $(DESTDIR)$(LIB)
+	install -d $(DESTDIR)$(BIN)
+	install -m 0755 $(FILES) $(DESTDIR)$(BIN)
