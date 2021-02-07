@@ -1,3 +1,9 @@
+piaware-support (5.0~dev) UNRELEASED; urgency=medium
+
+  * In development
+
+ -- Eric Tran <eric.tran@flightaware.com>  Sat, 06 Feb 2021 19:35:00 -6000
+
 piaware-support (4.0) stable; urgency=medium
 
   * Fix netmask option typo when generating dhcpcd static network configurations
