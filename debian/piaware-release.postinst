@@ -61,6 +61,33 @@ update_mirrors() {
     return 0
 }
 
+disable_vscode_list() {
+    # raspberrypi-sys-mods 20210208 unconditionally installs /etc/apt/sources.list.d/vscode.list on upgrade from pre-20210208
+    # Reverse that by commenting out the deb line if the current list exactly matches the auto-installed version
+
+    listfile=/etc/apt/sources.list.d/vscode.list
+    if [ -f $listfile ]
+    then
+        hash=$( md5sum $listfile | cut -c1-32 )
+        if [ "$hash" = "99f25608417d470e40f49e209ae9b76c" ]
+        then
+            echo "Disabling repository list at ${listfile}" >&2
+            echo "previously installed by raspberrypi-sys-mods.." >&2
+            sed -e 's@^deb@#deb@' $listfile >${listfile}.new && mv ${listfile}.new $listfile
+        fi
+    else
+        # Does not exist yet, maybe the raspberrypi-sys-mods upgrade hasn't happened yet, install a placeholder
+        # to prevent future upgrades from installing it
+        echo "Installing an empty repository list at ${listfile}" >&2
+        echo "to prevent that repository being installed by raspberrypi-sys-mods.." >&2
+        cat >${listfile} <<EOF
+# This is a placeholder file installed by the piaware-release package
+# on upgrade to piaware-release 5.0, to prevent a future upgrade of
+# raspberrypi-sys-mods installing an unwanted repository here.
+EOF
+    fi
+}
+
 case "$1" in
     configure)
         if dpkg --compare-versions "$2" lt "3.3.0"
@@ -73,6 +100,12 @@ case "$1" in
         then
             # update mirrors on upgrade to 3.6.2
             update_mirrors
+        fi
+
+        if dpkg --compare-versions "$2" lt-nl "5.0"
+        then
+            # disable stealth-added vscode repo on upgrade to 5.0
+            disable_vscode_list
         fi
 
         # splashscreen contents change on every version
