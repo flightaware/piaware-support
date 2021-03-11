@@ -1,9 +1,9 @@
-piaware-support (5.0) UNRELEASED; urgency=medium
+piaware-support (5.0) stable; urgency=medium
 
   * On SD card upgrade to PiAware 5, try to disable vscode.list if it was
     installed by a raspberrypi-sys-mods upgrade
 
- -- Eric Tran <eric.tran@flightaware.com>  Fri, 05 Mar 2021 08:20:00 -6000
+ -- Eric Tran <eric.tran@flightaware.com>  Thu, 11 Mar 2021 08:20:00 -6000
 
 piaware-support (4.0) stable; urgency=medium
 
