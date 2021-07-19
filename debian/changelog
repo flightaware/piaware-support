@@ -1,3 +1,9 @@
+piaware-support (6.0~dev) UNRELEASED; urgency=medium
+
+  * in development
+
+ -- Oliver Jowett <oliver.jowett@flightaware.com>  Mon, 19 Jul 2021 15:52:19 +0800
+
 piaware-support (5.0) stable; urgency=medium
 
   * On SD card upgrade to PiAware 5, try to disable vscode.list if it was
