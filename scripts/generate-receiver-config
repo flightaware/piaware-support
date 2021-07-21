@@ -61,6 +61,7 @@ proc generate_dump1090_config {config} {
 		RECEIVER_SERIAL {}
 		RECEIVER_GAIN 60
 		ADAPTIVE_DYNAMIC_RANGE yes
+		ADAPTIVE_DYNAMIC_RANGE_TARGET {}
 		ADAPTIVE_BURST no
 		ADAPTIVE_MIN_GAIN {}
 		ADAPTIVE_MAX_GAIN {}
@@ -134,6 +135,13 @@ proc generate_dump1090_config {config} {
 	if {![$config get allow-modeac]} {
 		dict append opts EXTRA_OPTIONS "--no-modeac-auto"
 	}
+
+	dict set opts SLOW_CPU [$config get slow-cpu]
+	dict set opts ADAPTIVE_DYNAMIC_RANGE [$config get adaptive-dynamic-range]
+	dict set opts ADAPTIVE_DYNAMIC_RANGE_TARGET [$config get adaptive-dynamic-range-target]
+	dict set opts ADAPTIVE_BURST [$config get adaptive-burst]
+	dict set opts ADAPTIVE_MIN_GAIN [$config get adaptive-min-gain]
+	dict set opts ADAPTIVE_MAX_GAIN [$config get adaptive-max-gain]
 
 	dict set opts EXTRA_OPTIONS [join [dict get $opts EXTRA_OPTIONS]]
 
