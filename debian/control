@@ -28,9 +28,9 @@ Description: PiAware apt repository configuration (testing environment)
 Package: piaware-release
 Architecture: all
 Depends: piaware-repository (= ${binary:Version}), piaware-support (= ${binary:Version}),
- piaware (= 5.0),
+ piaware (= 6.0~dev),
  beast-splitter (= 5.0),
- dump1090-fa (= 5.0),
+ dump1090-fa (= 6.0~dev),
  dump978-fa (= 5.0), skyaware978 (= 5.0),
  piaware-web (= 5.0),
  raspi-config, logrotate, resolvconf, usbutils, nano,
