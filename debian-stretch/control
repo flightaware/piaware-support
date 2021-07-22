@@ -29,10 +29,10 @@ Package: piaware-release
 Architecture: all
 Depends: piaware-repository (= ${binary:Version}), piaware-support (= ${binary:Version}),
  piaware (= 6.0~dev~bpo9+1),
- beast-splitter (= 5.0~bpo9+1),
+ beast-splitter (= 6.0~dev~bpo9+1),
  dump1090-fa (= 6.0~dev~bpo9+1),
- dump978-fa (= 5.0~bpo9+1), skyaware978 (= 5.0~bpo9+1),
- piaware-web (= 5.0~bpo9+1),
+ dump978-fa (= 6.0~dev~bpo9+1), skyaware978 (= 6.0~dev~bpo9+1),
+ piaware-web (= 6.0~dev~bpo9+1),
  raspi-config, logrotate, resolvconf, usbutils, nano,
  rtl-sdr, soapysdr-module-rtlsdr,
  socat, netcat-openbsd, plymouth, plymouth-themes,
