@@ -54,6 +54,40 @@ proc generate_beast_splitter_config {config} {
 	return 1
 }
 
+proc is_simple_shellword {word} {
+    if {[string first " " $word] >= 0} {
+        return 0
+    }
+
+    if {[string is alnum $word]} {
+        return 1
+    }
+
+    for {set i 0} {$i < [string length $word]} {incr i} {
+        set ch [string index $word $i]
+        if {![string is alnum $ch] && $ch ni {. ,}} {
+            return 0
+        }
+    }
+
+    return 1
+}
+
+proc shellquote {word} {
+    if {[is_simple_shellword $word]} {
+        return $word
+    }
+
+    set mappings {}
+    lappend mappings "\\" "\\\\"
+    lappend mappings "\$" "\\\$"
+    lappend mappings "\"" "\\\""
+    lappend mappings "`" "\\`"
+
+    set escaped [string map $mappings $word]
+    return "\"$escaped\""
+}
+
 proc generate_dump1090_config {config} {
 	set defaults {
 		ENABLED yes
@@ -148,7 +182,7 @@ proc generate_dump1090_config {config} {
 
 	set dump1090config [list]
 	foreach {k v} $opts {
-		lappend dump1090config "${k}=\"${v}\""
+		lappend dump1090config "${k}=[shellquote ${v}]"
 	}
 
 	::fa_config_generator::generate_file "/etc/default/dump1090-fa" $dump1090config
