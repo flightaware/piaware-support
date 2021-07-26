@@ -57,6 +57,7 @@ proc generate_beast_splitter_config {config} {
 proc generate_dump1090_config {config} {
 	set defaults {
 		ENABLED yes
+		CONFIG_STYLE 6
 		RECEIVER none
 		RECEIVER_SERIAL {}
 		RECEIVER_GAIN 60
