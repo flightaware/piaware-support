@@ -172,9 +172,15 @@ proc generate_dump1090_config {config} {
 	}
 
 	dict set opts SLOW_CPU [$config get slow-cpu]
-	dict set opts ADAPTIVE_DYNAMIC_RANGE [$config get adaptive-dynamic-range]
+
+	set adaptiveDynamicRange [$config get adaptive-dynamic-range]
+	dict set opts ADAPTIVE_DYNAMIC_RANGE [expr { $adaptiveDynamicRange == 1 } ? "yes" : "no"]
+
 	dict set opts ADAPTIVE_DYNAMIC_RANGE_TARGET [$config get adaptive-dynamic-range-target]
-	dict set opts ADAPTIVE_BURST [$config get adaptive-burst]
+
+	set adaptiveBurst [$config get adaptive-burst]
+	dict set opts ADAPTIVE_BURST [expr { $adaptiveBurst == 1 } ? "yes" : "no"]
+
 	dict set opts ADAPTIVE_MIN_GAIN [$config get adaptive-min-gain]
 	dict set opts ADAPTIVE_MAX_GAIN [$config get adaptive-max-gain]
 
