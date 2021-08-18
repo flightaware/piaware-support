@@ -1,8 +1,8 @@
-piaware-support (6.0~dev) UNRELEASED; urgency=medium
+piaware-support (6.0) UNRELEASED; urgency=medium
 
   * in development
 
- -- Oliver Jowett <oliver.jowett@flightaware.com>  Mon, 19 Jul 2021 15:52:19 +0800
+ -- Eric Tran <eric.tran@flightaware.com>  Wed, 18 Aug 2021 07:52:19 -0600
 
 piaware-support (5.0) stable; urgency=medium
 
