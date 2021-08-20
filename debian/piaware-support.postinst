@@ -73,6 +73,11 @@ remove_wpa_action_symlink() {
     fi
 }
 
+disable_adaptive_gain() {
+    echo "Disabling adaptive gain on upgrade from pre-6.0" >&2
+    piaware-config adaptive-dynamic-range no
+}
+
 case "$1" in
     configure)
         if dpkg --compare-versions "$2" lt "3.0.2"
@@ -110,6 +115,13 @@ case "$1" in
             if [ -x /etc/kernel/postinst.d/zz-update-bootconfig ]; then
                 /etc/kernel/postinst.d/zz-update-bootconfig
             fi
+        fi
+
+        if dpkg --compare-versions "$2" lt-nl "6.0"
+        then
+            # disable adaptive gain by default on upgrades only
+            # (fresh 6.0 installs will default to adaptive gain enabled)
+            disable_adaptive_gain
         fi
     ;;
 
