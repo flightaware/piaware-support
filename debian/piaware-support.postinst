@@ -76,6 +76,8 @@ remove_wpa_action_symlink() {
 disable_adaptive_gain() {
     echo "Disabling adaptive gain on upgrade from pre-6.0" >&2
     piaware-config adaptive-dynamic-range no
+    # try to immediately pick up the config change
+    invoke-rc.d try-restart dump1090-fa
 }
 
 case "$1" in
