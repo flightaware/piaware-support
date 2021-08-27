@@ -17,6 +17,29 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
+# this reimplements most of deb-systemd-invoke but with --no-block
+invoke_systemctl_noblock() {
+    action="$1"
+    unit="$2"
+
+    # we have to do this all by hand, because deb-systemd-invoke doesn't do
+    # what we want, booo
+    if [ -x /usr/sbin/policy-rc.d ]
+    then
+        set +e
+        /usr/sbin/policy-rc.d "$unit" "$action"
+        policy=$?
+        set -e
+        if [ "$policy" = "101" ]
+        then
+            echo "$action of $unit denied by policy" >&2
+            return 0
+        fi
+    fi
+
+    systemctl --no-block "$action" "$unit"
+}
+
 disable_dhcp_duid() {
     # upgrading from an old version; default to the old DHCP behaviour
     echo "Disabling use of DHCP DUIDs to retain pre-upgrade behaviour.."
@@ -77,7 +100,7 @@ disable_adaptive_gain() {
     echo "Disabling adaptive gain on upgrade from pre-6.0" >&2
     piaware-config adaptive-dynamic-range no
     # try to immediately pick up the config change
-    invoke-rc.d try-restart dump1090-fa
+    invoke_systemctl_noblock try-restart dump1090-fa
 }
 
 case "$1" in
