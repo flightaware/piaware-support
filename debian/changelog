@@ -1,8 +1,11 @@
-piaware-support (6.0) UNRELEASED; urgency=medium
+piaware-support (6.0) stable; urgency=medium
 
-  * in development
+  * Update receiver config generation for new-style dump1090-fa config
+  * Ensure dhcpcd restarts if it fails for any reason
+  * Disable adaptive gain for pre-6.0 upgrades and enable for new installs
+  * Depend on apt 1.8.2.3 to avoid problems with buster's suite name changing
 
- -- Eric Tran <eric.tran@flightaware.com>  Wed, 18 Aug 2021 07:52:19 -0600
+ -- Eric Tran <eric.tran@flightaware.com>  Tue, 31 Aug 2021 07:52:19 -0600
 
 piaware-support (5.0) stable; urgency=medium
 
