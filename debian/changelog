@@ -1,3 +1,9 @@
+piaware-support (6.1~dev) UNRELEASED; urgency=medium
+
+  * in development
+
+ -- Oliver Jowett <oliver.jowett@flightaware.com>  Fri, 03 Sep 2021 23:13:21 +0800
+
 piaware-support (6.0) stable; urgency=medium
 
   * Update receiver config generation for new-style dump1090-fa config

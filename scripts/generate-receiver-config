@@ -133,7 +133,7 @@ proc generate_dump1090_config {config} {
 
 			set ppm [$config get rtlsdr-ppm]
 			if {$ppm ne 0} {
-				dict append opts EXTRA_OPTIONS "--ppm" $ppm
+				dict lappend opts EXTRA_OPTIONS "--ppm" $ppm
 			}
 
 			dict set opts NET_BEAST_OUTPUT_PORTS 30005
@@ -143,10 +143,10 @@ proc generate_dump1090_config {config} {
 			dict set opts ENABLED yes
 			dict set opts RECEIVER bladerf
 			dict set opts RECEIVER_GAIN 66
-			dict append opts EXTRA_OPTIONS "--bladerf-fpga" "/usr/share/dump1090-fa/bladerf/decimate8-x40.rbf"
-			dict append opts EXTRA_OPTIONS "--bladerf-decimation" "8"
-			dict append opts EXTRA_OPTIONS "--bladerf-bandwidth" "14000000"
-			dict append opts EXTRA_OPTIONS "--freq" "1085200000"
+			dict lappend opts EXTRA_OPTIONS "--bladerf-fpga" "/usr/share/dump1090-fa/bladerf/decimate8-x40.rbf"
+			dict lappend opts EXTRA_OPTIONS "--bladerf-decimation" "8"
+			dict lappend opts EXTRA_OPTIONS "--bladerf-bandwidth" "14000000"
+			dict lappend opts EXTRA_OPTIONS "--freq" "1085200000"
 			dict set opts NET_BEAST_OUTPUT_PORTS 30005
 		}
 
@@ -168,7 +168,7 @@ proc generate_dump1090_config {config} {
 	}
 
 	if {![$config get allow-modeac]} {
-		dict append opts EXTRA_OPTIONS "--no-modeac-auto"
+		dict lappend opts EXTRA_OPTIONS "--no-modeac-auto"
 	}
 
 	dict set opts SLOW_CPU [$config get slow-cpu]
