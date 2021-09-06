@@ -28,11 +28,11 @@ Description: PiAware apt repository configuration (testing environment)
 Package: piaware-release
 Architecture: all
 Depends: piaware-repository (= ${binary:Version}), piaware-support (= ${binary:Version}),
- piaware (= 6.0),
- beast-splitter (= 6.0),
- dump1090-fa (= 6.0),
- dump978-fa (= 6.0), skyaware978 (= 6.0),
- piaware-web (= 6.0),
+ piaware (= 6.1),
+ beast-splitter (= 6.1),
+ dump1090-fa (= 6.1),
+ dump978-fa (= 6.1), skyaware978 (= 6.1),
+ piaware-web (= 6.1),
  raspi-config, logrotate, resolvconf, usbutils, nano,
  rtl-sdr, soapysdr-module-rtlsdr,
  socat, netcat-openbsd, plymouth, plymouth-themes,

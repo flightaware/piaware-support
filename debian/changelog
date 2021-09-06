@@ -1,6 +1,7 @@
-piaware-support (6.1~dev) UNRELEASED; urgency=medium
+piaware-support (6.1) stable; urgency=medium
 
-  * in development
+  * Fix incorrect generated dump1090 configuration when rtlsdr-ppm, allow-modeac
+    no, or a bladerf receiver type were set.
 
  -- Oliver Jowett <oliver.jowett@flightaware.com>  Fri, 03 Sep 2021 23:13:21 +0800
 
