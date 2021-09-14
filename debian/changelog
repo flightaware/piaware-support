@@ -1,3 +1,9 @@
+piaware-support (7.0~dev) UNRELEASED; urgency=medium
+
+  * in development
+
+ -- Oliver Jowett <oliver.jowett@flightaware.com>  Tue, 14 Sep 2021 21:22:15 +0800
+
 piaware-support (6.1) stable; urgency=medium
 
   * Fix incorrect generated dump1090 configuration when rtlsdr-ppm, allow-modeac
