@@ -14,6 +14,9 @@ fi
 
 /bin/systemctl --quiet restart set-rfkill || status=1
 
+/sbin/ifconfig wlan0 down
+/sbin/ifconfig wlan0 up
+
 echo "Regenerating network configuration..."
 
 /bin/systemctl --quiet restart generate-network-config || status=1
