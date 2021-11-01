@@ -33,6 +33,8 @@ Depends: piaware-repository (= ${binary:Version}), piaware-support (= ${binary:V
  dump1090-fa (= 7.0~dev),
  dump978-fa (= 7.0~dev), skyaware978 (= 7.0~dev),
  piaware-web (= 7.0~dev),
+ piaware-configurator (=1.0),
+ piaware-ble-connect (=1.0),
  raspi-config, logrotate, resolvconf, usbutils, nano,
  rtl-sdr, soapysdr-module-rtlsdr,
  socat, netcat-openbsd, plymouth, plymouth-themes,
