@@ -2,14 +2,21 @@
 
 # Invokes rfkill if configured
 #
-# This tries to turn off, specifically, the Pi 3 wifi & bluetooth
+# This tries to turn off, specifically, the Pi 3/4 wifi & bluetooth
 # for environments where they would interfere with the receiver
 # (e.g. FlightFeeder v7) or where a separate USB wifi dongle is
-# preferred to using the Pi 3's built-in wifi.
+# preferred to using the Pi's built-in wifi.
 
 package require cmdline
 package require fa_piaware_config
 catch {package require fa_flightfeeder_config}
+
+proc is_pi_mac {mac} {
+	return [expr {[string match -nocase "b8:27:eb:*" $mac] ||
+				  [string match -nocase "dc:a6:32:*" $mac] ||
+				  [string match -nocase "3a:35:41:*" $mac] ||
+				  [string match -nocase "e4:5f:01:*" $mac]}]
+}
 
 proc main {argv} {
 	set opts {
@@ -23,7 +30,7 @@ proc main {argv} {
 		return
 	}
 
-	# look for the Pi 3's wifi and bluetooth interfaces
+	# look for any onboard Pi wifi and bluetooth interfaces
 	# I wish this was easier..
 	set devices [list]
 	foreach dev [glob -nocomplain -tails -directory /sys/class/rfkill *] {
@@ -51,9 +58,7 @@ proc main {argv} {
 						catch {close $f}
 					}
 
-					if {![string match -nocase "b8:27:eb:*" $devAddress] &&
-						![string match -nocase "dc:a6:32:*" $devAddress]} {
-						# not Broadcom
+					if {![is_pi_mac $devAddress]} {
 						continue
 					}
 				}
@@ -66,8 +71,7 @@ proc main {argv} {
 						catch {close $f}
 					}
 
-					if {![string match -nocase "b8:27:eb:*" $devAddress]} {
-						# not Broadcom
+					if {![is_pi_mac $devAddress]} {
 						continue
 					}
 				}
