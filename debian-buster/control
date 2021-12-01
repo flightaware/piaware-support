@@ -2,7 +2,7 @@ Source: piaware-support
 Section: embedded
 Priority: extra
 Maintainer: FlightAware Developers <adsb-devs@flightaware.com>
-Build-Depends: debhelper(>=9), dh-systemd, tcl
+Build-Depends: debhelper(>=10), tcl
 Standards-Version: 3.9.3
 Homepage: https://github.com/flightaware
 
@@ -28,13 +28,11 @@ Description: PiAware apt repository configuration (testing environment)
 Package: piaware-release
 Architecture: all
 Depends: piaware-repository (= ${binary:Version}), piaware-support (= ${binary:Version}),
- piaware (= 7.0~dev),
- beast-splitter (= 7.0~dev),
- dump1090-fa (= 7.0~dev),
- dump978-fa (= 7.0~dev), skyaware978 (= 7.0~dev),
- piaware-web (= 7.0~dev),
- piaware-configurator (=1.0),
- piaware-ble-connect (=1.0),
+ piaware (= 7.0~dev~bpo10+1),
+ beast-splitter (= 7.0~dev~bpo10+1),
+ dump1090-fa (= 7.0~dev~bpo10+1),
+ dump978-fa (= 7.0~dev~bpo10+1), skyaware978 (= 7.0~dev~bpo10+1),
+ piaware-web (= 7.0~dev~bpo10+1),
  raspi-config, logrotate, resolvconf, usbutils, nano,
  rtl-sdr, soapysdr-module-rtlsdr,
  socat, netcat-openbsd, plymouth, plymouth-themes,

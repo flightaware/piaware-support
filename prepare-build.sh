@@ -11,9 +11,8 @@ then
     exit 1
 fi
 
-: ${DEBFULLNAME:=FlightAware build automation}
-: ${DEBEMAIL:=-adsb-devs@flightaware.com}
-export DEBFULLNAME DEBEMAIL
+export DEBFULLNAME="${DEBFULLNAME:-FlightAware build automation}"
+export DEBEMAIL="${DEBEMAIL:-adsb-devs@flightaware.com}"
 
 TOP=`dirname $0`
 DIST=$1
@@ -45,6 +44,11 @@ case "$DIST" in
         ;;
 
     buster)
+        echo "Updating changelog for buster backport build" >&2
+        dch --changelog $OUT/debian/changelog --local ~bpo10+ --force-distribution --distribution buster-backports "Automated backport build for buster"
+        ;;
+
+    bullseye)
         ;;
 
     *)

@@ -8,7 +8,7 @@ Homepage: https://github.com/flightaware
 
 Package: piaware-support
 Architecture: all
-Depends: piaware, wireless-tools, wpasupplicant (>= 2.3-1+deb8u5), crda, ifplugd, rfkill, atmel-firmware, firmware-atheros, firmware-brcm80211, firmware-intelwimax, firmware-iwlwifi, libertas-firmware, firmware-linux, firmware-ralink, firmware-realtek, firmware-ti-connectivity, firmware-zd1211, whois, ${misc:Depends}
+Depends: piaware, wireless-tools, wpasupplicant, crda, rfkill, atmel-firmware, firmware-atheros, firmware-brcm80211, firmware-intelwimax, firmware-iwlwifi, libertas-firmware, firmware-linux, firmware-ralink, firmware-realtek, firmware-ti-connectivity, firmware-zd1211, whois, dhcpcd5, ${misc:Depends}
 Recommends: piaware-repository
 Description: Support package for PiAware sdcard images.
  Handles boot-time configuration.
@@ -28,16 +28,15 @@ Description: PiAware apt repository configuration (testing environment)
 Package: piaware-release
 Architecture: all
 Depends: piaware-repository (= ${binary:Version}), piaware-support (= ${binary:Version}),
- piaware (= 7.0~dev~bpo9+1),
- beast-splitter (= 7.0~dev~bpo9+1),
- dump1090-fa (= 7.0~dev~bpo9+1),
- dump978-fa (= 7.0~dev~bpo9+1), skyaware978 (= 7.0~dev~bpo9+1),
- piaware-web (= 7.0~dev~bpo9+1),
+ piaware (= 7.0~dev),
+ beast-splitter (= 7.0~dev),
+ dump1090-fa (= 7.0~dev),
+ dump978-fa (= 7.0~dev), skyaware978 (= 7.0~dev),
+ piaware-web (= 7.0~dev),
  raspi-config, logrotate, resolvconf, usbutils, nano,
  rtl-sdr, soapysdr-module-rtlsdr,
  socat, netcat-openbsd, plymouth, plymouth-themes,
- ntp,
- sudo (>= 1.8.19p1-2.1+deb9u3)
+ ntp
 Breaks: piaware-repository-testing (<< ${binary:Version})
 Description: Metapackage for PiAware sdcard releases.
  Metapackage that depends on the specific packages that

@@ -1,0 +1,2 @@
+etc/apt/sources.list.d/piaware-bullseye.list
+etc/apt/trusted.gpg.d/flightaware-archive-keyring.gpg
