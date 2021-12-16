@@ -6,7 +6,7 @@ scripts/piaware-console-status usr/lib/piaware-support/
 scripts/rpi-bootconfig usr/lib/piaware-support/
 piaware-config.txt boot/
 debian/piaware-image-config.txt usr/share/piaware-support/
-systemd/* lib/systemd/system/
+systemd/dhcpcd.service.d/restart.conf lib/systemd/system/dhcpcd.service.d/
 etc/profile.d/
 etc/initramfs/post-update.d/rpi-bootconfig
 etc/initramfs/post-update.d/zz-update-bootconfig
