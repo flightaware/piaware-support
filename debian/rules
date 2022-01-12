@@ -4,7 +4,6 @@
 export DH_VERBOSE=1
 
 override_dh_systemd_enable:
-	[ ! -f debian/piaware-support.regenerate-ssh-keys.service ] || dh_systemd_enable -ppiaware-support --name=regenerate-ssh-keys regenerate-ssh-keys.service
 	dh_systemd_enable -ppiaware-support --name=generate-network-config generate-network-config.service
 	dh_systemd_enable -ppiaware-support --name=generate-receiver-config generate-receiver-config.service
 	dh_systemd_enable -ppiaware-support --name=set-rfkill set-rfkill.service
@@ -12,7 +11,6 @@ override_dh_systemd_enable:
 	dh_systemd_enable -ppiaware-release --name=piaware-console-status piaware-console-status.service
 
 override_dh_systemd_start:
-	[ ! -f debian/piaware-support.regenerate-ssh-keys.service ] || dh_systemd_start -ppiaware-support --no-start --name=regenerate-ssh-keys regenerate-ssh-keys.service
 	dh_systemd_start -ppiaware-support --no-start --name=generate-network-config generate-network-config.service
 	dh_systemd_start -ppiaware-support --no-start --name=generate-receiver-config generate-receiver-config.service
 	dh_systemd_start -ppiaware-support --name=set-rfkill set-rfkill.service
