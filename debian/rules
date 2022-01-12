@@ -15,7 +15,7 @@ override_dh_systemd_start:
 	dh_systemd_start -ppiaware-support --no-start --no-restart-after-upgrade --name=generate-receiver-config generate-receiver-config.service
 	dh_systemd_start -ppiaware-support --name=set-rfkill set-rfkill.service
 	dh_systemd_start -ppiaware-support --no-start --no-restart-after-upgrade --name=config-ready config-ready.target
-	dh_systemd_start -ppiaware-release --name=piaware-console-status piaware-console-status.service
+	dh_systemd_start -ppiaware-release --no-stop-on-upgrade --no-restart-after-upgrade --name=piaware-console-status piaware-console-status.service
 
 %:
 	dh $@ --with=systemd
