@@ -1,3 +1,9 @@
+piaware-support (7.2~dev) UNRELEASED; urgency=medium
+
+  * in development
+
+  -- Eric Tran <eric.tran@flightaware.com>  Fri, 25 Feb 2022 13:44:00 -0600
+
 piaware-support (7.1) stable; urgency=medium
 
   * piaware: Fix unintented restart of piaware during a piaware-managed upgrade
