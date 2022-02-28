@@ -40,7 +40,7 @@ Depends: piaware-repository (= ${binary:Version}), piaware-support (= ${binary:V
  sudo (>= 1.8.27-1+deb10u3),
  openssl (>= 1.1.1d-0+deb10u5),
  bind9-host (>= 9.11.5.P4+dfsg-5.1+deb10u3),
- apt (>= 1.8.2.3)
+ apt (>= 1.8.2.3), policykit-1 (>= 0.105-25+deb10u1)
 Breaks: piaware-repository-testing (<< ${binary:Version})
 Description: Metapackage for PiAware sdcard releases.
  Metapackage that depends on the specific packages that

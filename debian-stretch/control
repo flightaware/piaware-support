@@ -37,7 +37,8 @@ Depends: piaware-repository (= ${binary:Version}), piaware-support (= ${binary:V
  rtl-sdr, soapysdr-module-rtlsdr,
  socat, netcat-openbsd, plymouth, plymouth-themes,
  ntp,
- sudo (>= 1.8.19p1-2.1+deb9u3)
+ sudo (>= 1.8.19p1-2.1+deb9u3),
+ policykit-1 (>= 0.105-18+deb9u2)
 Breaks: piaware-repository-testing (<< ${binary:Version})
 Description: Metapackage for PiAware sdcard releases.
  Metapackage that depends on the specific packages that
