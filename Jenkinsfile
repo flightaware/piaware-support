@@ -39,7 +39,7 @@ node(label: 'raspberrypi') {
         }
 
         stage("Test install on ${dist}") {
-            sh "BRANCH=${env.BRANCH_NAME} /build/pi-builder/scripts/validate-packages.sh ${dist} ${results}/piaware-support_*.deb ${results}/piaware-repository_*.deb ${results}/piaware-repository-testing_*.deb ${results}/piaware-release_*.deb"
+            sh "BRANCH=${env.BRANCH_NAME} /build/pi-builder/scripts/validate-packages.sh ${dist} ${results}/piaware-support_*.deb ${results}/flightaware-apt-repository_*.deb ${results}/flightaware-apt-repository-testing_*.deb ${results}/piaware-release_*.deb"
         }
     }
 
