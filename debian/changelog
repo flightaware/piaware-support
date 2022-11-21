@@ -1,8 +1,9 @@
-piaware-support (8.0~dev) UNRELEASED; urgency=medium
+piaware-support (8.0) UNRELEASED; urgency=medium
 
-  * In development
+  * Bullseye - Replace piaware-apt-repository with flightaware-apt-repository which automatically installs the correct
+    sources.list file based on current OS
 
-  -- Eric Tran <eric.tran@flightaware.com>  Tue, 02 Aug 2022 11:19:00 -0600
+  -- Eric Tran <eric.tran@flightaware.com>  Mon, 21 Nov 2022 11:52:00 -0600
 
 piaware-support (7.2) stable; urgency=medium
 
