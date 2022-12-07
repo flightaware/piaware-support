@@ -1,3 +1,9 @@
+piaware-support (8.1~dev) UNRELEASED; urgency=medium
+
+  * Pick up latest flightaware-apt-repository that fixes Stretch OS upgrades
+
+  -- Eric Tran <eric.tran@flightaware.com>  Wed, 07 Dec 2022 14:40:00 -0600
+
 piaware-support (8.0) stable; urgency=medium
 
   * Bullseye - Replace piaware-apt-repository with flightaware-apt-repository which automatically installs the correct
