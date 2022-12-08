@@ -28,6 +28,7 @@ Depends: piaware-support (= ${binary:Version}),
  rtl-sdr, soapysdr-module-rtlsdr,
  socat, netcat-openbsd, plymouth, plymouth-themes,
  ntp, policykit-1 (>= 0.105-31+rpt1+deb11u1)
+Replaces: piaware-repository
 Breaks: piaware-repository-testing (<< ${binary:Version})
 Description: Metapackage for PiAware sdcard releases.
  Metapackage that depends on the specific packages that
