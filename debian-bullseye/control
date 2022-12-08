@@ -23,11 +23,12 @@ Depends: piaware-support (= ${binary:Version}),
  piaware-web (= 8.1),
  piaware-configurator (= 8.1),
  piaware-ble-connect (= 8.1),
- flightaware-apt-repository (= 1.1),
+ flightaware-apt-repository (>= 1.1),
  raspi-config, logrotate, resolvconf, usbutils, nano,
  rtl-sdr, soapysdr-module-rtlsdr,
  socat, netcat-openbsd, plymouth, plymouth-themes,
  ntp, policykit-1 (>= 0.105-31+rpt1+deb11u1)
+Conflicts: piaware-repository
 Replaces: piaware-repository
 Breaks: piaware-repository-testing (<< ${binary:Version})
 Description: Metapackage for PiAware sdcard releases.

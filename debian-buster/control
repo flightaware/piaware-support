@@ -21,7 +21,7 @@ Depends: piaware-support (= ${binary:Version}),
  dump1090-fa (= 8.1~bpo10+1),
  dump978-fa (= 8.1~bpo10+1), skyaware978 (= 8.1~bpo10+1),
  piaware-web (= 8.1~bpo10+1),
- flightaware-apt-repository (= 1.1),
+ flightaware-apt-repository (>= 1.1),
  raspi-config, logrotate, resolvconf, usbutils, nano,
  rtl-sdr, soapysdr-module-rtlsdr,
  socat, netcat-openbsd, plymouth, plymouth-themes,
@@ -30,6 +30,8 @@ Depends: piaware-support (= ${binary:Version}),
  openssl (>= 1.1.1d-0+deb10u5),
  bind9-host (>= 9.11.5.P4+dfsg-5.1+deb10u3),
  apt (>= 1.8.2.3), policykit-1 (>= 0.105-25+rpt1+deb10u1)
+Conflicts: piaware-repository
+Replaces: piaware-repository
 Breaks: piaware-repository-testing (<< ${binary:Version})
 Description: Metapackage for PiAware sdcard releases.
  Metapackage that depends on the specific packages that
