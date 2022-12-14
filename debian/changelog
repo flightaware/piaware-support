@@ -1,3 +1,9 @@
+piaware-support (8.2) stable; urgency=medium
+
+  * Remove piaware-repository recommends in control files that are causing removal of piaware-release
+
+  -- Eric Tran <eric.tran@flightaware.com>  Tue, 13 Dec 2022 23:21:00 -0600
+
 piaware-support (8.1) stable; urgency=medium
 
   * Pick up latest flightaware-apt-repository that fixes Stretch OS upgrades
