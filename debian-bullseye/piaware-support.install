@@ -17,3 +17,4 @@ etc/kernel/postinst.d/zz-update-bootconfig
 etc/kernel/postrm.d/rpi-bootconfig
 etc/kernel/postrm.d/zz-update-bootconfig
 package/helpers/piaware-restart-network usr/bin/
+package/helpers/piaware-restart-receiver usr/bin/
