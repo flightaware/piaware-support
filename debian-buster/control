@@ -17,7 +17,7 @@ Architecture: all
 Depends: piaware-support (= ${binary:Version}),
  piaware (= 8.2~bpo10+1),
  beast-splitter (= 8.2~bpo10+1),
- dump1090-fa (= 8.2~bpo10+1),
+ dump1090-fa (= 9.0~dev~bpo10+1),
  dump978-fa (= 8.2~bpo10+1), skyaware978 (= 8.2~bpo10+1),
  piaware-web (= 8.2~bpo10+1),
  flightaware-apt-repository (>= 1.1),
