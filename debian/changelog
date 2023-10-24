@@ -2,39 +2,39 @@ piaware-support (9.0~dev) UNRELEASED; urgency=medium
 
   * In development
 
-  -- Eric Tran <eric.tran@flightaware.com>  Mon, 04 Sep 2023 15:01:00 -0600
+ -- Eric Tran <eric.tran@flightaware.com>  Mon, 04 Sep 2023 15:01:00 -0600
 
 piaware-support (8.2) stable; urgency=medium
 
   * Remove piaware-repository recommends in control files that are causing removal of piaware-release
 
-  -- Eric Tran <eric.tran@flightaware.com>  Wed, 14 Dec 2022 16:21:00 -0600
+ -- Eric Tran <eric.tran@flightaware.com>  Wed, 14 Dec 2022 16:21:00 -0600
 
 piaware-support (8.1) stable; urgency=medium
 
   * Pick up latest flightaware-apt-repository that fixes Stretch OS upgrades
 
-  -- Eric Tran <eric.tran@flightaware.com>  Wed, 07 Dec 2022 20:14:00 -0600
+ -- Eric Tran <eric.tran@flightaware.com>  Wed, 07 Dec 2022 20:14:00 -0600
 
 piaware-support (8.0) stable; urgency=medium
 
   * Bullseye - Replace piaware-apt-repository with flightaware-apt-repository which automatically installs the correct
     sources.list file based on current OS
 
-  -- Eric Tran <eric.tran@flightaware.com>  Tue, 06 Dec 2022 14:35:00 -0600
+ -- Eric Tran <eric.tran@flightaware.com>  Tue, 06 Dec 2022 14:35:00 -0600
 
 piaware-support (7.2) stable; urgency=medium
 
   * Use policykit-1 with security update to address Polkit Privilege Escalation Vulnerability (CVE-2021-4034)
 
-  -- Eric Tran <eric.tran@flightaware.com>  Thu, 10 Mar 2022 23:04:00 -0600
+ -- Eric Tran <eric.tran@flightaware.com>  Thu, 10 Mar 2022 23:04:00 -0600
 
 piaware-support (7.1) stable; urgency=medium
 
   * piaware: Fix unintented restart of piaware during a piaware-managed upgrade
     (triggered by a behavioral change between debhelper compat 9 and compat 10)
 
-  -- Eric Tran <eric.tran@flightaware.com>  Tue, 11 Jan 2021 10:05:00 -0600
+ -- Eric Tran <eric.tran@flightaware.com>  Tue, 11 Jan 2021 10:05:00 -0600
 
 piaware-support (7.0) stable; urgency=medium
 
