@@ -1,6 +1,8 @@
 piaware-support (9.0~dev) UNRELEASED; urgency=medium
 
-  * In development
+  * Update to PiAware 9.0 and related packages
+  * Treat bullseye as a backport (though we do not yet support bookworm here)
+  * Discontinue support for stretch
 
  -- Eric Tran <eric.tran@flightaware.com>  Mon, 04 Sep 2023 15:01:00 -0600
 
