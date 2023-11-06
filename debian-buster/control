@@ -15,12 +15,12 @@ Description: Support package for PiAware sdcard images.
 Package: piaware-release
 Architecture: all
 Depends: piaware-support (= ${binary:Version}),
- piaware (= 9.0~dev~bpo10+1),
- beast-splitter (= 9.0~dev~bpo10+1),
- dump1090-fa (= 9.0~dev~bpo10+1),
- dump978-fa (= 9.0~dev~bpo10+1), skyaware978 (= 9.0~dev~bpo10+1),
- piaware-web (= 9.0~dev~bpo10+1),
- flightaware-apt-repository (>= 1.2~dev),
+ piaware (= 9.0~bpo10+1),
+ beast-splitter (= 9.0~bpo10+1),
+ dump1090-fa (= 9.0~bpo10+1),
+ dump978-fa (= 9.0~bpo10+1), skyaware978 (= 9.0~bpo10+1),
+ piaware-web (= 9.0~bpo10+1),
+ flightaware-apt-repository (>= 1.2),
  raspi-config, logrotate, resolvconf, usbutils, nano,
  rtl-sdr, soapysdr-module-rtlsdr,
  socat, netcat-openbsd, plymouth, plymouth-themes,
