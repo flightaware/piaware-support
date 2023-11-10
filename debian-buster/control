@@ -15,7 +15,7 @@ Description: Support package for PiAware sdcard images.
 Package: piaware-release
 Architecture: all
 Depends: piaware-support (= ${binary:Version}),
- piaware (= 9.0~bpo10+1),
+ piaware (= 9.0.1~bpo10+1),
  beast-splitter (= 9.0~bpo10+1),
  dump1090-fa (= 9.0~bpo10+1),
  dump978-fa (= 9.0~bpo10+1), skyaware978 (= 9.0~bpo10+1),
