@@ -1,4 +1,0 @@
-nmcli con add con-name piaware type wifi ssid 'something' 
-nmcli con modify piaware wifi-sec.key-mgmt wpa-psk
-nmcli con modify piaware wifi-sec.psk ''
-nmcli con up piaware
