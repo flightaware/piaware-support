@@ -120,11 +120,19 @@ class Metadata():
     def convert_str_to_uuid(self, val: str , version = 4) -> UUID:
         return UUID(val, version=version)
     
+    def convert_str_to_gain(self, val) -> str | float:
+        if (isinstance(val, str) and val == "max") or (isinstance(val, int) and val == -10):
+            return "max"
+        elif isinstance(val, int):
+            return int(val)
+        else:
+            return float(val)
+    
     def convert_value(self, key, val) -> any:
-        setting = self.settings(key)
-        t = settings.type
+        setting = self.settings[key]
+        t = setting.setting_type
 
-        if check_enums(t):
+        if check_enums(t, val):
             return val
             
         match t:
@@ -147,19 +155,19 @@ class Metadata():
                 return self.convert_str_to_uuid(val)
 
             case "gain":
-                return self.validate_str_gain(val)
+                return self.convert_str_to_gain(val)
 
             case _:
                 raise TypeError("Unrecognized type {t}")
 
-    def validate_str_bool(self, val: str) -> bool:
+    def validate_bool(self, val: str) -> bool:
         if val == "yes" or val == "no":
             return True
         else:
             return False
 
 
-    def validate_str_int(self, val: str) -> bool:
+    def validate_int(self, val: str) -> bool:
         try: 
             int(val)
         except ValueError:
@@ -167,10 +175,7 @@ class Metadata():
         else:
             return True
 
-    # def convert_str_to_int(self, val: str) -> int:
-    #     return int(val)
-
-    def validate_str_double(self, val: str) -> bool:
+    def validate_double(self, val: str) -> bool:
         try: 
             float(val)
         except ValueError:
@@ -178,24 +183,22 @@ class Metadata():
         else:
             return True
 
-    def validate_str_mac(self, val: str) -> bool:
+    def validate_mac(self, val: str) -> bool:
         m = re.match("^[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}$", val)
         if m.start() == 0 and m.end == len(val):
             return True
         
         return False
 
-    def validate_str_uuid(self, val: str, version=4) -> bool:
+    def validate_uuid(self, val: str, version=4) -> bool:
         try:
             uuid_obj = UUID(uuid_to_test, version=version)
         except ValueError:
             return False
         return str(uuid_obj) == uuid_to_test
 
-    def validate_str_gain(self, val: str) -> bool:
-        return self.validate_str_double(val) or val == "max"
-
-
+    def validate_gain(self, val: str) -> bool:
+        return self.validate_double(val) or (isinstance(val, str) and val == "max")
 
     def validate_value(self, key, val) -> bool:
         setting = self.settings[key]
@@ -209,22 +212,22 @@ class Metadata():
                 return True
 
             case "bool":
-                return self.validate_str_bool(val)
+                return self.validate_bool(val)
 
             case "int":
-                return self.validate_str_int(val)
+                return self.validate_int(val)
 
             case "double":
-                return self.validate_str_double(val)
+                return self.validate_double(val)
 
             case "mac":
-                return self.validate_str_mac(val)
+                return self.validate_mac(val)
 
             case "uuid":
-                return self.validate_str_uuid(val)
+                return self.validate_uuid(val)
 
             case "gain":
-                return self.validate_str_gain(val)
+                return self.validate_gain(val)
 
             case _:
                 raise TypeError(f"Unrecognized type {t}")
@@ -239,12 +242,31 @@ class ConfigFile():
         self.values = {}
     
     def process_quotes(self, line: str) -> str:
-        if line[0] != "\"" or line[0] != "'":
+        if line[0] != "\"" and line[0] != "'":
             comment_index = line.find("#")
             if comment_index == -1:
                 return line
             else:
                 return line[0:comment_index].strip()
+        val = ""
+        esc = False
+        for i in range(1, len(line)):
+            char = line[i]
+            if esc:
+                val += char
+                esc = False
+                continue
+
+            if char == "\"":
+                print(char)
+                break
+
+            if char == "\\":
+                esc = True
+                continue
+
+            val += char
+        return val.strip()
 
 
     def parse_line(self, line) -> tuple | None:
@@ -262,8 +284,8 @@ class ConfigFile():
         return None
 
     def get(self, setting_key: str) -> any:
-        if setting_key in self.files.values:
-            return self.files.values[setting_key]
+        if setting_key in self.values:
+            return self.values[setting_key]
         else:
             return None
 
@@ -298,10 +320,10 @@ class ConfigFile():
 
                             values[key] = val
                 for k, v in values.items():
-                    self.values[k] = v
+                    self.values[k] = self._metadata.convert_value(k, v)
                         
         except Exception as e:
-            print(e)
+            print(f"Something went wrong while reading config file {self._filename}: {e}")
 
 class ConfigGroup():
     files: list[ConfigFile]
@@ -334,11 +356,11 @@ class ConfigGroup():
             if val:
                 return val
         
-        return self.metadata[setting_key].default
+        return self._metadata.get_setting(setting_key).default
 
 
 def create_standard_piaware_config_group(extra_file_path: str = None) -> ConfigGroup:
-    test_dir = "/Users/nick.wan/Documents/fa/test-piaware-config-files"
+    test_dir = ""
     # piaware_image_config = "/usr/share/piaware-support/piaware-image-config.txt"
     # piaware_conf = "/etc/piaware.conf"
     # boot_piaware_config = "/boot/piaware-config.txt"
@@ -373,6 +395,7 @@ def generate() -> ConfigGroup():
 def main():
     cg = generate()
     print(cg.files[0].values)
-
+    print(cg.get("wireless-ssid"))
+    print(cg.get("wireless-password"))
 main()
 
