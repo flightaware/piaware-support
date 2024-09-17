@@ -121,6 +121,7 @@ class Metadata():
         return UUID(val, version=version)
     
     def convert_str_to_gain(self, val) -> str | float:
+        val = val.lower()
         if (isinstance(val, str) and val == "max") or (isinstance(val, int) and val == -10):
             return "max"
         elif isinstance(val, int):
@@ -161,6 +162,7 @@ class Metadata():
                 raise TypeError("Unrecognized type {t}")
 
     def validate_bool(self, val: str) -> bool:
+        val = val.lower()
         if val == "yes" or val == "no":
             return True
         else:
@@ -184,6 +186,7 @@ class Metadata():
             return True
 
     def validate_mac(self, val: str) -> bool:
+        val = val.lower()
         m = re.match("^[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}$", val)
         if m.start() == 0 and m.end == len(val):
             return True
@@ -257,8 +260,7 @@ class ConfigFile():
                 esc = False
                 continue
 
-            if char == "\"":
-                print(char)
+            if char == "\"" or char == "'":
                 break
 
             if char == "\\":
@@ -276,10 +278,9 @@ class ConfigFile():
         if re.search(r"^\s*([a-zA-Z0-9_-]+)\s*(?:#.*)?$", line):
             return (line.strip(), "")
 
-        if re.search(r"^\s*([a-zA-Z0-9_-]+)\s+(.+)$", line):
-            line = line.strip()
-            line = re.split(r"\s+", line)
-            return (line[0], self.process_quotes(line[1]))
+        option_line = re.search(r"^\s*([a-zA-Z0-9_-]+)\s+(.+)$", line)
+        if option_line:
+            return (option_line.group(1), self.process_quotes(option_line.group(2)))
 
         return None
 
@@ -305,7 +306,6 @@ class ConfigFile():
                         
                         key, val = l
                         key = key.lower()
-                        val = val.lower()
                         if self._metadata.get_setting(key) is None:
                             print(f"{self._filename}:{idx}: unrecognized option {key}")
                             continue
@@ -360,13 +360,9 @@ class ConfigGroup():
 
 
 def create_standard_piaware_config_group(extra_file_path: str = None) -> ConfigGroup:
-    test_dir = ""
-    # piaware_image_config = "/usr/share/piaware-support/piaware-image-config.txt"
-    # piaware_conf = "/etc/piaware.conf"
-    # boot_piaware_config = "/boot/piaware-config.txt"
-    piaware_image_config = f"{test_dir}/piaware-image-config.txt"
-    piaware_conf = f"{test_dir}/piaware.conf"
-    boot_piaware_config= f"{test_dir}/piaware-config.txt"
+    piaware_image_config = "/usr/share/piaware-support/piaware-image-config.txt"
+    piaware_conf = "/etc/piaware.conf"
+    boot_piaware_config = "/boot/piaware-config.txt"
 
 
     files = []
@@ -385,17 +381,8 @@ def create_standard_piaware_config_group(extra_file_path: str = None) -> ConfigG
     
     return ConfigGroup(files=files, metadata = Metadata())
 
-def generate() -> ConfigGroup():
-    cg = create_standard_piaware_config_group()
+def generate_from_args(extra_file_path: str = None) -> ConfigGroup():
+    cg = create_standard_piaware_config_group(extra_file_path=extra_file_path)
     cg.read_configs()
-    for f in cg.files:
-        print(f"{f}:{f._priority}")
     return cg
-
-def main():
-    cg = generate()
-    print(cg.files[0].values)
-    print(cg.get("wireless-ssid"))
-    print(cg.get("wireless-password"))
-main()
 
