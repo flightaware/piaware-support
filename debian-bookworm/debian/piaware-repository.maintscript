@@ -1,3 +1,0 @@
-rm_conffile /etc/apt/sources.list.d/piaware.list
-rm_conffile /etc/apt/sources.list.d/piaware-jessie.list
-rm_conffile /etc/apt/sources.list.d/piaware-testing.list 3.0.4~

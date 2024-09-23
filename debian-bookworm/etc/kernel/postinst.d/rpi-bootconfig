@@ -1,9 +1,0 @@
-#!/bin/sh -e
-
-# Record installation of a new kernel so that
-# rpi-bootconfig can later use it to regenerate the Pi's
-# /boot/config.txt.
-
-[ -x /usr/lib/piaware-support/rpi-bootconfig ] || exit 0
-
-/usr/lib/piaware-support/rpi-bootconfig install "$@"

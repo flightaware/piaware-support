@@ -1,8 +1,0 @@
-[Plymouth Theme]
-Name=piaware
-Description=PiAware Splash
-ModuleName=script
-
-[script]
-ImageDir=/usr/share/plymouth/themes/piaware
-ScriptFile=/usr/share/plymouth/themes/piaware/piaware.script

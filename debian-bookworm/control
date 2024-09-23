@@ -1,0 +1,35 @@
+Source: piaware-support
+Section: embedded
+Priority: extra
+Maintainer: FlightAware Developers <adsb-devs@flightaware.com>
+Build-Depends: debhelper(>=10), tcl
+Standards-Version: 3.9.3
+Homepage: https://github.com/flightaware
+
+Package: piaware-support
+Architecture: all
+Depends: piaware, wireless-tools, wpasupplicant, crda, rfkill, atmel-firmware, firmware-atheros, firmware-brcm80211, firmware-intelwimax, firmware-iwlwifi, libertas-firmware, firmware-linux, firmware-ralink, firmware-realtek, firmware-ti-connectivity, firmware-zd1211, whois, dhcpcd5 (>= 1:8.1.2-1+rpt8+fa4), ${misc:Depends}
+Description: Support package for PiAware sdcard images.
+ Handles boot-time configuration.
+
+Package: piaware-release
+Architecture: all
+Depends: piaware-support (= ${binary:Version}),
+ piaware (= 9.0.1),
+ beast-splitter (= 9.0),
+ dump1090-fa (= 9.1~dev),
+ dump978-fa (= 9.0), skyaware978 (= 9.0),
+ piaware-web (= 9.0),
+ piaware-configurator (= 9.1),
+ piaware-ble-connect (= 9.0),
+ flightaware-apt-repository (>= 1.2),
+ raspi-config, logrotate, resolvconf, usbutils, nano,
+ rtl-sdr, soapysdr-module-rtlsdr,
+ socat, netcat-openbsd, plymouth, plymouth-themes,
+ ntp, policykit-1 (>= 0.105-31+rpt1+deb11u1)
+Conflicts: piaware-repository
+Replaces: piaware-repository
+Breaks: piaware-repository-testing (<< ${binary:Version})
+Description: Metapackage for PiAware sdcard releases.
+ Metapackage that depends on the specific packages that
+ make up a PiAware sdcard release.

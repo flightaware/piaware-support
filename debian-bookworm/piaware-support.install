@@ -4,9 +4,10 @@ scripts/generate-receiver-config usr/lib/piaware-support/
 scripts/set-rfkill usr/lib/piaware-support/
 scripts/piaware-console-status usr/lib/piaware-support/
 scripts/rpi-bootconfig usr/lib/piaware-support/
+etc/modprobe.d/
 piaware-config.txt boot/
 debian/piaware-image-config.txt usr/share/piaware-support/
-systemd/dhcpcd.service.d/restart.conf lib/systemd/system/dhcpcd.service.d/
+systemd/dhcpcd.service.d/quiet.conf lib/systemd/system/dhcpcd.service.d/
 systemd/config-ready.target lib/systemd/system/
 etc/profile.d/
 etc/initramfs/post-update.d/rpi-bootconfig
