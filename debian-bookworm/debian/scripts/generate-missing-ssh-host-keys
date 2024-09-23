@@ -1,0 +1,15 @@
+#!/bin/sh
+
+TYPES="dsa ecdsa ed25519 rsa"
+
+for keytype in $TYPES
+do
+    keyfile=/etc/ssh/ssh_host_${keytype}_key
+    if [ ! -f $keyfile ]
+    then
+        echo -n "Generating new $keytype SSH host key.. "
+        ssh-keygen -q -f $keyfile -N '' -t $keytype
+        echo "done."
+        ssh-keygen -l -f ${keyfile}.pub
+    fi
+done

@@ -1,0 +1,15 @@
+# This service generates dump1090-fa and beast-splitter configuration
+# based on the receiver configuration in /boot/piaware-config.txt
+
+[Unit]
+Description=Generate receiver configuration
+Before=dump1090-fa.service beast-splitter.service dump978-fa.service skyaware978.service
+Wants=config-ready.target
+After=config-ready.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/piaware-support/generate-receiver-config
+
+[Install]
+WantedBy=dump1090-fa.service beast-splitter.service dump978-fa.service skyaware978.service

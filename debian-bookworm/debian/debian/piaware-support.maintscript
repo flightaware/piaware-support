@@ -1,0 +1,5 @@
+rm_conffile /etc/kernel/postinst.d/initramfs-tools-hack 3.6.3~
+rm_conffile /etc/kernel/postrm.d/initramfs-tools-hack 3.6.3~
+rm_conffile /etc/apt/preferences.d/50-pin-kernel.pref 3.7.0~
+rm_conffile /etc/systemd/system/config-ready.target.wants/wait-for-usb-drives.service 7.0~
+rm_conffile /etc/modprobe.d/8192cu.conf 7.0~

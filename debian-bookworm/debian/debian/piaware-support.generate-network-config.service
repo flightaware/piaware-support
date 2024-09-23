@@ -1,0 +1,17 @@
+# This service generates a network configuration
+# based on the contents of /boot/piaware-config.txt
+
+[Unit]
+Description=Generate network configuration
+Before=network-pre.target dhcpcd.service
+Wants=network-pre.target
+After=config-ready.target set-rfkill.service
+Wants=config-ready.target
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/piaware-support/generate-network-config
+
+[Install]
+WantedBy=network.target

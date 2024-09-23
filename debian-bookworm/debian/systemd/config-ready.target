@@ -1,0 +1,18 @@
+# This target marks the point at which piaware's configuration
+# files are available.
+#
+# Units that read piaware configuration should declare
+#
+#  Wants=config-ready.target
+#  After=config-ready.target
+#
+# Units that generate piaware configuration should declare
+#
+#  WantedBy=config-ready.target
+#  Before=config-ready.target
+
+[Unit]
+Description=Make configuration files available
+RefuseManualStart=yes
+DefaultDependencies=no
+After=local-fs.target
