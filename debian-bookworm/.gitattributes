@@ -1,3 +1,0 @@
-piaware-config.txt eol=crlf
-*.eps -diff
-*.svg -diff
