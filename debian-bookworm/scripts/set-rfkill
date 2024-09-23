@@ -1,0 +1,121 @@
+#!/usr/bin/env tclsh
+
+# Invokes rfkill if configured
+#
+# This tries to turn off, specifically, the Pi 3/4 wifi & bluetooth
+# for environments where they would interfere with the receiver
+# (e.g. FlightFeeder v7) or where a separate USB wifi dongle is
+# preferred to using the Pi's built-in wifi.
+
+package require cmdline
+package require fa_piaware_config
+catch {package require fa_flightfeeder_config}
+
+proc is_pi_mac {mac} {
+	return [expr {[string match -nocase "b8:27:eb:*" $mac] ||
+				  [string match -nocase "dc:a6:32:*" $mac] ||
+				  [string match -nocase "3a:35:41:*" $mac] ||
+				  [string match -nocase "e4:5f:01:*" $mac]}]
+}
+
+proc main {argv} {
+	set opts {
+		{dryrun "just say what you'd do, don't do it"}
+	}
+
+	set usage ": $::argv0 ?-dryrun?"
+
+	if {[catch {array set params [::cmdline::getoptions argv $opts $usage]} catchResult] == 1} {
+		puts stderr $catchResult
+		return
+	}
+
+	# look for any onboard Pi wifi and bluetooth interfaces
+	# I wish this was easier..
+	set devices [list]
+	foreach dev [glob -nocomplain -tails -directory /sys/class/rfkill *] {
+		if {[catch {
+			set f [open "/sys/class/rfkill/$dev/index" "r"]
+			try {
+				gets $f devIndex
+			} finally {
+				catch {close $f}
+			}
+
+			set f [open "/sys/class/rfkill/$dev/type" "r"]
+			try {
+				gets $f devType
+			} finally {
+				catch {close $f}
+			}
+
+			switch -- $devType {
+				"wlan" {
+					set f [open "/sys/class/rfkill/$dev/device/macaddress" "r"]
+					try {
+						gets $f devAddress
+					} finally {
+						catch {close $f}
+					}
+
+					if {![is_pi_mac $devAddress]} {
+						continue
+					}
+				}
+
+				"bluetooth" {
+					set f [open "/sys/class/rfkill/$dev/device/address" "r"]
+					try {
+						gets $f devAddress
+					} finally {
+						catch {close $f}
+					}
+
+					if {![is_pi_mac $devAddress]} {
+						continue
+					}
+				}
+
+				default {
+					# not bluetooth/wlan
+					continue
+				}
+			}
+
+			# ok, this looks like this is one we want to work on
+			lappend devices $devIndex
+		} catchResult] == 1} {
+			# nb deliberately ignoring "continue" catch results here
+			puts stderr "Caught '$catchResult' processing $dev"
+		}
+	}
+
+	if {$devices eq ""} {
+		puts "No devices needing rfkill found"
+		exit 0
+	}
+
+	set config [::fa_piaware_config::new_combined_config #auto]
+	$config read_config
+
+	if {[$config get rfkill]} {
+		puts "Setting rfkill on devices: $devices"
+		set mode "block"
+	} else {
+		puts "Clearing rfkill on devices: $devices"
+		set mode "unblock"
+	}
+
+	foreach devIndex $devices {
+		set cmd [list /usr/sbin/rfkill $mode $devIndex]
+		if {$params(dryrun)} {
+			puts "-dryrun was set, would have run: $cmd"
+		} else {
+			exec {*}$cmd >@stdout 2>@stderr
+		}
+	}
+}
+
+if {!$tcl_interactive} {
+	main $argv
+}

@@ -1,0 +1,237 @@
+#!/usr/bin/tclsh8.6
+
+package require fa_sysinfo
+package require json
+
+namespace eval ::term {
+	set color(BLACK) 0
+	set color(RED) 1
+	set color(GREEN) 2
+	set color(YELLOW) 3
+	set color(BLUE) 4
+	set color(MAGENTA) 5
+	set color(CYAN) 6
+	set color(WHITE) 7
+
+	proc blank {val} {
+		catch {exec -- setterm -blank $val 2>/dev/null}
+	}
+
+	proc tput {cap args} {
+		variable tputCache
+
+		set key [list $cap $args]
+		if {[info exists tputCache($key)]} {
+			return $tputCache($key)
+		}
+
+		if {[catch {exec -keepnewline -- tput $cap {*}$args 2>/dev/null} result]} {
+			set result ""
+		}
+		set tputCache($key) $result
+		return $result
+	}
+
+	proc clear {} {
+		return [tput clear]
+	}
+
+	proc bold {args} {
+		return "[tput bold][join $args][tput sgr0]"
+	}
+
+	proc color {fg args} {
+		return "[tput setaf $::term::color($fg)][join $args][tput op]"
+	}
+}
+
+proc init_info {} {
+	set ::mac [::fa_sysinfo::mac_address]
+	set ::piawareVersion [exec -ignorestderr dpkg-query --show --showformat {${Version}} piaware-release]
+
+	refresh_info
+}
+
+proc refresh_info {} {
+	set ::wifiInterface [::fa_sysinfo::wireless_interface]
+	if {$::wifiInterface ne ""} {
+		set ::wifiState [::fa_sysinfo::interface_state $::wifiInterface]
+		set ::wifiIP [::fa_sysinfo::interface_ip_address $::wifiInterface]
+	} else {
+		set ::wifiState ""
+		set ::wifiIP ""
+	}
+
+	set ::wiredState [::fa_sysinfo::interface_state eth0]
+	set ::wiredIP [::fa_sysinfo::interface_ip_address eth0]
+
+	::fa_sysinfo::route_to_flightaware _ _ ::IP
+
+	set ::cputemp [::fa_sysinfo::cpu_temperature]
+	set ::cpuload [::fa_sysinfo::cpu_load]
+	set ::uptime [::fa_sysinfo::uptime]
+
+	unset -nocomplain ::piawareStatus
+	unset -nocomplain ::statsURL
+	unset -nocomplain ::unclaimedID
+	if {[catch {
+		set f [open "/run/piaware/status.json" r]
+		try {
+			set result [::json::json2dict [read $f]]
+		} finally {
+			catch {close $f}
+		}
+
+		set expiry [dict get $result "expiry"]
+		set now [clock milliseconds]
+		if {$now > $expiry} {
+			error "status file out of date"
+		}
+
+		foreach thing {piaware mlat adept radio uat_radio no_radio} {
+			if {[dict exists $result $thing]} {
+				set ::piawareStatus($thing) [list [dict get $result $thing status] [dict get $result $thing message]]
+			}
+		}
+
+		if {[dict exists $result site_url]} {
+			set ::statsURL [dict get $result site_url]
+		}
+
+		if {[dict exists $result unclaimed_feeder_id]} {
+			set ::unclaimedID [dict get $result unclaimed_feeder_id]
+		}
+	} result]} {
+		set ::piawareStatus(piaware) [list red "Could not read piaware status file (piaware may not be running)"]
+	}
+
+	unset -nocomplain ::uuid
+	catch {
+		set f [open "/var/cache/piaware/feeder_id" r]
+		try {
+			set ::uuid [read $f]
+		} finally {
+			catch {close $f}
+		}
+	}
+}
+
+proc pretty_print_uptime {secs} {
+	set days [expr {$secs / 86400}]
+	set hours [expr {($secs / 3600) % 24}]
+	set mins [expr {($secs / 60) % 60}]
+
+	if {$days >= 1.0} {
+		return [format "%.0fd %02.0fh %02.0fm" $days $hours $mins]
+	} elseif {$hours >= 1.0} {
+		return [format "%02.0fh %02.0fm" $hours $mins]
+	} else {
+		return [format "%02.0fm" $mins]
+	}
+}
+
+proc pretty_print_netstatus {interface state ip} {
+	if {$interface eq ""} {
+		return "not configured"
+	}
+
+	if {$state ne "up"} {
+		return "$interface [::term::color RED $state]"
+	}
+
+	if {$ip eq ""} {
+		return "$interface $state, [::term::color RED no IP address assigned]"
+	} else {
+		return "$interface $state, IP address: $ip"
+	}
+}
+
+proc refresh_screen {} {
+	refresh_info
+
+	puts [::term::clear]
+
+	set now [clock format [clock seconds] -format "%Y/%m/%d %H:%M:%S UTC" -timezone UTC]
+	puts "[::term::bold Welcome to PiAware $::piawareVersion!]"
+	puts ""
+
+	puts [format "%-20s %s" "System time:" $now]
+	puts [format "%-20s %s" "Time since reboot:" [pretty_print_uptime $::uptime]]
+	puts [format "%-20s %.0f%%" "CPU load:" $::cpuload]
+	if {$::cputemp ne ""} {
+		puts [format "%-20s %.0fC" "CPU temperature:" $::cputemp]
+	}
+	if {$::mac ne ""} {
+		puts [format "%-20s %s" "Site MAC address:" $::mac]
+	}
+	if {[info exists ::uuid] && $::uuid ne ""} {
+		puts [format "%-20s %s" "Site feeder ID:" $::uuid]
+	}
+
+	puts ""
+	puts [format "%-20s %s" "Wired network:" [pretty_print_netstatus eth0 $::wiredState $::wiredIP]]
+	puts [format "%-20s %s" "Wireless network:" [pretty_print_netstatus $::wifiInterface $::wifiState $::wifiIP]]
+
+	puts ""
+	foreach {thing description} [list piaware "PiAware feeder" radio "1090 Receiver" adept "FlightAware feed" mlat "Multilateration" uat_radio "978 UAT Receiver" no_radio "Receiver"] {
+		if {[info exists ::piawareStatus($thing)]} {
+			lassign $::piawareStatus($thing) status message
+			switch -- $status {
+				green {
+					set color GREEN
+					set status "normal"
+				}
+				amber {
+					set color YELLOW
+					set status "warning"
+				}
+				default {
+					set color RED
+					set status "error"
+				}
+			}
+
+			puts [format "%-20s %s: %s" $description: [::term::color $color $status] $message]
+		}
+	}
+
+	if {$::IP ne ""} {
+		puts ""
+		puts "To access a status page and a map of nearby aircraft,"
+		puts "visit http://$::IP/ from another computer on your local network."
+	}
+
+	if {[info exists ::statsURL]} {
+		puts ""
+		puts "To view your site statistics online,"
+		puts "visit $::statsURL"
+	}
+
+	if {[info exists ::unclaimedID]} {
+		puts ""
+		puts "To associate this site with your FlightAware account, claim it by visiting"
+		puts "https://flightaware.com/adsb/piaware/claim/${::unclaimedID}"
+	}
+
+	puts ""
+	puts "[::term::bold Alt+F1:]  This screen"
+	puts "[::term::bold Alt+F2:]  Command line login"
+	puts "           (see https://flightaware.com/adsb/piaware/build/optional)"
+	puts "[::term::bold Alt+F10:] System logs"
+
+	::term::blank poke
+}
+
+set ::interval 1000
+proc periodically_refresh_screen {} {
+	# refresh fast initially
+	set ::interval [expr {min(60000, $::interval + 1000)}]
+	after $::interval periodically_refresh_screen
+	refresh_screen
+}
+
+if {!$tcl_interactive} {
+	init_info
+	after idle periodically_refresh_screen
+	vwait forever
+}

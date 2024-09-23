@@ -1,0 +1,167 @@
+#!/bin/sh
+# postinst script for piaware-support
+#
+# see: dh_installdeb(1)
+
+set -e
+
+# summary of how this script can be called:
+#        * <postinst> `configure' <most-recently-configured-version>
+#        * <old-postinst> `abort-upgrade' <new version>
+#        * <conflictor's-postinst> `abort-remove' `in-favour' <package>
+#          <new-version>
+#        * <postinst> `abort-remove'
+#        * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
+#          <failed-install-package> <version> `removing'
+#          <conflicting-package> <version>
+# for details, see http://www.debian.org/doc/debian-policy/ or
+# the debian-policy package
+
+# this reimplements most of deb-systemd-invoke but with --no-block
+invoke_systemctl_noblock() {
+    action="$1"
+    unit="$2"
+
+    # we have to do this all by hand, because deb-systemd-invoke doesn't do
+    # what we want, booo
+    if [ -x /usr/sbin/policy-rc.d ]
+    then
+        set +e
+        /usr/sbin/policy-rc.d "$unit" "$action"
+        policy=$?
+        set -e
+        if [ "$policy" = "101" ]
+        then
+            echo "$action of $unit denied by policy" >&2
+            return 0
+        fi
+    fi
+
+    systemctl --no-block "$action" "$unit"
+}
+
+disable_dhcp_duid() {
+    # upgrading from an old version; default to the old DHCP behaviour
+    echo "Disabling use of DHCP DUIDs to retain pre-upgrade behaviour.."
+    piaware-config allow-dhcp-duid no
+}
+
+fast_enough_for_modeac() {
+    # see if the CPU is fast enough to allow mode A/C
+    # this is a blacklist against certain Pi hardware only,
+    # other slow CPUs will need hand-configuring
+
+    if ! test -f /proc/cpuinfo; then return 0; fi
+
+    # see http://elinux.org/RPi_HardwareHistory#Board_Revision_History
+    revision=$(grep "^Revision" /proc/cpuinfo | awk '{ print $3 }' | sed 's@^1000@@')
+    case "$revision" in
+        0002|0003|0004|0005|0006|000d|000e|000f) return 1 ;;   # old style, 1B
+        0007|0008|0009) return 1 ;;   # old style, 1A
+        0010|0013)      return 1 ;;   # old style, 1B+
+        0011|0014)      return 1 ;;   # old style, CM1
+        0012|0015)      return 1 ;;   # old style, 1A+
+        [89a-f]??00?)   return 1 ;;   # new style, 1A
+        [89a-f]??01?)   return 1 ;;   # new style, 1B
+        [89a-f]??02?)   return 1 ;;   # new style, 1A+
+        [89a-f]??03?)   return 1 ;;   # new style, 1B+
+        [89a-f]??06?)   return 1 ;;   # new style, CM1
+        [89a-f]??09?)   return 1 ;;   # new style, Zero
+        [89a-f]??0c?)   return 1 ;;   # new style, Zero W
+        [89a-f]?0???)   return 1 ;;   # new style, other BCM2835
+        *)              return 0 ;;   # anything else is OK
+    esac
+}
+
+modeac_setup() {
+    if ! fast_enough_for_modeac
+    then
+        echo "Disabling Mode A/C by default due to a slow CPU."
+        piaware-config allow-modeac no
+    fi
+}
+
+fix_initramfs_config() {
+    if [ -f /etc/initramfs-tools/update-initramfs.conf ]
+    then
+        echo "Changing update-initramfs config to regenerate all initrds"
+        sed -i 's@^update_initramfs=yes@update_initramfs=all@g' /etc/initramfs-tools/update-initramfs.conf
+    fi
+}
+
+remove_wpa_action_symlink() {
+    if [ -h /etc/ifplugd/action.d/action_wpa ]
+    then
+        rm -f /etc/ifplugd/action.d/action_wpa
+    fi
+}
+
+disable_adaptive_gain() {
+    echo "Disabling adaptive gain on upgrade from pre-6.0" >&2
+    piaware-config adaptive-dynamic-range no
+    # try to immediately pick up the config change
+    invoke_systemctl_noblock try-restart dump1090-fa
+}
+
+case "$1" in
+    configure)
+        if dpkg --compare-versions "$2" lt "3.0.2"
+        then
+            # new install or upgrade from very old version,
+            # sort out wpa_action hook
+            remove_wpa_action_symlink
+        fi
+
+        if dpkg --compare-versions "$2" lt-nl "3.3"
+        then
+            # it's an upgrade from pre-3.3
+            # retain the old DHCP behavior
+            disable_dhcp_duid
+            # maybe disable mode a/c on slow cpus
+            modeac_setup
+        fi
+
+        if dpkg --compare-versions "$2" lt "3.3"
+        then
+           # new install or upgrade
+           # tweak config so that we rebuild both pi1 and pi2 initrds
+           # as we don't know what we're booting on next
+           fix_initramfs_config
+        fi
+
+        if dpkg --compare-versions "$2" lt "3.5"
+        then
+            # populate initial rpi-bootconfig state based on what is
+            # currently installed
+            mkdir -p /var/lib/rpi-bootconfig
+            /usr/lib/piaware-support/rpi-bootconfig scan
+
+            # maybe regenerate config.txt
+            if [ -x /etc/kernel/postinst.d/zz-update-bootconfig ]; then
+                /etc/kernel/postinst.d/zz-update-bootconfig
+            fi
+        fi
+
+        if dpkg --compare-versions "$2" lt-nl "6.0"
+        then
+            # disable adaptive gain by default on upgrades only
+            # (fresh 6.0 installs will default to adaptive gain enabled)
+            disable_adaptive_gain
+        fi
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+# dh_installdeb will replace this with shell code automatically
+# generated by other debhelper scripts.
+
+#DEBHELPER#
+
+exit 0

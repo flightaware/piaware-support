@@ -1,0 +1,2 @@
+rm_conffile /etc/apt/sources.list.d/piaware-testing-bis.list
+rm_conffile /etc/apt/sources.list.d/piaware-jessie-testing.list
