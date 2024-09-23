@@ -58,7 +58,6 @@ case "$DIST" in
         # consider older distributions to be "backports" for the sake of
         # consistent version numbers
         echo "Preparing bookworm" >&2
-        dch --changelog $OUT/debian/changelog  --force-distribution --distribution bookworm
         ;;
 
     *)
