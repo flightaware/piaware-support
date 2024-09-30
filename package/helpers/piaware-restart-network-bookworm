@@ -10,9 +10,9 @@ nmcli con down wireless
 
 /bin/systemctl --quiet restart NetworkManager || status=1
 
-nmcli con up wireless
+sleep 10s
 
-/bin/systemctl --quiet restart rsyslog || status=1
+nmcli con up wireless
 
 
 echo "Done. Wait a moment for networking changes to take effect"
