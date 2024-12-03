@@ -1,3 +1,9 @@
+piaware-support (10.0~dev) UNRELEASED; urgency=medium
+
+  * Testing bookworm network manager
+
+ -- Nick Wan <nicholas.wan@flightaware.com>  Tue, 03 Dec 2024 21:54:55 +0000
+
 piaware-support (9.0.1) stable; urgency=medium
 
   * Bugfix release to correct fa-mlat-client build problems on Buster only
