@@ -7,7 +7,7 @@ scripts/rpi-bootconfig usr/lib/piaware-support/
 etc/modprobe.d/
 piaware-config.txt boot/
 debian/piaware-image-config.txt usr/share/piaware-support/
-systemd/dhcpcd.service.d/quiet.conf lib/systemd/system/dhcpcd.service.d/
+systemd/NetworkManager.service.d/restart.conf lib/systemd/system/NetworkManager.service.d/
 systemd/config-ready.target lib/systemd/system/
 etc/profile.d/
 etc/initramfs/post-update.d/rpi-bootconfig
