@@ -1,3 +1,8 @@
+"""
+    This file is a re-write of https://github.com/flightaware/piaware/blob/master/package/fa_piaware_config.tcl.
+    It reads from the three default config files to obtain various settings for the piaware machine.
+"""
+
 from uuid import UUID
 import re
 import os
@@ -19,7 +24,6 @@ PIAWARE_CONFIG_ENUMS["country"] = [ "AD","AE","AF","AG","AI","AL","AM","AO","AQ"
 
 PIAWARE_CONFIG_ENUMS["receiver"] = ["rtlsdr", "sdr", "bladerf", "beast", "relay", "radarcape", "radarcape-local", "other", "none"]
 PIAWARE_CONFIG_ENUMS["uat_receiver"] = ["sdr", "stratuxv3", "other", "none"]
-PIAWARE_CONFIG_ENUMS["network_config_style"] = ["sdr", "stratuxv3", "other", "none"]
 PIAWARE_CONFIG_ENUMS["network_type"] = ["static", "dhcp"]
 PIAWARE_CONFIG_ENUMS["slow_cpu"] = ["yes", "no", "auto"]
 
@@ -50,7 +54,6 @@ class Metadata():
         self.settings["force-mac-address"] = MetadataSettings(setting_type="MAC")
         self.settings["allow-auto-updates"] = MetadataSettings(setting_type="bool", default=False)
         self.settings["allow-manual-updates"] = MetadataSettings(setting_type="bool", default=False)
-        self.settings["network-config-style"] = MetadataSettings(setting_type="network_config_style", default="buster", sdonly=True, network=True)
         self.settings["wired-network"] = MetadataSettings(setting_type="bool", default=True, sdonly=True, network=True)
         self.settings["wired-type"] = MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True)
         self.settings["wired-address"] = MetadataSettings(sdonly=True, network=True)
@@ -358,7 +361,8 @@ class ConfigGroup():
         
         return self._metadata.get_setting(setting_key).default
 
-
+# Create a standard piaware config group from these 3 default locations.
+# Create ConfigFile objects and reorder them based on priority.
 def create_standard_piaware_config_group(extra_file_path: str = None) -> ConfigGroup:
     piaware_image_config = "/usr/share/piaware-support/piaware-image-config.txt"
     piaware_conf = "/etc/piaware.conf"
@@ -381,7 +385,9 @@ def create_standard_piaware_config_group(extra_file_path: str = None) -> ConfigG
     
     return ConfigGroup(files=files, metadata = Metadata())
 
-def generate_from_args(extra_file_path: str = None) -> ConfigGroup():
+# Get standard config group.
+# Validate and read in the values.
+def get_standard_config_group(extra_file_path: str = None) -> ConfigGroup():
     cg = create_standard_piaware_config_group(extra_file_path=extra_file_path)
     cg.read_configs()
     return cg

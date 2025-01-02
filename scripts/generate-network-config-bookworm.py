@@ -1,4 +1,4 @@
-from piaware_config import generate_from_args, ConfigGroup
+from piaware_config import get_standard_config_group, ConfigGroup
 from uuid import uuid4
 import subprocess
 
@@ -43,7 +43,8 @@ def generate_network_config(config: ConfigGroup):
     
 def main(dryrun=False, extra_file_path: str = None):
     
-    config_group = generate_from_args()
+    config_group = get_standard_config_group(extra_file_path)
     generate_network_config(config_group)
 
-main()
+if __name__ == "__main__":
+    main()
