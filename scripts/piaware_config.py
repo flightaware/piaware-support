@@ -34,7 +34,6 @@ def check_enums(setting_type: str, value: str) -> bool:
     else:
         return False
 
-
 class MetadataSettings():
     def __init__(self, default: any = None, setting_type: str = None, protect: str = None, sdonly: bool = None, network: str = None) -> None:
         self.default = default
@@ -125,9 +124,9 @@ class Metadata():
     
     def convert_str_to_gain(self, val) -> str | float:
         val = val.lower()
-        if (isinstance(val, str) and val == "max") or (isinstance(val, int) and val == -10):
+        if (isinstance(val, str) and val == "max") or (self.validate_int(val) and int(val) <= -10):
             return "max"
-        elif isinstance(val, int):
+        elif self.validate_int(val):
             return int(val)
         else:
             return float(val)
@@ -150,19 +149,19 @@ class Metadata():
                 return int(val)
 
             case "double":
-                return float(double)
+                return float(val)
 
-            case "mac":
+            case "MAC":
                 return val
 
-            case "uuid":
+            case "UUID":
                 return self.convert_str_to_uuid(val)
 
             case "gain":
                 return self.convert_str_to_gain(val)
 
             case _:
-                raise TypeError("Unrecognized type {t}")
+                raise TypeError(f"Unrecognized type {t}")
 
     def validate_bool(self, val: str) -> bool:
         val = val.lower()
@@ -190,18 +189,21 @@ class Metadata():
 
     def validate_mac(self, val: str) -> bool:
         val = val.lower()
-        m = re.match("^[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}$", val)
-        if m.start() == 0 and m.end == len(val):
-            return True
+        m = re.fullmatch("^[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}$", val)
+        if m is None:
+            return False
         
-        return False
+        if m.start() == 0 and m.end() == len(val):
+            return True
+        else:
+            return False
 
     def validate_uuid(self, val: str, version=4) -> bool:
         try:
-            uuid_obj = UUID(uuid_to_test, version=version)
+            uuid_obj = UUID(val, version=version)
         except ValueError:
             return False
-        return str(uuid_obj) == uuid_to_test
+        return str(uuid_obj) == val
 
     def validate_gain(self, val: str) -> bool:
         return self.validate_double(val) or (isinstance(val, str) and val == "max")
@@ -226,10 +228,10 @@ class Metadata():
             case "double":
                 return self.validate_double(val)
 
-            case "mac":
+            case "MAC":
                 return self.validate_mac(val)
 
-            case "uuid":
+            case "UUID":
                 return self.validate_uuid(val)
 
             case "gain":
