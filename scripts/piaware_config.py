@@ -250,12 +250,16 @@ class ConfigFile():
         self.values = {}
     
     def process_quotes(self, line: str) -> str:
+        if len(line) == 0:
+            return line
+
         if line[0] != "\"" and line[0] != "'":
             comment_index = line.find("#")
             if comment_index == -1:
                 return line
             else:
                 return line[0:comment_index].strip()
+
         val = ""
         esc = False
         for i in range(1, len(line)):
@@ -358,7 +362,7 @@ class ConfigGroup():
     def get(self, setting_key: str) -> any:
         for file in self.files:
             val = file.get(setting_key)
-            if val:
+            if val is not None:
                 return val
         
         return self._metadata.get_setting(setting_key).default
