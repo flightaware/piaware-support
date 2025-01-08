@@ -26,6 +26,7 @@ PIAWARE_CONFIG_ENUMS["receiver"] = ["rtlsdr", "sdr", "bladerf", "beast", "relay"
 PIAWARE_CONFIG_ENUMS["uat_receiver"] = ["sdr", "stratuxv3", "other", "none"]
 PIAWARE_CONFIG_ENUMS["network_type"] = ["static", "dhcp"]
 PIAWARE_CONFIG_ENUMS["slow_cpu"] = ["yes", "no", "auto"]
+PIAWARE_CONFIG_ENUMS["network_config_style"] = ["default", "buster", "jessie"]
 
 
 def check_enums(setting_type: str, value: str) -> bool:
@@ -53,6 +54,7 @@ class Metadata():
         self.settings["force-mac-address"] = MetadataSettings(setting_type="MAC")
         self.settings["allow-auto-updates"] = MetadataSettings(setting_type="bool", default=False)
         self.settings["allow-manual-updates"] = MetadataSettings(setting_type="bool", default=False)
+        self.settings["network-config-style"] = MetadataSettings(setting_type="network_config_style", default="default", sdonly=True, network=True)
         self.settings["wired-network"] = MetadataSettings(setting_type="bool", default=True, sdonly=True, network=True)
         self.settings["wired-type"] = MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True)
         self.settings["wired-address"] = MetadataSettings(sdonly=True, network=True)
