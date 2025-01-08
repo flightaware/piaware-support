@@ -8,20 +8,20 @@ Homepage: https://github.com/flightaware
 
 Package: piaware-support
 Architecture: all
-Depends: piaware, wireless-tools, wpasupplicant, crda, rfkill, atmel-firmware, firmware-atheros, firmware-brcm80211, firmware-intelwimax, firmware-iwlwifi, libertas-firmware, firmware-linux, firmware-ralink, firmware-realtek, firmware-ti-connectivity, firmware-zd1211, whois, dhcpcd5 (>= 1:8.1.2-1+rpt8+fa4), ${misc:Depends}
+Depends: piaware, wireless-tools, wpasupplicant, rfkill, atmel-firmware, firmware-atheros, firmware-brcm80211, firmware-intelwimax, firmware-iwlwifi, libertas-firmware, firmware-linux, firmware-ralink, firmware-realtek, firmware-ti-connectivity, firmware-zd1211, whois, network-manager, ${misc:Depends}
 Description: Support package for PiAware sdcard images.
  Handles boot-time configuration.
 
 Package: piaware-release
 Architecture: all
 Depends: piaware-support (= ${binary:Version}),
- piaware (= 9.0.1),
- beast-splitter (= 9.0),
- dump1090-fa (= 9.1~dev),
- dump978-fa (= 9.0), skyaware978 (= 9.0),
- piaware-web (= 9.0),
- piaware-configurator (= 9.1),
- piaware-ble-connect (= 9.0),
+ piaware (= 10.0~dev),
+ beast-splitter (= 10.0~dev),
+ dump1090-fa (= 10.0~dev),
+ dump978-fa (= 10.0~dev), skyaware978 (= 10.0~dev),
+ piaware-web (= 10.0~dev),
+ piaware-configurator (= 10.0~dev),
+ piaware-ble-connect (= 10.0~dev),
  flightaware-apt-repository (>= 1.2),
  raspi-config, logrotate, resolvconf, usbutils, nano,
  rtl-sdr, soapysdr-module-rtlsdr,
