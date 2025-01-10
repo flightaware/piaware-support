@@ -1,6 +1,6 @@
 PREFIX=/usr
 BIN=$(PREFIX)/bin
-FILES=piaware-restart-network piaware-restart-receiver piaware-restart-restart-network-bookworm
+FILES=piaware-restart-network piaware-restart-receiver piaware-restart-network-bookworm
 
 all:
 
