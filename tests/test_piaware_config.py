@@ -42,7 +42,7 @@ class TestMetadata(unittest.TestCase):
         assert testm.convert_value("manage-config", "no") == False
         assert testm.convert_value("priority", "1") == 1
         assert testm.convert_value("adaptive-min-gain", "1.2") == 1.2
-        assert testm.convert_value("force-mac-address", "01:23:45:67:89:AB") == "01:23:45:67:89:AB"
+        assert testm.convert_value("force-macaddress", "01:23:45:67:89:AB") == "01:23:45:67:89:AB"
         assert testm.convert_value("feeder-id", "e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c") == UUID("e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c", version=4)
         assert testm.convert_value("rtlsdr-gain", "-10") == "max"
 
@@ -102,7 +102,7 @@ class TestMetadata(unittest.TestCase):
             (testm.validate_value("manage-config", "no")),
             (testm.validate_value("priority", "1")),
             (testm.validate_value("adaptive-min-gain", "1.2")),
-            (testm.validate_value("force-mac-address", "01:23:45:67:89:AB")),
+            (testm.validate_value("force-macaddress", "01:23:45:67:89:AB")),
             (testm.validate_value("feeder-id", "e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c")),
             (testm.validate_value("rtlsdr-gain", "-10"))
         ]
