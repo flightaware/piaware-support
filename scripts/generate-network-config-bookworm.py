@@ -1,8 +1,10 @@
 from piaware_config import get_standard_config_group, ConfigGroup
 from uuid import uuid4
 import subprocess
+import os
 
 SYS_CON_DIR = "/etc/NetworkManager/system-connections"
+FIRSTBOOT_PATH = "/run/firstboot"
 
 def wireless_conn_file_template(new_uuid: str, ssid: str, psk: str):
     return f"""[connection]
@@ -40,6 +42,11 @@ def generate_network_config(config: ConfigGroup):
         conn_file.write(wireless_conn_file_template(new_uuid, ssid, psk))
     subprocess.run(["chmod", "600", f"{SYS_CON_DIR}/wireless.nmconnection"])
     subprocess.run(["sync"])
+
+    if not os.path.exists(FIRSTBOOT_PATH):
+        subprocess.run(["nmcli", "con", "up", "wireless"])
+        with open(FIRSTBOOT_PATH, "w") as f:
+            f.write("Used by generate-network-config-bookworm.py to determine if it's being run for the first time after a bootup.")
     
 def main(dryrun=False, extra_file_path: str = None):
     
