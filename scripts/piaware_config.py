@@ -374,7 +374,7 @@ class ConfigGroup():
 def create_standard_piaware_config_group(extra_file_path: str = None) -> ConfigGroup:
     piaware_image_config = "/usr/share/piaware-support/piaware-image-config.txt"
     piaware_conf = "/etc/piaware.conf"
-    boot_piaware_config = "/boot/piaware-config.txt"
+    boot_piaware_config = "/boot/firmware/piaware-config.txt"
 
 
     files = []

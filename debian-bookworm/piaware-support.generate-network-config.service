@@ -1,5 +1,5 @@
 # This service generates a network configuration
-# based on the contents of /boot/piaware-config.txt
+# based on the contents of /boot/firmware/piaware-config.txt
 
 [Unit]
 Description=Generate network configuration
