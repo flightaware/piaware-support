@@ -6,7 +6,7 @@ scripts/set-rfkill usr/lib/piaware-support/
 scripts/piaware-console-status usr/lib/piaware-support/
 scripts/rpi-bootconfig usr/lib/piaware-support/
 etc/modprobe.d/
-piaware-config.txt boot/
+piaware-config.txt boot/firmware
 debian/piaware-image-config.txt usr/share/piaware-support/
 systemd/NetworkManager.service.d/restart.conf lib/systemd/system/NetworkManager.service.d/
 systemd/config-ready.target lib/systemd/system/
