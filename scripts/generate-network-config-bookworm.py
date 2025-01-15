@@ -32,13 +32,13 @@ def wireless_conn_file_template(new_uuid: str, ssid: str, psk: str):
 def generate_network_config(config: ConfigGroup):
     if config.get("wired-network"):
         print("wired-network set to yes")
+        subprocess.run(["ip", "link", "set", "eth0", "up"])
     else:
         print("wired-network set to no")
-        subprocess.run(["nmcli", "con", "down", "eth0"])
+        subprocess.run(["ip", "link", "set", "eth0", "down"])
 
     if not config.get("wireless-network"):
         print("wireless-network set to no")
-        subprocess.run(["nmcli","con","down","wireless"])
         subprocess.run(["nmcli", "radio", "wifi", "off"])
         return
 
