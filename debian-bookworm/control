@@ -23,7 +23,7 @@ Depends: piaware-support (= ${binary:Version}),
  piaware-configurator (= 10.0~dev),
  piaware-ble-connect (= 10.0~dev),
  flightaware-apt-repository (>= 1.2),
- raspi-config, logrotate, resolvconf, usbutils, nano,
+ raspi-config, logrotate, usbutils, nano,
  rtl-sdr, soapysdr-module-rtlsdr,
  socat, netcat-openbsd, plymouth, plymouth-themes,
  ntp, policykit-1 (>= 0.105-31+rpt1+deb11u1)
