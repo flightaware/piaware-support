@@ -3,6 +3,7 @@
 
 [Unit]
 Description=Generate network configuration
+Before=network-pre.target
 Wants=network-pre.target
 After=config-ready.target set-rfkill.service NetworkManager.service
 Wants=config-ready.target
