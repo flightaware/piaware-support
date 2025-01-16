@@ -6,28 +6,60 @@ import os
 SYS_CON_DIR = "/etc/NetworkManager/system-connections"
 FIRSTBOOT_PATH = "/run/firstboot"
 
-def wireless_conn_file_template(new_uuid: str, ssid: str, psk: str):
-    return f"""[connection]
-    id=wireless
-    uuid={new_uuid}
-    type=wifi
+def format_dns(dns_string: str) -> str:
+    names = dns_string.strip(" \n\t")
+    names = names.split(" ")
+    formatted = ";".join(names) + ";"
+    return formatted
 
-    [wifi]
-    mode=infrastructure
-    ssid={ssid}
+def wireless_conn_file_template(new_uuid: str, config: ConfigGroup):
+    ssid = config.get("wireless-ssid")
+    psk = config.get("wireless-password")
 
-    [wifi-security]
-    key-mgmt=wpa-psk
-    psk={psk}
+    file = f"""
+[connection]
+id=wireless
+uuid={new_uuid}
+type=wifi
 
-    [ipv4]
-    method=auto
+[wifi]
+mode=infrastructure
+ssid={ssid}
 
-    [ipv6]
-    addr-gen-mode=default
-    method=auto
+[wifi-security]
+key-mgmt=wpa-psk
+psk={psk}
+    """
 
-    [proxy]"""
+    ip = """
+[ipv4]
+    """
+    if config.get("wireless-type") == "static":
+        static_ip = config.get("wireless-address") + "/" + config.get("wireless-netmask")
+        gateway = config.get("wireless-gateway")
+        name_servers = format_dns(config.get("wireless-nameservers"))
+
+        if gateway is not None:
+            static_ip += f",{gateway}"
+        ip += f"""
+address1={static_ip}
+dns={name_servers}
+method=manual
+            """
+    else:
+        ip += """
+method=auto
+        """
+
+    ip += """
+[ipv6]
+addr-gen-mode=default
+method=auto
+
+[proxy]
+        """
+    file += ip
+    return file
 
 def generate_network_config(config: ConfigGroup):
     if not config.get("wireless-network"):
@@ -37,22 +69,16 @@ def generate_network_config(config: ConfigGroup):
 
     with open(f"{SYS_CON_DIR}/wireless.nmconnection", "w") as conn_file:
         new_uuid = uuid4()
-        ssid = config.get("wireless-ssid")
-        psk = config.get("wireless-password")
+        conn_file.write(wireless_conn_file_template(new_uuid, config))
 
-        conn_file.write(wireless_conn_file_template(new_uuid, ssid, psk))
     subprocess.run(["chmod", "600", f"{SYS_CON_DIR}/wireless.nmconnection"])
     subprocess.run(["sync"])
 
-    if not os.path.exists(FIRSTBOOT_PATH):
-        print("Upping wireless")
-        subprocess.run(["nmcli", "radio", "wifi", "on"])
-        subprocess.run(["nmcli", "con", "up", "wireless"])
-        with open(FIRSTBOOT_PATH, "w") as f:
-            f.write("Used by generate-network-config-bookworm.py to determine if it's being run for the first time after a bootup.")
+    print("Upping wireless")
+    subprocess.run(["nmcli", "radio", "wifi", "on"])
+    subprocess.run(["nmcli", "con", "up", "wireless"])
     
 def main(dryrun=False, extra_file_path: str = None):
-    
     config_group = get_standard_config_group(extra_file_path)
     generate_network_config(config_group)
 
