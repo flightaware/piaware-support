@@ -11,7 +11,7 @@ DefaultDependencies=no
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/python3 /usr/lib/piaware-support/generate-network-config-bookworm.py
+ExecStart=/usr/bin/python3 /usr/lib/piaware-support/generate_network_config_bookworm.py
 
 [Install]
 WantedBy=network.target

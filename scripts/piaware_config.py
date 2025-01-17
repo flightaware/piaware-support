@@ -57,11 +57,11 @@ class Metadata():
         self.settings["network-config-style"] = MetadataSettings(setting_type="network_config_style", default="default", sdonly=True, network=True)
         self.settings["wired-network"] = MetadataSettings(setting_type="bool", default=True, sdonly=True, network=True)
         self.settings["wired-type"] = MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True)
-        self.settings["wired-address"] = MetadataSettings(sdonly=True, network=True)
-        self.settings["wired-netmask"] = MetadataSettings(sdonly=True, network=True)
-        self.settings["wired-broadcast"] = MetadataSettings(sdonly=True, network=True)
-        self.settings["wired-gateway"] = MetadataSettings(sdonly=True, network=True)
-        self.settings["wired-nameservers"] = MetadataSettings(default= "8.8.8.8 8.8.4.4", sdonly=True, network=True)
+        self.settings["wired-address"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
+        self.settings["wired-netmask"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
+        self.settings["wired-broadcast"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
+        self.settings["wired-gateway"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
+        self.settings["wired-nameservers"] = MetadataSettings(default= "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str")
         self.settings["wireless-network"] = MetadataSettings(setting_type="bool", default=False, sdonly=True, network=True)
         self.settings["wireless-ssid"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
         self.settings["wireless-password"] = MetadataSettings(protect=True, sdonly=True, network=True, setting_type="str")
@@ -163,7 +163,7 @@ class Metadata():
                 return self.convert_str_to_gain(val)
 
             case _:
-                raise TypeError(f"Unrecognized type {t}")
+                raise TypeError(f"Cannot convert unrecognized type {t} for {key}, {val}")
 
     def validate_bool(self, val: str) -> bool:
         val = val.lower()
@@ -240,7 +240,7 @@ class Metadata():
                 return self.validate_gain(val)
 
             case _:
-                raise TypeError(f"Unrecognized type {t}")
+                raise TypeError(f"Cannot validate Unrecognized type {t} from {key}, {val}")
 
             
 class ConfigFile():

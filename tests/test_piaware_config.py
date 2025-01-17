@@ -203,6 +203,7 @@ class TestConfigGroup(unittest.TestCase):
         assert cfg.files[1]._priority == 30
         assert cfg.get("image-type") == "image_2"
         assert cfg.get("wired-network") is False
+        assert cfg.get("wireless-network") is False
 
     def test_create_standard_piaware_config_group(self):
         cfg = create_standard_piaware_config_group()
