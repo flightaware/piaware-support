@@ -116,13 +116,11 @@ def generate_wired_network_config(config: ConfigGroup):
     subprocess.run(["sync"])
 
     print("Created wired connection")
-    subprocess.run(["nmcli", "con", "up", "wired"])
 
 
 def generate_wireless_network_config(config: ConfigGroup):
     if not config.get("wireless-network"):
         print("wireless-network set to no")
-        subprocess.run(["nmcli", "radio", "wifi", "off"])
         return
 
     with open(f"{SYS_CON_DIR}/wireless.nmconnection", "w") as conn_file:
@@ -130,10 +128,6 @@ def generate_wireless_network_config(config: ConfigGroup):
 
     subprocess.run(["chmod", "600", f"{SYS_CON_DIR}/wireless.nmconnection"])
     subprocess.run(["sync"])
-
-    print("Upping wireless")
-    subprocess.run(["nmcli", "radio", "wifi", "on"])
-    subprocess.run(["nmcli", "con", "up", "wireless"])
     
 def main(dryrun=False, extra_file_path: str = None):
     config_group = get_standard_config_group(extra_file_path)
