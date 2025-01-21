@@ -1,14 +1,13 @@
 from piaware_config import get_standard_config_group, ConfigGroup
 import subprocess
 
-    
-def main(dryrun=False, extra_file_path: str = None):
+def main():
     try:
         subprocess.run(["nmcli", "con", "up", "wired"])
     except Exception as e:
         print(f"{e} occured when trying to activate wired network. Check your ethernet connection")
 
-    c = get_standard_config_group(extra_file_path)
+    c = get_standard_config_group()
     if c.get("wireless-network"):
         print("wireless-network set to yes. Enabling...")
         subprocess.run(["nmcli", "radio", "wifi", "on"])
