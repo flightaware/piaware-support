@@ -45,10 +45,15 @@ def calculate_brd_by_hand(addr: str, nm: int) -> str:
     ba = ".".join(base_10_val)
     return ba
 
-def verify_broadcast_address(config: ConfigGroup):
+def verify_broadcast_address(network: str,config: ConfigGroup) -> bool:
     print("Verifying broadcast address")
-    addr = config.get("wireless-address")
-    nm = config.get("wireless-netmask")
+    addr = config.get(f"{network}-address")
+    nm = config.get(f"{network}-netmask")
+
+    if addr is None or nm is None:
+        print(f"Addr: {addr}, Netmask: {nm}")
+        return False
+
     if nm > 32:
         print("Netmask cannot be greater than 32. Stopping brd verification...")
         return False
@@ -191,7 +196,8 @@ def main(dryrun=False, extra_file_path: str = None):
     config_group = get_standard_config_group(extra_file_path)
     generate_wired_network_config(config_group)
     generate_wireless_network_config(config_group)
-    verify_broadcast_address(config_group)
+    verify_broadcast_address("wireless", config_group)
+    verify_broadcast_address("wired", config_group)
 
 if __name__ == "__main__":
     main()
