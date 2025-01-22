@@ -24,7 +24,7 @@ PIAWARE_CONFIG_ENUMS["country"] = [ "AD","AE","AF","AG","AI","AL","AM","AO","AQ"
 
 PIAWARE_CONFIG_ENUMS["receiver"] = ["rtlsdr", "sdr", "bladerf", "beast", "relay", "radarcape", "radarcape-local", "other", "none"]
 PIAWARE_CONFIG_ENUMS["uat_receiver"] = ["sdr", "stratuxv3", "other", "none"]
-PIAWARE_CONFIG_ENUMS["network_type"] = ["static", "network-manager"]
+PIAWARE_CONFIG_ENUMS["network_type"] = ["static", "dhcp"]
 PIAWARE_CONFIG_ENUMS["slow_cpu"] = ["yes", "no", "auto"]
 PIAWARE_CONFIG_ENUMS["network_config_style"] = ["default", "buster", "jessie"]
 
@@ -56,7 +56,7 @@ class Metadata():
         self.settings["allow-manual-updates"] = MetadataSettings(setting_type="bool", default=False)
         self.settings["network-config-style"] = MetadataSettings(setting_type="network_config_style", default="default", sdonly=True, network=True)
         self.settings["wired-network"] = MetadataSettings(setting_type="bool", default=True, sdonly=True, network=True)
-        self.settings["wired-type"] = MetadataSettings(setting_type="network_type", default="network-manager", sdonly=True, network=True)
+        self.settings["wired-type"] = MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True)
         self.settings["wired-address"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
         self.settings["wired-netmask"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
         self.settings["wired-broadcast"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
@@ -65,7 +65,7 @@ class Metadata():
         self.settings["wireless-network"] = MetadataSettings(setting_type="bool", default=False, sdonly=True, network=True)
         self.settings["wireless-ssid"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
         self.settings["wireless-password"] = MetadataSettings(protect=True, sdonly=True, network=True, setting_type="str")
-        self.settings["wireless-type"] = MetadataSettings(setting_type="network_type", default="network-manager", sdonly=True, network=True)
+        self.settings["wireless-type"] = MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True)
         self.settings["wireless-address"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
         self.settings["wireless-broadcast"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
         self.settings["wireless-netmask"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
