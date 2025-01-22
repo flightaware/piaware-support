@@ -27,7 +27,9 @@ PIAWARE_CONFIG_ENUMS["uat_receiver"] = ["sdr", "stratuxv3", "other", "none"]
 PIAWARE_CONFIG_ENUMS["network_type"] = ["static", "dhcp"]
 PIAWARE_CONFIG_ENUMS["slow_cpu"] = ["yes", "no", "auto"]
 PIAWARE_CONFIG_ENUMS["network_config_style"] = ["default", "buster", "jessie"]
-
+PIAWARE_IMAGE_CONF = "/usr/share/piaware-support/piaware-image-config.txt"
+PIAWARE_CONF = "/etc/piaware.conf"
+BOOT_PIAWARE_CONF = "/boot/firmware/piaware-config.txt"
 
 def check_enums(setting_type: str, value: str) -> bool:
     if setting_type in PIAWARE_CONFIG_ENUMS and value in PIAWARE_CONFIG_ENUMS[setting_type]:
@@ -36,12 +38,13 @@ def check_enums(setting_type: str, value: str) -> bool:
         return False
 
 class MetadataSettings():
-    def __init__(self, default: any = None, setting_type: str = None, protect: str = None, sdonly: bool = None, network: str = None) -> None:
+    def __init__(self, default: any = None, setting_type: str = None, protect: str = None, sdonly: bool = None, network: str = None, ignore_list = None) -> None:
         self.default = default
         self.setting_type = setting_type
         self.protect = protect
         self.sdonly = sdonly
         self.network = network
+        self.ignore_list = ignore_list
 
 class Metadata():
     settings: MetadataSettings = {}
@@ -59,7 +62,8 @@ class Metadata():
         self.settings["wired-type"] = MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True)
         self.settings["wired-address"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
         self.settings["wired-netmask"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
-        self.settings["wired-broadcast"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
+        # Setting broadcast address directly through boot/firmare/piaware-config.txt has been deprecated.
+        self.settings["wired-broadcast"] = MetadataSettings(sdonly=True, network=True, setting_type="str", ignore_list=[BOOT_PIAWARE_CONF])
         self.settings["wired-gateway"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
         self.settings["wired-nameservers"] = MetadataSettings(default= "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str")
         self.settings["wireless-network"] = MetadataSettings(setting_type="bool", default=False, sdonly=True, network=True)
@@ -67,7 +71,7 @@ class Metadata():
         self.settings["wireless-password"] = MetadataSettings(protect=True, sdonly=True, network=True, setting_type="str")
         self.settings["wireless-type"] = MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True)
         self.settings["wireless-address"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
-        self.settings["wireless-broadcast"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
+        self.settings["wireless-broadcast"] = MetadataSettings(sdonly=True, network=True, setting_type="str", ignore_list=[BOOT_PIAWARE_CONF])
         self.settings["wireless-netmask"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
         self.settings["wireless-gateway"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
         self.settings["wireless-nameservers"] = MetadataSettings(default = "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str")
@@ -210,6 +214,13 @@ class Metadata():
     def validate_gain(self, val: str) -> bool:
         return self.validate_double(val) or (isinstance(val, str) and val == "max")
 
+    def check_if_file_in_ignore_list(self, key, file_name) -> bool:
+        setting = self.settings[key]
+
+        if setting.ignore_list is not None and file_name in setting.ignore_list:
+            return True
+        return False
+
     def validate_value(self, key, val) -> bool:
         setting = self.settings[key]
         t = setting.setting_type
@@ -320,6 +331,10 @@ class ConfigFile():
                         if self._metadata.get_setting(key) is None:
                             print(f"{self._filename}:{idx}: unrecognized option {key}")
                             continue
+
+                        if self._metadata.check_if_file_in_ignore_list(key, self._filename):
+                            print(f"{self._filename}:{idx}: option {key} has {self._filename} in its ignore_list")
+                            continue
                         
                         if val != "":
                             if not self._metadata.validate_value(key, val):
@@ -359,8 +374,6 @@ class ConfigGroup():
         else:
             print(f"No files to sort for ConfigGroup")
 
-    
-
     def get(self, setting_key: str) -> any:
         for file in self.files:
             val = file.get(setting_key)
@@ -372,21 +385,16 @@ class ConfigGroup():
 # Create a standard piaware config group from these 3 default locations.
 # Create ConfigFile objects and reorder them based on priority.
 def create_standard_piaware_config_group(extra_file_path: str = None) -> ConfigGroup:
-    piaware_image_config = "/usr/share/piaware-support/piaware-image-config.txt"
-    piaware_conf = "/etc/piaware.conf"
-    boot_piaware_config = "/boot/firmware/piaware-config.txt"
-
-
     files = []
-    f = ConfigFile(filename=piaware_image_config, priority=30, metadata = Metadata())
+    f = ConfigFile(filename=PIAWARE_IMAGE_CONF, priority=30, metadata = Metadata())
     files.append(f)
 
     if extra_file_path is not None:
         f = ConfigFile(filename=extra_file_path, priority=100, metadata = Metadata())
         files.append(f)
     else:
-        f1 = ConfigFile(filename=piaware_conf, priority=40, metadata = Metadata())
-        f2 = ConfigFile(filename=boot_piaware_config, priority=50, metadata = Metadata())
+        f1 = ConfigFile(filename=PIAWARE_CONF, priority=40, metadata = Metadata())
+        f2 = ConfigFile(filename=BOOT_PIAWARE_CONF, priority=50, metadata = Metadata())
 
         files.append(f1)
         files.append(f2)

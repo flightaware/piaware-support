@@ -127,7 +127,6 @@ class TestCases(unittest.TestCase):
         c = Mock()
         c.get = Mock(side_effect=get)
         template = wired_conn_file_template(c)
-        # print(template)
         assert template == wired_template.format("sample_ip\nmethod=manual")
 
         csn_mock.side_effect = ValueError("test")
@@ -144,7 +143,7 @@ class TestCases(unittest.TestCase):
 
     @mock.patch("scripts.generate_network_config_bookworm.configure_static_network", side_effect=mock_csn)
     @mock.patch("scripts.generate_network_config_bookworm.uuid4", side_effect=mock_uuid)
-    def test_wired_conn_file_template(self, uuid_mock, csn_mock):
+    def test_wireless_conn_file_template(self, uuid_mock, csn_mock):
         def get(k):
             if k == "wireless-type":
                 return "static"

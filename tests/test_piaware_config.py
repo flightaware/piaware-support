@@ -1,6 +1,3 @@
-# install pytest
-# run `python3 -m pytest`
-
 from unittest import mock
 import os
 import unittest
@@ -77,6 +74,7 @@ class TestMetadata(unittest.TestCase):
         assert testm.validate_mac("01:23:45:67:89:AB") == True
         assert testm.validate_mac("01:23:45:67:89") == False
         assert testm.validate_mac("01:23:45:67:89:") == False
+        assert testm.validate_mac("13423:01:23:45:67:89:AB") == False
         assert testm.validate_mac("312") == False
 
     def test_validate_uuid(self):
@@ -114,12 +112,21 @@ class TestMetadata(unittest.TestCase):
         with self.assertRaises(TypeError):
             testm.validate_value("test", "dne")
 
+    def test_check_if_file_in_ignore_list(self):
+        testm = Metadata()
+        testm.settings["test"] = MetadataSettings(setting_type="int", ignore_list=["test_file"])
+        resp = testm.check_if_file_in_ignore_list("test", "test_file")
+        assert resp == True
+
+        resp = testm.check_if_file_in_ignore_list("test", "nothing")
+        assert resp == False
+
 class TestConfigFile(unittest.TestCase):
 
     def mock_config_file(*args):
         class Example:
             def __enter__(self):
-                return ["image-type image", "adaptive-min-gain -1" , "doesnt exist" , "manage-config 1232"]
+                return ["image-type image", "adaptive-min-gain -1" , "doesnt exist" , "manage-config 1232", "test 1", "adept-serverport 2", "adept-serverport 5"]
 
             def __exit__(self, exc_type, exc_val, exc_tb):
                 pass
@@ -163,6 +170,8 @@ class TestConfigFile(unittest.TestCase):
     @mock.patch("builtins.open", side_effect=mock_config_file)
     @mock.patch("os.path.isfile", side_effect=is_file_mock)
     def test_read_config(self, open_mock, is_file_mock):
+        testm = Metadata()
+        testm.settings["test"] = MetadataSettings(setting_type="int", ignore_list=["file"])
         testc = ConfigFile("file", metadata = Metadata())
         testc.read_config()
 
@@ -210,3 +219,7 @@ class TestConfigGroup(unittest.TestCase):
         assert cfg.files[0]._priority == 30
         assert cfg.files[1]._priority == 40
         assert cfg.files[2]._priority == 50
+
+class TestHelpers(unittest.TestCase):
+    def test_check_enum(self):
+        assert check_enums("receiver", "sdr") is True
