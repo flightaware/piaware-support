@@ -5,23 +5,23 @@ import os
 
 SYS_CON_DIR = "/etc/NetworkManager/system-connections"
 
-def get_broadcast_address():
-    ips = subprocess.run(["ip", "addr", "show"], capture_output=True)
-    ips = ips.stdout.decode("utf-8")
-    ips = ips.split("\n")
-    x = 0
-    for index, line in enumerate(ips):
-        if "wlan0" in line:
-            x = index
-            break
+def get_broadcast_address(device: str):
+    try:
+        out = subprocess.run(["ip", "addr", "show"], capture_output=True)
+        ifaces = subprocess.run(["grep", "inet "], input=out.stdout, capture_output=True)
+        ifaces = ifaces.stdout.decode("utf-8")
+        ifaces = ifaces.split("\n")
+        ifaces = [iface.strip() for iface in ifaces]
 
-    for line in ips[x:]:
-        if "inet" in line:
-            line = line.strip()
-            line = line.split(" ")
-            for index, l in enumerate(line):
-                if l == "brd":
-                    return line[index + 1]
+        for iface in ifaces:
+            x = iface.split(" ")
+            if device in x:
+                for index, el in enumerate(x):
+                    if el == "brd":
+                        return x[index + 1]
+    except Exception as e:
+        print(f"Ran into error {e} when trying to get broadcast address")
+
     return None
 
 # We're calculating broadcast address for an ipv4 address.
@@ -58,7 +58,7 @@ def verify_broadcast_address(network: str,config: ConfigGroup) -> bool:
         print("Netmask cannot be greater than 32. Stopping brd verification...")
         return False
     calculated_ba = calculate_brd_by_hand(addr, nm)
-    assigned_ba = get_broadcast_address()
+    assigned_ba = get_broadcast_address("eth0" if network == "wired" else "wlan0")
     if assigned_ba is None:
         print("Could not find brd address")
     elif assigned_ba == calculated_ba:

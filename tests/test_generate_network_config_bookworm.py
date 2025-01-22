@@ -55,36 +55,17 @@ method=auto
 [proxy]
 """
 
-mock_ips = """
-1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
-    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+mock_ifaces = """
     inet 127.0.0.1/8 scope host lo
-       valid_lft forever preferred_lft forever
-    inet6 ::1/128 scope host noprefixroute 
-       valid_lft forever preferred_lft forever
-2: eth0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state DOWN group default qlen 1000
-    link/ether d8:3a:dd:3a:d5:9d brd ff:ff:ff:ff:ff:ff
-3: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
-    link/ether d8:3a:dd:3a:d5:9e brd ff:ff:ff:ff:ff:ff
-    inet 192.168.1.69/24 brd 192.168.1.255 scope global noprefixroute wlan0
-       valid_lft forever preferred_lft forever
-    inet6 2600:1700:f2f8:4200::3e/128 scope global dynamic noprefixroute 
-       valid_lft 2202sec preferred_lft 2202sec
-    inet6 2600:1700:f2f8:4200:ebfe:6a1:f1b0:820/64 scope global dynamic noprefixroute 
-       valid_lft 3562sec preferred_lft 3562sec
-    inet6 fe80::6724:37a3:31f9:8ec8/64 scope link noprefixroute 
-       valid_lft forever preferred_lft forever
+    inet 192.168.1.86/24 brd 192.168.1.255 scope global dynamic noprefixroute wlan0
+    inet 192.168.1.42/12 brd 192.168.255.255 scope global noprefixroute eth0
+
 """
 
-mock_ips_nowlan0 = """
-1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
-    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+mock_ifaces_no_wlan0 = """
     inet 127.0.0.1/8 scope host lo
-       valid_lft forever preferred_lft forever
-    inet6 ::1/128 scope host noprefixroute 
-       valid_lft forever preferred_lft forever
-2: eth0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state DOWN group default qlen 1000
-    link/ether d8:3a:dd:3a:d5:9d brd ff:ff:ff:ff:ff:ff
+    inet 192.168.1.42/12 brd 192.168.255.255 scope global noprefixroute eth0
+
 """
 
 class TestCases(unittest.TestCase):
@@ -207,15 +188,25 @@ class TestCases(unittest.TestCase):
     @mock.patch("scripts.generate_network_config_bookworm.subprocess.run")
     def test_get_broadcast_address(self, run_mock):
         mock = Mock()
-        mock.stdout.decode = Mock(return_value=mock_ips)
+        mock.stdout = Mock()
 
         mock2 = Mock()
-        mock2.stdout.decode = Mock(return_value=mock_ips_nowlan0)
+        mock2.stdout.decode = Mock(return_value=mock_ifaces)
         run_mock.side_effect = [mock, mock2]
-        brd = get_broadcast_address()
+        brd = get_broadcast_address("wlan0")
         assert brd == "192.168.1.255"
 
-        brd = get_broadcast_address()
+        run_mock.side_effect = [mock, mock2]
+        brd = get_broadcast_address("wlan1230")
+        assert brd is None
+
+        run_mock.side_effect = [mock, mock2]
+        brd = get_broadcast_address("eth0")
+        assert brd == "192.168.255.255"
+
+        exc = ValueError("test")
+        run_mock.side_effect = exc
+        brd = get_broadcast_address("eth0")
         assert brd is None
     
     def test_calculate_brd_by_hand(self):
