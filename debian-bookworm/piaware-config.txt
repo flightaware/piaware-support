@@ -17,7 +17,7 @@
 # NETWORK CONFIGURATION
 #
 
-# By default, PiAware will use NetworkManager when connecting to your network.
+# By default, PiAware will use dhcp when connecting to your network.
 # For other configurations, see the Advanced Configuration page
 # linked at the top of this file.
 
