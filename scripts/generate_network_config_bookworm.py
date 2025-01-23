@@ -6,25 +6,6 @@ import stat
 
 SYS_CON_DIR = "/etc/NetworkManager/system-connections"
 
-def get_broadcast_address(device: str):
-    try:
-        out = subprocess.run(["ip", "addr", "show"], capture_output=True)
-        ifaces = subprocess.run(["grep", "inet "], input=out.stdout, capture_output=True)
-        ifaces = ifaces.stdout.decode("utf-8")
-        ifaces = ifaces.split("\n")
-        ifaces = [iface.strip() for iface in ifaces]
-
-        for iface in ifaces:
-            x = iface.split(" ")
-            if device in x:
-                for index, el in enumerate(x):
-                    if el == "brd":
-                        return x[index + 1]
-    except Exception as e:
-        print(f"Ran into error {e} when trying to get broadcast address")
-
-    return None
-
 # We're calculating broadcast address for an ipv4 address.
 # Hence the magic number 32. Ipv4 addresses are 32 bits.
 def calculate_brd_by_hand(addr: str, nm: int) -> str:
@@ -47,27 +28,26 @@ def calculate_brd_by_hand(addr: str, nm: int) -> str:
     return ba
 
 def verify_broadcast_address(network: str,config: ConfigGroup) -> bool:
+    assigned_ba = config.get(f"{network}-broadcast")
+    if not assigned_ba:
+        return
+
     print("Verifying broadcast address")
     addr = config.get(f"{network}-address")
     nm = config.get(f"{network}-netmask")
 
     if addr is None or nm is None:
         print(f"Addr: {addr}, Netmask: {nm}")
-        return False
+        return
 
     if nm > 32:
         print("Netmask cannot be greater than 32. Stopping brd verification...")
-        return False
+        return
+        
     calculated_ba = calculate_brd_by_hand(addr, nm)
-    assigned_ba = get_broadcast_address("eth0" if network == "wired" else "wlan0")
-    if assigned_ba is None:
-        print("Could not find brd address")
-    elif assigned_ba == calculated_ba:
-        print(f"The assigned brd address {assigned_ba} looks good")
-    else:
-        print(f"Warning: the brd address that we've calculated {calculated_ba} is different than the assigned one {assigned_ba}")
 
-    return assigned_ba == calculated_ba
+    if assigned_ba != calculated_ba:
+        print(f"Warning: the brd address that we've calculated: {calculated_ba} is different than the one you've assigned: {assigned_ba}")
 
 def format_dns(dns_string: str) -> str:
     names = dns_string.split()

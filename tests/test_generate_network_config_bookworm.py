@@ -187,3 +187,41 @@ class TestCases(unittest.TestCase):
         c.get = Mock(side_effect=get)
         template = get_wireless_conn_file(c)
         assert template == wireless_template.format("method=auto")
+    
+    def test_calculate_brd_by_hand(self):
+        brd = calculate_brd_by_hand("192.168.1.24", 8)
+        assert brd == "192.255.255.255"
+        brd = calculate_brd_by_hand("192.168.1.24", 16)
+        assert brd == "192.168.255.255"
+        brd = calculate_brd_by_hand("192.168.1.24", 24)
+        assert brd == "192.168.1.255"
+        brd = calculate_brd_by_hand("192.168.1.24", 31)
+        assert brd == "192.168.1.25"
+
+    @mock.patch("scripts.generate_network_config_bookworm.calculate_brd_by_hand")
+    @mock.patch("scripts.generate_network_config_bookworm.print")
+    def test_verify_broadcast_address(self, print_mock, calculate_brd_by_hand_mock):
+        c = Mock()
+        c.get = Mock(side_effect=[None])
+        verify_broadcast_address("wireless", c)
+        calculate_brd_by_hand_mock.assert_not_called()
+        assert c.get.call_count == 1
+
+        c.get = Mock(side_effect=["192.111.1.255", None, None])
+        verify_broadcast_address("wireless", c)
+        calculate_brd_by_hand_mock.assert_not_called()
+        assert c.get.call_count == 3
+
+        c.get = Mock(side_effect=["192.111.255.255", "192.111.1.42", 24])
+        calculate_brd_by_hand_mock.side_effect = ["192.111.255.255"]
+        print_mock.reset_mock()
+        verify_broadcast_address("wireless", c)
+        calculate_brd_by_hand_mock.assert_called()
+        assert print_mock.call_count == 1
+
+        c.get = Mock(side_effect=["192.111.255.255", "192.111.1.42", 24])
+        calculate_brd_by_hand_mock.side_effect = ["not equal"]
+        print_mock.reset_mock()
+        verify_broadcast_address("wireless", c)
+        calculate_brd_by_hand_mock.assert_called()
+        assert print_mock.call_count == 2
