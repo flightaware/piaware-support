@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from piaware_config import get_standard_config_group, ConfigGroup
 from uuid import uuid4
 import subprocess
@@ -43,7 +45,7 @@ def verify_broadcast_address(network: str,config: ConfigGroup) -> bool:
     if nm > 32:
         print("Netmask cannot be greater than 32. Stopping brd verification...")
         return
-        
+
     calculated_ba = calculate_brd_by_hand(addr, nm)
 
     if assigned_ba != calculated_ba:
