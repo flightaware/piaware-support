@@ -2,12 +2,12 @@ from piaware_config import get_standard_config_group, ConfigGroup
 from uuid import uuid4
 import subprocess
 import os
+import stat
 
 SYS_CON_DIR = "/etc/NetworkManager/system-connections"
 
 def format_dns(dns_string: str) -> str:
-    names = dns_string.strip(" \n\t")
-    names = names.split(" ")
+    names = dns_string.split()
     formatted = ";".join(names) + ";"
     return formatted
 
@@ -21,7 +21,7 @@ def configure_static_network(network_type: str, config: ConfigGroup):
     check_address_and_netmask_set(network_type, config)
 
     ip = ""
-    static_ip = config.get(f"{network_type}-address") + "/" + config.get(f"{network_type}-netmask")
+    static_ip = config.get(f"{network_type}-address") + "/" + str(config.get(f"{network_type}-netmask"))
     gateway = config.get(f"{network_type}-gateway")
     if gateway is not None:
         static_ip += f",{gateway}"
@@ -32,8 +32,10 @@ def configure_static_network(network_type: str, config: ConfigGroup):
         ip += f"dns={format_dns(name_servers)}\n"
     return ip
 
-def wired_conn_file_template(config: ConfigGroup):
+def get_wired_conn_file(config: ConfigGroup):
     new_uuid = uuid4()
+    connect = "true" if config.get("wired-network") else "false"
+
     file = f"""
 [connection]
 id=wired
@@ -41,6 +43,7 @@ uuid={new_uuid}
 type=ethernet
 autoconnect-priority=999
 interface-name=eth0
+autoconnect={connect}
 
 [ethernet]
 """
@@ -66,16 +69,18 @@ method=auto
 
     return file
 
-def wireless_conn_file_template(config: ConfigGroup):
+def get_wireless_conn_file(config: ConfigGroup):
     new_uuid = uuid4()
     ssid = config.get("wireless-ssid")
     psk = config.get("wireless-password")
+    connect = "true" if config.get("wireless-network") else "false"
 
     file = f"""
 [connection]
 id=wireless
 uuid={new_uuid}
 type=wifi
+autoconnect={connect}
 
 [wifi]
 mode=infrastructure
@@ -110,24 +115,15 @@ method=auto
 
 def generate_wired_network_config(config: ConfigGroup):
     with open(f"{SYS_CON_DIR}/wired.nmconnection", "w") as conn_file:
-        conn_file.write(wired_conn_file_template(config))
+        conn_file.write(get_wired_conn_file(config))
 
-    subprocess.run(["chmod", "600", f"{SYS_CON_DIR}/wired.nmconnection"])
-    subprocess.run(["sync"])
-
-    print("Created wired connection")
-
+    os.chmod(f"{SYS_CON_DIR}/wired.nmconnection", stat.S_IRUSR | stat.S_IWUSR)
 
 def generate_wireless_network_config(config: ConfigGroup):
-    if not config.get("wireless-network"):
-        print("wireless-network set to no")
-        return
-
     with open(f"{SYS_CON_DIR}/wireless.nmconnection", "w") as conn_file:
-        conn_file.write(wireless_conn_file_template(config))
+        conn_file.write(get_wireless_conn_file(config))
 
-    subprocess.run(["chmod", "600", f"{SYS_CON_DIR}/wireless.nmconnection"])
-    subprocess.run(["sync"])
+    os.chmod(f"{SYS_CON_DIR}/wireless.nmconnection", stat.S_IRUSR | stat.S_IWUSR)
     
 def main(dryrun=False, extra_file_path: str = None):
     config_group = get_standard_config_group(extra_file_path)
