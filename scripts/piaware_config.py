@@ -47,68 +47,67 @@ class MetadataSettings():
         self.ignore_list = ignore_list
 
 class Metadata():
-    settings: MetadataSettings = {}
-    self.settings = {
-        "priority" : MetadataSettings(setting_type="int")
-        "image-type" : MetadataSettings(setting_type="str")
-        "manage-config" : MetadataSettings(setting_type="bool", default=False)
-        "feeder-id" : MetadataSettings(setting_type="UUID")
-        "force-macaddress" : MetadataSettings(setting_type="MAC")
-        "allow-auto-updates" : MetadataSettings(setting_type="bool", default=False)
-        "allow-manual-updates" : MetadataSettings(setting_type="bool", default=False)
-        "network-config-style" : MetadataSettings(setting_type="network_config_style", default="default", sdonly=True, network=True)
-        "wired-network" : MetadataSettings(setting_type="bool", default=True, sdonly=True, network=True)
-        "wired-type" : MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True)
-        "wired-address" : MetadataSettings(sdonly=True, network=True, setting_type="str")
-        "wired-netmask" : MetadataSettings(sdonly=True, network=True, setting_type="str")
+    settings: MetadataSettings = {
+        "priority" : MetadataSettings(setting_type="int"),
+        "image-type" : MetadataSettings(setting_type="str"),
+        "manage-config" : MetadataSettings(setting_type="bool", default=False),
+        "feeder-id" : MetadataSettings(setting_type="UUID"),
+        "force-macaddress" : MetadataSettings(setting_type="MAC"),
+        "allow-auto-updates" : MetadataSettings(setting_type="bool", default=False),
+        "allow-manual-updates" : MetadataSettings(setting_type="bool", default=False),
+        "network-config-style" : MetadataSettings(setting_type="network_config_style", default="default", sdonly=True, network=True),
+        "wired-network" : MetadataSettings(setting_type="bool", default=True, sdonly=True, network=True),
+        "wired-type" : MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True),
+        "wired-address" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
+        "wired-netmask" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
         # Setting broadcast address directly through boot/firmare/piaware-config.txt has been deprecated.
-        "wired-broadcast" : MetadataSettings(sdonly=True, network=True, setting_type="str", ignore_list=[BOOT_PIAWARE_CONF])
-        "wired-gateway" : MetadataSettings(sdonly=True, network=True, setting_type="str")
-        "wired-nameservers" : MetadataSettings(default= "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str")
-        "wireless-network" : MetadataSettings(setting_type="bool", default=False, sdonly=True, network=True)
-        "wireless-ssid" : MetadataSettings(sdonly=True, network=True, setting_type="str")
-        "wireless-password" : MetadataSettings(protect=True, sdonly=True, network=True, setting_type="str")
-        "wireless-type" : MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True)
-        "wireless-address" : MetadataSettings(sdonly=True, network=True, setting_type="str")
-        "wireless-broadcast" : MetadataSettings(sdonly=True, network=True, setting_type="str", ignore_list=[BOOT_PIAWARE_CONF])
-        "wireless-netmask" : MetadataSettings(sdonly=True, network=True, setting_type="str")
-        "wireless-gateway" : MetadataSettings(sdonly=True, network=True, setting_type="str")
-        "wireless-nameservers" : MetadataSettings(default = "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str")
-        "wireless-country" : MetadataSettings(default = "00", setting_type="country", sdonly=True, network=True)
-        "allow-dhcp-duic" : MetadataSettings(default=True, setting_type="bool", sdonly=True, network=True)
-        "http-proxy-host" : MetadataSettings(network=True)
-        "http-proxy-port" : MetadataSettings(network=True)
-        "http-proxy-user" : MetadataSettings(network=True)
-        "http-proxy-password" : MetadataSettings(protect=True, network=True)
-        "adept-serverhosts" : MetadataSettings() # Come back to this
-        "adept-serverport" : MetadataSettings(setting_type="int", default=1200)
-        "rfkill" : MetadataSettings(setting_type="bool", default=False, sdonly=True)
-        "receiver-type" : MetadataSettings(setting_type="receiver", default="rtlsdr")
-        "rtlsdr-device-index" : MetadataSettings(default=False, sdonly=True)
-        "rtlsdr-ppm" : MetadataSettings(setting_type = "int", default = 0, sdonly=True)
-        "rtlsdr-gain" : MetadataSettings(setting_type = "gain", default = "max", sdonly=True)
-        "beast-baudrate" : MetadataSettings(setting_type = "int", sdonly=True)
-        "radarcape-host" : MetadataSettings(sdonly = True)
-        "receiver-port" : MetadataSettings(setting_type = "int", default = 30005)
-        "allow-modeac" : MetadataSettings(setting_type = "bool", default = True, sdonly=True)
-        "allow-mlat" : MetadataSettings(setting_type = "bool", default = True)
-        "mlat-results" : MetadataSettings(setting_type = "bool", default = True)
-        "mlat-results-anon" : MetadataSettings(setting_type = "bool", default = True)
-        "mlat-results-format" : MetadataSettings(default = "beast,connect,localhost:30104 beast,listen,30105 ext_basestation,listen,30106")
-        "slow-cpu" : MetadataSettings(default = "auto", sdonly = True)
-        "adaptive-dynamic-range" : MetadataSettings(setting_type="bool", default = True, sdonly=True)
-        "adaptive-dynamic-range-target" : MetadataSettings(setting_type="double", sdonly=True)
-        "adaptive-burst" : MetadataSettings(setting_type="bool", default=False, sdonly=True)
-        "adaptive-min-gain" : MetadataSettings(setting_type="double", sdonly=True)
-        "adaptive-max-gain" : MetadataSettings(setting_type="double", sdonly=True)
-        "enable-firehose" : MetadataSettings(setting_type="bool", default = False)
-        "allow-ble-setup" : MetadataSettings(default = "auto", sdonly = True)
-        "uat-receiver-type" : MetadataSettings(setting_type = "uat_receiver", default=None)
-        "uat-receiver-host" : MetadataSettings()
-        "uat-receiver-port" : MetadataSettings(setting_type = "int", default = 30978)
-        "uat-sdr-gain" : MetadataSettings(setting_type = "gain", default = "max", sdonly = True)
-        "uat-sdr-ppm" : MetadataSettings(setting_type = "double", default = 0, sdonly = True)
-        "uat-sdr-device" : MetadataSettings(default = "driver=rtlsdr", sdonly = True)
+        "wired-broadcast" : MetadataSettings(sdonly=True, network=True, setting_type="str", ignore_list=[BOOT_PIAWARE_CONF]),
+        "wired-gateway" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
+        "wired-nameservers" : MetadataSettings(default= "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str"),
+        "wireless-network" : MetadataSettings(setting_type="bool", default=False, sdonly=True, network=True),
+        "wireless-ssid" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
+        "wireless-password" : MetadataSettings(protect=True, sdonly=True, network=True, setting_type="str"),
+        "wireless-type" : MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True),
+        "wireless-address" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
+        "wireless-broadcast" : MetadataSettings(sdonly=True, network=True, setting_type="str", ignore_list=[BOOT_PIAWARE_CONF]),
+        "wireless-netmask" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
+        "wireless-gateway" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
+        "wireless-nameservers" : MetadataSettings(default = "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str"),
+        "wireless-country" : MetadataSettings(default = "00", setting_type="country", sdonly=True, network=True),
+        "allow-dhcp-duic" : MetadataSettings(default=True, setting_type="bool", sdonly=True, network=True),
+        "http-proxy-host" : MetadataSettings(network=True),
+        "http-proxy-port" : MetadataSettings(network=True),
+        "http-proxy-user" : MetadataSettings(network=True),
+        "http-proxy-password" : MetadataSettings(protect=True, network=True),
+        "adept-serverhosts" : MetadataSettings(), # Come back to this
+        "adept-serverport" : MetadataSettings(setting_type="int", default=1200),
+        "rfkill" : MetadataSettings(setting_type="bool", default=False, sdonly=True),
+        "receiver-type" : MetadataSettings(setting_type="receiver", default="rtlsdr"),
+        "rtlsdr-device-index" : MetadataSettings(default=False, sdonly=True),
+        "rtlsdr-ppm" : MetadataSettings(setting_type = "int", default = 0, sdonly=True),
+        "rtlsdr-gain" : MetadataSettings(setting_type = "gain", default = "max", sdonly=True),
+        "beast-baudrate" : MetadataSettings(setting_type = "int", sdonly=True),
+        "radarcape-host" : MetadataSettings(sdonly = True),
+        "receiver-port" : MetadataSettings(setting_type = "int", default = 30005),
+        "allow-modeac" : MetadataSettings(setting_type = "bool", default = True, sdonly=True),
+        "allow-mlat" : MetadataSettings(setting_type = "bool", default = True),
+        "mlat-results" : MetadataSettings(setting_type = "bool", default = True),
+        "mlat-results-anon" : MetadataSettings(setting_type = "bool", default = True),
+        "mlat-results-format" : MetadataSettings(default = "beast,connect,localhost:30104 beast,listen,30105 ext_basestation,listen,30106"),
+        "slow-cpu" : MetadataSettings(default = "auto", sdonly = True),
+        "adaptive-dynamic-range" : MetadataSettings(setting_type="bool", default = True, sdonly=True),
+        "adaptive-dynamic-range-target" : MetadataSettings(setting_type="double", sdonly=True),
+        "adaptive-burst" : MetadataSettings(setting_type="bool", default=False, sdonly=True),
+        "adaptive-min-gain" : MetadataSettings(setting_type="double", sdonly=True),
+        "adaptive-max-gain" : MetadataSettings(setting_type="double", sdonly=True),
+        "enable-firehose" : MetadataSettings(setting_type="bool", default = False),
+        "allow-ble-setup" : MetadataSettings(default = "auto", sdonly = True),
+        "uat-receiver-type" : MetadataSettings(setting_type = "uat_receiver", default=None),
+        "uat-receiver-host" : MetadataSettings(),
+        "uat-receiver-port" : MetadataSettings(setting_type = "int", default = 30978),
+        "uat-sdr-gain" : MetadataSettings(setting_type = "gain", default = "max", sdonly = True),
+        "uat-sdr-ppm" : MetadataSettings(setting_type = "double", default = 0, sdonly = True),
+        "uat-sdr-device" : MetadataSettings(default = "driver=rtlsdr", sdonly = True),
         "use-gpsd" : MetadataSettings(setting_type="bool", default = True)
     }
 

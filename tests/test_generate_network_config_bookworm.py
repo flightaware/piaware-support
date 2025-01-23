@@ -18,6 +18,7 @@ uuid=e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c
 type=ethernet
 autoconnect-priority=999
 interface-name=eth0
+autoconnect=false
 
 [ethernet]
 
@@ -36,6 +37,7 @@ wireless_template = """
 id=wireless
 uuid=e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c
 type=wifi
+autoconnect=false
 
 [wifi]
 mode=infrastructure
@@ -118,7 +120,7 @@ class TestCases(unittest.TestCase):
 
     @mock.patch("scripts.generate_network_config_bookworm.configure_static_network", side_effect=mock_csn)
     @mock.patch("scripts.generate_network_config_bookworm.uuid4", side_effect=mock_uuid)
-    def test_wired_conn_file_template(self, uuid_mock, csn_mock):
+    def test_get_wired_conn_file(self, uuid_mock, csn_mock):
         def get(k):
             if k == "wired-type":
                 return "static"
@@ -126,11 +128,11 @@ class TestCases(unittest.TestCase):
                 return None
         c = Mock()
         c.get = Mock(side_effect=get)
-        template = wired_conn_file_template(c)
+        template = get_wired_conn_file(c)
         assert template == wired_template.format("sample_ip\nmethod=manual")
 
         csn_mock.side_effect = ValueError("test")
-        template = wired_conn_file_template(c)
+        template = get_wired_conn_file(c)
         assert template == wired_template.format("method=auto")
 
 
@@ -138,12 +140,12 @@ class TestCases(unittest.TestCase):
             if k == "wired-type":
                 return "NetworkManager"
         c.get = Mock(side_effect=get)
-        template = wired_conn_file_template(c)
+        template = get_wired_conn_file(c)
         assert template == wired_template.format("method=auto")
 
     @mock.patch("scripts.generate_network_config_bookworm.configure_static_network", side_effect=mock_csn)
     @mock.patch("scripts.generate_network_config_bookworm.uuid4", side_effect=mock_uuid)
-    def test_wireless_conn_file_template(self, uuid_mock, csn_mock):
+    def test_get_wireless_conn_file(self, uuid_mock, csn_mock):
         def get(k):
             if k == "wireless-type":
                 return "static"
@@ -155,12 +157,12 @@ class TestCases(unittest.TestCase):
                 return None
         c = Mock()
         c.get = Mock(side_effect=get)
-        template = wireless_conn_file_template(c)
+        template = get_wireless_conn_file(c)
         # print(template)
         assert template == wireless_template.format("sample_ip\nmethod=manual")
 
         csn_mock.side_effect = ValueError("test")
-        template = wireless_conn_file_template(c)
+        template = get_wireless_conn_file(c)
         assert template == wireless_template.format("method=auto")
 
 
@@ -172,5 +174,5 @@ class TestCases(unittest.TestCase):
             elif k == "wireless-password":
                 return "sirasti"
         c.get = Mock(side_effect=get)
-        template = wireless_conn_file_template(c)
+        template = get_wireless_conn_file(c)
         assert template == wireless_template.format("method=auto")
