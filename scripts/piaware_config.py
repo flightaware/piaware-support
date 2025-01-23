@@ -27,7 +27,9 @@ PIAWARE_CONFIG_ENUMS["uat_receiver"] = ["sdr", "stratuxv3", "other", "none"]
 PIAWARE_CONFIG_ENUMS["network_type"] = ["static", "dhcp"]
 PIAWARE_CONFIG_ENUMS["slow_cpu"] = ["yes", "no", "auto"]
 PIAWARE_CONFIG_ENUMS["network_config_style"] = ["default", "buster", "jessie"]
-
+PIAWARE_IMAGE_CONF = "/usr/share/piaware-support/piaware-image-config.txt"
+PIAWARE_CONF = "/etc/piaware.conf"
+BOOT_PIAWARE_CONF = "/boot/firmware/piaware-config.txt"
 
 def check_enums(setting_type: str, value: str) -> bool:
     if setting_type in PIAWARE_CONFIG_ENUMS and value in PIAWARE_CONFIG_ENUMS[setting_type]:
@@ -36,84 +38,84 @@ def check_enums(setting_type: str, value: str) -> bool:
         return False
 
 class MetadataSettings():
-    def __init__(self, default: any = None, setting_type: str = None, protect: str = None, sdonly: bool = None, network: str = None) -> None:
+    def __init__(self, default: any = None, setting_type: str = None, protect: str = None, sdonly: bool = None, network: str = None, ignore_list = None) -> None:
         self.default = default
         self.setting_type = setting_type
         self.protect = protect
         self.sdonly = sdonly
         self.network = network
+        self.ignore_list = ignore_list
 
 class Metadata():
-    settings: MetadataSettings = {}
-
-    def __init__(self, **kwargs):
-        self.settings["priority"] = MetadataSettings(setting_type="int")
-        self.settings["image-type"] = MetadataSettings(setting_type="str")
-        self.settings["manage-config"] = MetadataSettings(setting_type="bool", default=False)
-        self.settings["feeder-id"] = MetadataSettings(setting_type="UUID")
-        self.settings["force-macaddress"] = MetadataSettings(setting_type="MAC")
-        self.settings["allow-auto-updates"] = MetadataSettings(setting_type="bool", default=False)
-        self.settings["allow-manual-updates"] = MetadataSettings(setting_type="bool", default=False)
-        self.settings["network-config-style"] = MetadataSettings(setting_type="network_config_style", default="default", sdonly=True, network=True)
-        self.settings["wired-network"] = MetadataSettings(setting_type="bool", default=True, sdonly=True, network=True)
-        self.settings["wired-type"] = MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True)
-        self.settings["wired-address"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
-        self.settings["wired-netmask"] = MetadataSettings(sdonly=True, network=True, setting_type="int")
-        self.settings["wired-broadcast"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
-        self.settings["wired-gateway"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
-        self.settings["wired-nameservers"] = MetadataSettings(default= "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str")
-        self.settings["wireless-network"] = MetadataSettings(setting_type="bool", default=False, sdonly=True, network=True)
-        self.settings["wireless-ssid"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
-        self.settings["wireless-password"] = MetadataSettings(protect=True, sdonly=True, network=True, setting_type="str")
-        self.settings["wireless-type"] = MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True)
-        self.settings["wireless-address"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
-        self.settings["wireless-broadcast"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
-        self.settings["wireless-netmask"] = MetadataSettings(sdonly=True, network=True, setting_type="int")
-        self.settings["wireless-gateway"] = MetadataSettings(sdonly=True, network=True, setting_type="str")
-        self.settings["wireless-nameservers"] = MetadataSettings(default = "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str")
-        self.settings["wireless-country"] = MetadataSettings(default = "00", setting_type="country", sdonly=True, network=True)
-        self.settings["allow-dhcp-duic"] = MetadataSettings(default=True, setting_type="bool", sdonly=True, network=True)
-        self.settings["http-proxy-host"] = MetadataSettings(network=True)
-        self.settings["http-proxy-port"] = MetadataSettings(network=True)
-        self.settings["http-proxy-user"] = MetadataSettings(network=True)
-        self.settings["http-proxy-password"] = MetadataSettings(protect=True, network=True)
-        self.settings["adept-serverhosts"] = MetadataSettings() # Come back to this
-        self.settings["adept-serverport"] = MetadataSettings(setting_type="int", default=1200)
-        self.settings["rfkill"] = MetadataSettings(setting_type="bool", default=False, sdonly=True)
-        self.settings["receiver-type"] = MetadataSettings(setting_type="receiver", default="rtlsdr")
-        self.settings["rtlsdr-device-index"] = MetadataSettings(default=False, sdonly=True)
-        self.settings["rtlsdr-ppm"] = MetadataSettings(setting_type = "int", default = 0, sdonly=True)
-        self.settings["rtlsdr-gain"] = MetadataSettings(setting_type = "gain", default = "max", sdonly=True)
-        self.settings["beast-baudrate"] = MetadataSettings(setting_type = "int", sdonly=True)
-        self.settings["radarcape-host"] = MetadataSettings(sdonly = True)
-        self.settings["receiver-port"] = MetadataSettings(setting_type = "int", default = 30005)
-        self.settings["allow-modeac"] = MetadataSettings(setting_type = "bool", default = True, sdonly=True)
-        self.settings["allow-mlat"] = MetadataSettings(setting_type = "bool", default = True)
-        self.settings["mlat-results"] = MetadataSettings(setting_type = "bool", default = True)
-        self.settings["mlat-results-anon"] = MetadataSettings(setting_type = "bool", default = True)
-        self.settings["mlat-results-format"] = MetadataSettings(default = "beast,connect,localhost:30104 beast,listen,30105 ext_basestation,listen,30106")
-        self.settings["slow-cpu"] = MetadataSettings(default = "auto", sdonly = True)
-        self.settings["adaptive-dynamic-range"] = MetadataSettings(setting_type="bool", default = True, sdonly=True)
-        self.settings["adaptive-dynamic-range-target"] = MetadataSettings(setting_type="double", sdonly=True)
-        self.settings["adaptive-burst"] = MetadataSettings(setting_type="bool", default=False, sdonly=True)
-        self.settings["adaptive-min-gain"] = MetadataSettings(setting_type="double", sdonly=True)
-        self.settings["adaptive-max-gain"] = MetadataSettings(setting_type="double", sdonly=True)
-        self.settings["enable-firehose"] = MetadataSettings(setting_type="bool", default = False)
-        self.settings["allow-ble-setup"] = MetadataSettings(default = "auto", sdonly = True)
-        self.settings["uat-receiver-type"] = MetadataSettings(setting_type = "uat_receiver", default=None)
-        self.settings["uat-receiver-host"] = MetadataSettings()
-        self.settings["uat-receiver-port"] = MetadataSettings(setting_type = "int", default = 30978)
-        self.settings["uat-sdr-gain"] = MetadataSettings(setting_type = "gain", default = "max", sdonly = True)
-        self.settings["uat-sdr-ppm"] = MetadataSettings(setting_type = "double", default = 0, sdonly = True)
-        self.settings["uat-sdr-device"] = MetadataSettings(default = "driver=rtlsdr", sdonly = True)
-        self.settings["use-gpsd"] = MetadataSettings(setting_type="bool", default = True)
+    settings: MetadataSettings = {
+        "priority" : MetadataSettings(setting_type="int"),
+        "image-type" : MetadataSettings(setting_type="str"),
+        "manage-config" : MetadataSettings(setting_type="bool", default=False),
+        "feeder-id" : MetadataSettings(setting_type="UUID"),
+        "force-macaddress" : MetadataSettings(setting_type="MAC"),
+        "allow-auto-updates" : MetadataSettings(setting_type="bool", default=False),
+        "allow-manual-updates" : MetadataSettings(setting_type="bool", default=False),
+        "network-config-style" : MetadataSettings(setting_type="network_config_style", default="default", sdonly=True, network=True),
+        "wired-network" : MetadataSettings(setting_type="bool", default=True, sdonly=True, network=True),
+        "wired-type" : MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True),
+        "wired-address" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
+        "wired-netmask" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
+        # Setting broadcast address directly through boot/firmare/piaware-config.txt has been deprecated.
+        "wired-broadcast" : MetadataSettings(sdonly=True, network=True, setting_type="str", ignore_list=[BOOT_PIAWARE_CONF]),
+        "wired-gateway" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
+        "wired-nameservers" : MetadataSettings(default= "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str"),
+        "wireless-network" : MetadataSettings(setting_type="bool", default=False, sdonly=True, network=True),
+        "wireless-ssid" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
+        "wireless-password" : MetadataSettings(protect=True, sdonly=True, network=True, setting_type="str"),
+        "wireless-type" : MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True),
+        "wireless-address" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
+        "wireless-broadcast" : MetadataSettings(sdonly=True, network=True, setting_type="str", ignore_list=[BOOT_PIAWARE_CONF]),
+        "wireless-netmask" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
+        "wireless-gateway" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
+        "wireless-nameservers" : MetadataSettings(default = "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str"),
+        "wireless-country" : MetadataSettings(default = "00", setting_type="country", sdonly=True, network=True),
+        "allow-dhcp-duic" : MetadataSettings(default=True, setting_type="bool", sdonly=True, network=True),
+        "http-proxy-host" : MetadataSettings(network=True),
+        "http-proxy-port" : MetadataSettings(network=True),
+        "http-proxy-user" : MetadataSettings(network=True),
+        "http-proxy-password" : MetadataSettings(protect=True, network=True),
+        "adept-serverhosts" : MetadataSettings(), # Come back to this
+        "adept-serverport" : MetadataSettings(setting_type="int", default=1200),
+        "rfkill" : MetadataSettings(setting_type="bool", default=False, sdonly=True),
+        "receiver-type" : MetadataSettings(setting_type="receiver", default="rtlsdr"),
+        "rtlsdr-device-index" : MetadataSettings(default=False, sdonly=True),
+        "rtlsdr-ppm" : MetadataSettings(setting_type = "int", default = 0, sdonly=True),
+        "rtlsdr-gain" : MetadataSettings(setting_type = "gain", default = "max", sdonly=True),
+        "beast-baudrate" : MetadataSettings(setting_type = "int", sdonly=True),
+        "radarcape-host" : MetadataSettings(sdonly = True),
+        "receiver-port" : MetadataSettings(setting_type = "int", default = 30005),
+        "allow-modeac" : MetadataSettings(setting_type = "bool", default = True, sdonly=True),
+        "allow-mlat" : MetadataSettings(setting_type = "bool", default = True),
+        "mlat-results" : MetadataSettings(setting_type = "bool", default = True),
+        "mlat-results-anon" : MetadataSettings(setting_type = "bool", default = True),
+        "mlat-results-format" : MetadataSettings(default = "beast,connect,localhost:30104 beast,listen,30105 ext_basestation,listen,30106"),
+        "slow-cpu" : MetadataSettings(default = "auto", sdonly = True),
+        "adaptive-dynamic-range" : MetadataSettings(setting_type="bool", default = True, sdonly=True),
+        "adaptive-dynamic-range-target" : MetadataSettings(setting_type="double", sdonly=True),
+        "adaptive-burst" : MetadataSettings(setting_type="bool", default=False, sdonly=True),
+        "adaptive-min-gain" : MetadataSettings(setting_type="double", sdonly=True),
+        "adaptive-max-gain" : MetadataSettings(setting_type="double", sdonly=True),
+        "enable-firehose" : MetadataSettings(setting_type="bool", default = False),
+        "allow-ble-setup" : MetadataSettings(default = "auto", sdonly = True),
+        "uat-receiver-type" : MetadataSettings(setting_type = "uat_receiver", default=None),
+        "uat-receiver-host" : MetadataSettings(),
+        "uat-receiver-port" : MetadataSettings(setting_type = "int", default = 30978),
+        "uat-sdr-gain" : MetadataSettings(setting_type = "gain", default = "max", sdonly = True),
+        "uat-sdr-ppm" : MetadataSettings(setting_type = "double", default = 0, sdonly = True),
+        "uat-sdr-device" : MetadataSettings(default = "driver=rtlsdr", sdonly = True),
+        "use-gpsd" : MetadataSettings(setting_type="bool", default = True)
+    }
 
     def get_setting(self, setting_key: str) -> MetadataSettings:
         if setting_key in self.settings:
             return self.settings[setting_key]
         print(f"Could not find {setting_key} in settings")
         return None
-
 
     def convert_str_to_bool(self, val: str) -> bool:
         if val.lower() == "yes":
@@ -209,6 +211,13 @@ class Metadata():
 
     def validate_gain(self, val: str) -> bool:
         return self.validate_double(val) or (isinstance(val, str) and val == "max")
+
+    def check_if_file_in_ignore_list(self, key, file_name) -> bool:
+        setting = self.settings[key]
+
+        if setting.ignore_list is not None and file_name in setting.ignore_list:
+            return True
+        return False
 
     def validate_value(self, key, val) -> bool:
         setting = self.settings[key]
@@ -320,6 +329,10 @@ class ConfigFile():
                         if self._metadata.get_setting(key) is None:
                             print(f"{self._filename}:{idx}: unrecognized option {key}")
                             continue
+
+                        if self._metadata.check_if_file_in_ignore_list(key, self._filename):
+                            print(f"{self._filename}:{idx}: option {key} has {self._filename} in its ignore_list")
+                            continue
                         
                         if val != "":
                             if not self._metadata.validate_value(key, val):
@@ -359,8 +372,6 @@ class ConfigGroup():
         else:
             print(f"No files to sort for ConfigGroup")
 
-    
-
     def get(self, setting_key: str) -> any:
         for file in self.files:
             val = file.get(setting_key)
@@ -372,21 +383,16 @@ class ConfigGroup():
 # Create a standard piaware config group from these 3 default locations.
 # Create ConfigFile objects and reorder them based on priority.
 def create_standard_piaware_config_group(extra_file_path: str = None) -> ConfigGroup:
-    piaware_image_config = "/usr/share/piaware-support/piaware-image-config.txt"
-    piaware_conf = "/etc/piaware.conf"
-    boot_piaware_config = "/boot/firmware/piaware-config.txt"
-
-
     files = []
-    f = ConfigFile(filename=piaware_image_config, priority=30, metadata = Metadata())
+    f = ConfigFile(filename=PIAWARE_IMAGE_CONF, priority=30, metadata = Metadata())
     files.append(f)
 
     if extra_file_path is not None:
         f = ConfigFile(filename=extra_file_path, priority=100, metadata = Metadata())
         files.append(f)
     else:
-        f1 = ConfigFile(filename=piaware_conf, priority=40, metadata = Metadata())
-        f2 = ConfigFile(filename=boot_piaware_config, priority=50, metadata = Metadata())
+        f1 = ConfigFile(filename=PIAWARE_CONF, priority=40, metadata = Metadata())
+        f2 = ConfigFile(filename=BOOT_PIAWARE_CONF, priority=50, metadata = Metadata())
 
         files.append(f1)
         files.append(f2)
