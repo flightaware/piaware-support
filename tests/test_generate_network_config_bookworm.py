@@ -79,22 +79,19 @@ class TestCases(unittest.TestCase):
         ret = format_dns("8.8.8.8 8.8.4.4")
         assert ret == val
 
-    def test_check_address_and_netmask_set(self):
-
-        def get(k):
-            if k == "wireless-address":
-                return None
-            elif k == "wireless-netmask":
-                return None
-            else:
-                return True
-
+    def test_check_address_and_netmask(self):
         c = Mock()
-        c.get = Mock(side_effect=get)
+        c.get = Mock(side_effect=[None])
         with self.assertRaises(ValueError):
-            check_address_and_netmask_set("wireless", c)
+            check_address_and_netmask("wireless", c)
         
-        check_address_and_netmask_set("s", c)
+        c.get = Mock(side_effect=["192.168.1.24", None])
+        with self.assertRaises(ValueError):
+            check_address_and_netmask("s", c)
+
+        c.get = Mock(side_effect=["192.168.1.24", 45])
+        with self.assertRaises(ValueError):
+            check_address_and_netmask("s", c)
 
     def test_configure_static_network(self):
         enable_g = False
@@ -145,12 +142,12 @@ class TestCases(unittest.TestCase):
         assert template == wired_template.format("sample_ip\nmethod=manual")
 
         csn_mock.side_effect = ValueError("test")
-        template = get_wired_conn_file(c)
-        assert template == wired_template.format("method=auto")
+        with self.assertRaises(ValueError):
+            get_wired_conn_file(c)
 
         def get(k):
             if k == "wired-type":
-                return "NetworkManager"
+                return "dhcp"
         c.get = Mock(side_effect=get)
         template = get_wired_conn_file(c)
         assert template == wired_template.format("method=auto")
@@ -170,12 +167,11 @@ class TestCases(unittest.TestCase):
         c = Mock()
         c.get = Mock(side_effect=get)
         template = get_wireless_conn_file(c)
-        # print(template)
         assert template == wireless_template.format("sample_ip\nmethod=manual")
 
         csn_mock.side_effect = ValueError("test")
-        template = get_wireless_conn_file(c)
-        assert template == wireless_template.format("method=auto")
+        with self.assertRaises(ValueError):
+            template = get_wireless_conn_file(c)
 
         def get(k):
             if k == "wireless-type":

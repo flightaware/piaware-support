@@ -56,14 +56,18 @@ def format_dns(dns_string: str) -> str:
     formatted = ";".join(names) + ";"
     return formatted
 
-def check_address_and_netmask_set(network_type: str, config: ConfigGroup):
+def check_address_and_netmask(network_type: str, config: ConfigGroup):
     if config.get(f"{network_type}-address") is None:
-        raise ValueError(f"{network_type}-type was set to static but address was not set")
-    if config.get(f"{network_type}-netmask") is None:
-        raise ValueError(f"{network_type}-type was set to static but netmask was not set")
+        raise ValueError(f"{network_type}-type was set to static but {network_type}-address was not set")
+    netmask = config.get(f"{network_type}-netmask") 
+    if netmask is None:
+        raise ValueError(f"{network_type}-type was set to static but {network_type}-netmask was not set")
+    if netmask < 0 or netmask > 32:
+        raise ValueError(f"{network_type}-netmask should be a int between 0 and 32")
+
 
 def configure_static_network(network_type: str, config: ConfigGroup):
-    check_address_and_netmask_set(network_type, config)
+    check_address_and_netmask(network_type, config)
 
     ip = ""
     static_ip = config.get(f"{network_type}-address") + "/" + str(config.get(f"{network_type}-netmask"))
@@ -96,11 +100,8 @@ autoconnect={connect}
 [ipv4]
 """
     if config.get("wired-type") == "static":
-        try:
-            ipv4 += configure_static_network("wired", config)
-            ipv4 += "method=manual\n"
-        except ValueError:
-            ipv4 += "method=auto\n"
+        ipv4 += configure_static_network("wired", config)
+        ipv4 += "method=manual\n"
     else:
         ipv4 += "method=auto\n"
     file += ipv4
@@ -140,11 +141,8 @@ psk={psk}
 [ipv4]
 """
     if config.get("wireless-type") == "static":
-        try:
-            ipv4 += configure_static_network("wireless", config)
-            ipv4 += f"method=manual\n"
-        except ValueError:
-            ipv4 += "method=auto\n"
+        ipv4 += configure_static_network("wireless", config)
+        ipv4 += f"method=manual\n"
     else:
         ipv4 += "method=auto\n"
 

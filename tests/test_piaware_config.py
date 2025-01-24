@@ -112,15 +112,6 @@ class TestMetadata(unittest.TestCase):
         with self.assertRaises(TypeError):
             testm.validate_value("test", "dne")
 
-    def test_check_if_file_in_ignore_list(self):
-        testm = Metadata()
-        testm.settings["test"] = MetadataSettings(setting_type="int", ignore_list=["test_file"])
-        resp = testm.check_if_file_in_ignore_list("test", "test_file")
-        assert resp == True
-
-        resp = testm.check_if_file_in_ignore_list("test", "nothing")
-        assert resp == False
-
 class TestConfigFile(unittest.TestCase):
 
     def mock_config_file(*args):

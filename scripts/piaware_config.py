@@ -38,7 +38,7 @@ def check_enums(setting_type: str, value: str) -> bool:
         return False
 
 class MetadataSettings():
-    def __init__(self, default: any = None, setting_type: str = None, protect: str = None, sdonly: bool = None, network: str = None, ignore_list = None) -> None:
+    def __init__(self, default: any = None, setting_type: str = None, protect: str = None, sdonly: bool = None, network: str = None, ignore_list = []) -> None:
         self.default = default
         self.setting_type = setting_type
         self.protect = protect
@@ -212,13 +212,6 @@ class Metadata():
     def validate_gain(self, val: str) -> bool:
         return self.validate_double(val) or (isinstance(val, str) and val == "max")
 
-    def check_if_file_in_ignore_list(self, key, file_name) -> bool:
-        setting = self.settings[key]
-
-        if setting.ignore_list is not None and file_name in setting.ignore_list:
-            return True
-        return False
-
     def validate_value(self, key, val) -> bool:
         setting = self.settings[key]
         t = setting.setting_type
@@ -326,11 +319,12 @@ class ConfigFile():
                         
                         key, val = l
                         key = key.lower()
-                        if self._metadata.get_setting(key) is None:
+                        setting = self._metadata.get_setting(key)
+                        if setting is None:
                             print(f"{self._filename}:{idx}: unrecognized option {key}")
                             continue
 
-                        if self._metadata.check_if_file_in_ignore_list(key, self._filename):
+                        if self._filename in setting.ignore_list:
                             print(f"{self._filename}:{idx}: option {key} has {self._filename} in its ignore_list")
                             continue
                         
