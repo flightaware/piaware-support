@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from piaware_config import get_standard_config_group, ConfigGroup
 from uuid import uuid4
 import subprocess
@@ -5,6 +7,49 @@ import os
 import stat
 
 SYS_CON_DIR = "/etc/NetworkManager/system-connections"
+
+# We're calculating broadcast address for an ipv4 address.
+# Hence the magic number 32. Ipv4 addresses are 32 bits.
+def calculate_brd_by_hand(addr: str, nm: int) -> str:
+    values = addr.split(".")
+    binaries = [f"{int(v):08b}" for v in values]
+    full_bin = list("".join(binaries))
+    for i in range(32 - nm):
+        full_bin[i + nm] = "1"
+
+    cur = ""
+    base_10_val = []
+    for index, i in enumerate(full_bin):
+        cur += i
+
+        if (index + 1) % 8 == 0 and index > 0:
+            base_10_val.append(f"{(int(cur, 2))}")
+            cur = ""
+
+    ba = ".".join(base_10_val)
+    return ba
+
+def verify_broadcast_address(network: str,config: ConfigGroup) -> bool:
+    assigned_ba = config.get(f"{network}-broadcast")
+    if not assigned_ba:
+        return
+
+    print("Verifying broadcast address")
+    addr = config.get(f"{network}-address")
+    nm = config.get(f"{network}-netmask")
+
+    if addr is None or nm is None:
+        print(f"Addr: {addr}, Netmask: {nm}")
+        return
+
+    if nm > 32:
+        print("Netmask cannot be greater than 32. Stopping brd verification...")
+        return
+
+    calculated_ba = calculate_brd_by_hand(addr, nm)
+
+    if assigned_ba != calculated_ba:
+        print(f"Warning: the brd address that we've calculated: {calculated_ba} is different than the one you've assigned: {assigned_ba}")
 
 def format_dns(dns_string: str) -> str:
     names = dns_string.split()
@@ -129,6 +174,8 @@ def main(dryrun=False, extra_file_path: str = None):
     config_group = get_standard_config_group(extra_file_path)
     generate_wired_network_config(config_group)
     generate_wireless_network_config(config_group)
+    verify_broadcast_address("wireless", config_group)
+    verify_broadcast_address("wired", config_group)
 
 if __name__ == "__main__":
     main()

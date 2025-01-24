@@ -13,3 +13,11 @@ sdcard image:
  * initramfs support
  * Management of /boot/config.txt when kernels or initramfs are updated
  * Warns about default passwords when ssh is enabled
+
+## Tests
+
+`pip install pytest`
+`pip install coverage`
+run `python3 -m pytest`
+run `coverage run -m pytest`
+run `coverage html`
