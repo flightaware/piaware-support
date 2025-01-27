@@ -1,5 +1,6 @@
 from unittest import mock
 from unittest.mock import Mock
+from ipaddress import NetmaskValueError
 import os
 import unittest
 import importlib  
@@ -106,10 +107,6 @@ class TestCases(unittest.TestCase):
         with self.assertRaises(ValueError):
             check_address_and_netmask("s", c)
 
-        c.get = Mock(side_effect=["192.168.1.24", 45])
-        with self.assertRaises(ValueError):
-            check_address_and_netmask("s", c)
-
     def test_configure_static_network(self):
         enable_g = False
         enable_dns = False
@@ -118,7 +115,7 @@ class TestCases(unittest.TestCase):
             if k == "wireless-address":
                 return "192.111.1.42"
             elif k == "wireless-netmask":
-                return 24
+                return "255.255.255.0"
             elif k == "wireless-gateway" and enable_g:
                 return "192.111.1.33"
             elif k == "wireless-nameservers" and enable_dns:
@@ -138,6 +135,10 @@ class TestCases(unittest.TestCase):
         enable_dns = True
         network = configure_static_network("wireless", c)
         assert network == "address1=192.111.1.42/24,192.111.1.33\ndns=8.8.8.8;\n"
+
+        with self.assertRaises(NetmaskValueError):
+            c.get = Mock(side_effect=["192.111.1.42", "255.255", "255.255"])
+            network = configure_static_network("wireless", c)
 
     def mock_uuid():
         return uuid.UUID("e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c", version=4)

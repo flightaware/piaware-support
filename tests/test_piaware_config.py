@@ -117,7 +117,15 @@ class TestConfigFile(unittest.TestCase):
     def mock_config_file(*args):
         class Example:
             def __enter__(self):
-                return ["image-type image", "adaptive-min-gain -1" , "doesnt exist" , "manage-config 1232", "test 1", "adept-serverport 2", "adept-serverport 5"]
+                return ["image-type image", 
+                "adaptive-min-gain -1" , 
+                "doesnt exist" , 
+                "manage-config 1232", 
+                "test 1", 
+                "adept-serverport 2", 
+                "adept-serverport 5",
+                "wireless-netmask 255.255.255.0"
+                ]
 
             def __exit__(self, exc_type, exc_val, exc_tb):
                 pass
@@ -169,6 +177,7 @@ class TestConfigFile(unittest.TestCase):
         assert testc.get("image-type") == "image"
         assert testc.get("adaptive-min-gain") == -1
         assert testc.get("test") is None
+        print(testc.get("wireless-netmask"))
 
 class TestConfigGroup(unittest.TestCase):
 

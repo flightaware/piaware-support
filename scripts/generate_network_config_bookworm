@@ -5,8 +5,12 @@ from uuid import uuid4
 import subprocess
 import os
 import stat
+import ipaddress
 
 SYS_CON_DIR = "/etc/NetworkManager/system-connections"
+
+def netmask_to_cidr(netmask) -> int:
+    return ipaddress.IPv4Network('0.0.0.0/' + netmask).prefixlen
 
 # We're calculating broadcast address for an ipv4 address.
 # Hence the magic number 32. Ipv4 addresses are 32 bits.
@@ -62,15 +66,12 @@ def check_address_and_netmask(network_type: str, config: ConfigGroup):
     netmask = config.get(f"{network_type}-netmask") 
     if netmask is None:
         raise ValueError(f"{network_type}-type was set to static but {network_type}-netmask was not set")
-    if netmask < 0 or netmask > 32:
-        raise ValueError(f"{network_type}-netmask should be a int between 0 and 32")
-
 
 def configure_static_network(network_type: str, config: ConfigGroup):
     check_address_and_netmask(network_type, config)
-
+    cidr = str(netmask_to_cidr(config.get(f"{network_type}-netmask")))
     ip = ""
-    static_ip = config.get(f"{network_type}-address") + "/" + str(config.get(f"{network_type}-netmask"))
+    static_ip = config.get(f"{network_type}-address") + "/" + cidr
     gateway = config.get(f"{network_type}-gateway")
     if gateway is not None:
         static_ip += f",{gateway}"
