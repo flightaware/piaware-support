@@ -93,6 +93,9 @@ class TestCases(unittest.TestCase):
         ret = format_dns("8.8.8.8 8.8.4.4")
         assert ret == val
 
+        ret = format_dns("   8.8.8.8  \n  8.8.4.4  ")
+        assert ret == val
+
     def test_check_address_and_netmask(self):
         c = Mock()
         c.get = Mock(side_effect=[None])

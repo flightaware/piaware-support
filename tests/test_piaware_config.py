@@ -162,12 +162,13 @@ class TestConfigFile(unittest.TestCase):
     @mock.patch("os.path.isfile", side_effect=is_file_mock)
     def test_read_config(self, open_mock, is_file_mock):
         testm = Metadata()
-        testm.settings["test"] = MetadataSettings(setting_type="int", ignore_list=["file"])
+        testm.settings["test"] = MetadataSettings(setting_type="int", deprecated=True)
         testc = ConfigFile("file", metadata = Metadata())
         testc.read_config()
 
         assert testc.get("image-type") == "image"
         assert testc.get("adaptive-min-gain") == -1
+        assert testc.get("test") is None
 
 class TestConfigGroup(unittest.TestCase):
 

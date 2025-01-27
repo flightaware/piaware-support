@@ -38,13 +38,13 @@ def check_enums(setting_type: str, value: str) -> bool:
         return False
 
 class MetadataSettings():
-    def __init__(self, default: any = None, setting_type: str = None, protect: str = None, sdonly: bool = None, network: str = None, ignore_list = []) -> None:
+    def __init__(self, default: any = None, setting_type: str = None, protect: str = None, sdonly: bool = None, network: str = None, deprecated = False) -> None:
         self.default = default
         self.setting_type = setting_type
         self.protect = protect
         self.sdonly = sdonly
         self.network = network
-        self.ignore_list = ignore_list
+        self.deprecated = deprecated
 
 class Metadata():
     settings: MetadataSettings = {
@@ -61,7 +61,7 @@ class Metadata():
         "wired-address" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
         "wired-netmask" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
         # Setting broadcast address directly through boot/firmare/piaware-config.txt has been deprecated.
-        "wired-broadcast" : MetadataSettings(sdonly=True, network=True, setting_type="str", ignore_list=[BOOT_PIAWARE_CONF]),
+        "wired-broadcast" : MetadataSettings(sdonly=True, network=True, setting_type="str", deprecated=True),
         "wired-gateway" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
         "wired-nameservers" : MetadataSettings(default= "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str"),
         "wireless-network" : MetadataSettings(setting_type="bool", default=False, sdonly=True, network=True),
@@ -69,7 +69,7 @@ class Metadata():
         "wireless-password" : MetadataSettings(protect=True, sdonly=True, network=True, setting_type="str"),
         "wireless-type" : MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True),
         "wireless-address" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
-        "wireless-broadcast" : MetadataSettings(sdonly=True, network=True, setting_type="str", ignore_list=[BOOT_PIAWARE_CONF]),
+        "wireless-broadcast" : MetadataSettings(sdonly=True, network=True, setting_type="str", deprecated=True),
         "wireless-netmask" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
         "wireless-gateway" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
         "wireless-nameservers" : MetadataSettings(default = "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str"),
@@ -324,8 +324,8 @@ class ConfigFile():
                             print(f"{self._filename}:{idx}: unrecognized option {key}")
                             continue
 
-                        if self._filename in setting.ignore_list:
-                            print(f"{self._filename}:{idx}: option {key} has {self._filename} in its ignore_list")
+                        if setting.deprecated:
+                            print(f"{self._filename}:{idx}: option {key} is deprecated. Skipping...")
                             continue
                         
                         if val != "":
