@@ -1,4 +1,3 @@
-
 from unittest import mock
 from unittest.mock import Mock
 import os
@@ -7,7 +6,22 @@ import importlib
 import sys
 sys.path.append("./scripts/")
 
-from scripts.generate_network_config_bookworm import *
+
+def import_bookworm():
+    from importlib.machinery import SourceFileLoader
+    import importlib.util
+    loader = SourceFileLoader("generate_network_config_bookworm", "./scripts/generate_network_config_bookworm")
+
+    spec = importlib.util.spec_from_loader("generate_network_config_bookworm", loader)
+    generate_network_config_bookworm = importlib.util.module_from_spec(spec)
+    sys.modules["generate_network_config_bookworm"] = generate_network_config_bookworm
+    spec.loader.exec_module(generate_network_config_bookworm)
+
+    return generate_network_config_bookworm
+
+
+generate_network_config_bookworm = import_bookworm()
+from generate_network_config_bookworm import *
 from scripts.piaware_config import *
 import uuid
 
@@ -128,8 +142,8 @@ class TestCases(unittest.TestCase):
     def mock_csn(*args):
         return "sample_ip\n"
 
-    @mock.patch("scripts.generate_network_config_bookworm.configure_static_network", side_effect=mock_csn)
-    @mock.patch("scripts.generate_network_config_bookworm.uuid4", side_effect=mock_uuid)
+    @mock.patch("generate_network_config_bookworm.configure_static_network", side_effect=mock_csn)
+    @mock.patch("generate_network_config_bookworm.uuid4", side_effect=mock_uuid)
     def test_get_wired_conn_file(self, uuid_mock, csn_mock):
         def get(k):
             if k == "wired-type":
@@ -152,8 +166,8 @@ class TestCases(unittest.TestCase):
         template = get_wired_conn_file(c)
         assert template == wired_template.format("method=auto")
 
-    @mock.patch("scripts.generate_network_config_bookworm.configure_static_network", side_effect=mock_csn)
-    @mock.patch("scripts.generate_network_config_bookworm.uuid4", side_effect=mock_uuid)
+    @mock.patch("generate_network_config_bookworm.configure_static_network", side_effect=mock_csn)
+    @mock.patch("generate_network_config_bookworm.uuid4", side_effect=mock_uuid)
     def test_get_wireless_conn_file(self, uuid_mock, csn_mock):
         def get(k):
             if k == "wireless-type":
@@ -194,8 +208,8 @@ class TestCases(unittest.TestCase):
         brd = calculate_brd_by_hand("192.168.1.24", 31)
         assert brd == "192.168.1.25"
 
-    @mock.patch("scripts.generate_network_config_bookworm.calculate_brd_by_hand")
-    @mock.patch("scripts.generate_network_config_bookworm.print")
+    @mock.patch("generate_network_config_bookworm.calculate_brd_by_hand")
+    @mock.patch("generate_network_config_bookworm.print")
     def test_verify_broadcast_address(self, print_mock, calculate_brd_by_hand_mock):
         c = Mock()
         c.get = Mock(side_effect=[None])
