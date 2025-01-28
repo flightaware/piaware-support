@@ -97,15 +97,46 @@ class TestCases(unittest.TestCase):
         ret = format_dns("   8.8.8.8  \n  8.8.4.4  ")
         assert ret == val
 
-    def test_check_address_and_netmask(self):
+    def test_check_address(self):
         c = Mock()
         c.get = Mock(side_effect=[None])
         with self.assertRaises(ValueError):
-            check_address_and_netmask("wireless", c)
+            check_address("wireless", c)
         
-        c.get = Mock(side_effect=["192.168.1.24", None])
+        c.get = Mock(side_effect=["192.123"])
         with self.assertRaises(ValueError):
-            check_address_and_netmask("s", c)
+            check_address("s", c)
+
+        c.get = Mock(side_effect=["2001:db8:3333:4444:5555:6666:7777:8888"])
+        with self.assertRaises(ValueError):
+            check_address("s", c)
+
+    def test_get_netmask(self):
+        c = Mock()
+
+        test_cases = [
+            {
+                "se": ["255.255.255.0"],
+                "ex": "255.255.255.0"
+            },
+            {
+                "se": [None, "0.0.0.0"],
+                "ex": "255.0.0.0"
+            },
+            {
+                "se": [None, "128.0.0.0"],
+                "ex": "255.255.0.0"
+            },
+            {
+                "se": [None, "192.0.0.0"],
+                "ex": "255.255.255.0"
+            },
+        ]
+
+        for t in test_cases:
+            c.get = Mock(side_effect=t["se"])
+            nm = get_netmask("wireless", c)
+            assert nm == t["ex"]
 
     def test_configure_static_network(self):
         enable_g = False

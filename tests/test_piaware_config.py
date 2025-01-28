@@ -177,7 +177,7 @@ class TestConfigFile(unittest.TestCase):
         assert testc.get("image-type") == "image"
         assert testc.get("adaptive-min-gain") == -1
         assert testc.get("test") is None
-        print(testc.get("wireless-netmask"))
+        assert testc.get("wireless-netmask") == "255.255.255.0"
 
 class TestConfigGroup(unittest.TestCase):
 

@@ -60,16 +60,36 @@ def format_dns(dns_string: str) -> str:
     formatted = ";".join(names) + ";"
     return formatted
 
-def check_address_and_netmask(network_type: str, config: ConfigGroup):
-    if config.get(f"{network_type}-address") is None:
+def check_address(network_type: str, config: ConfigGroup):
+    address = config.get(f"{network_type}-address")
+    if address is None:
         raise ValueError(f"{network_type}-type was set to static but {network_type}-address was not set")
+    address = ipaddress.ip_address(address)
+
+    if address.version != 4:
+        raise ValueError(f"{network_type}-address needs an ipv4 address")
+
+def get_netmask(network_type: str, config: ConfigGroup) -> str:
     netmask = config.get(f"{network_type}-netmask") 
     if netmask is None:
-        raise ValueError(f"{network_type}-type was set to static but {network_type}-netmask was not set")
+        address = config.get(f"{network_type}-address")
+        address = ipaddress.ip_address(address)
+        address = '{:#b}'.format(address)
+        address = address[2:]
+        match address[0:3]:
+            case "000":
+                return "255.0.0.0"
+            case "100":
+                return "255.255.0.0"
+            case "110":
+                return "255.255.255.0"
+    else:
+        return netmask
 
-def configure_static_network(network_type: str, config: ConfigGroup):
-    check_address_and_netmask(network_type, config)
-    cidr = str(netmask_to_cidr(config.get(f"{network_type}-netmask")))
+def configure_static_network(network_type: str, config: ConfigGroup) -> str:
+    check_address(network_type, config)
+    nm = get_netmask(network_type, config)
+    cidr = str(netmask_to_cidr(nm))
     ip = ""
     static_ip = config.get(f"{network_type}-address") + "/" + cidr
     gateway = config.get(f"{network_type}-gateway")
