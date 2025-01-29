@@ -4,8 +4,6 @@ import unittest
 from scripts.piaware_config import *
 from uuid import UUID
 
-adept_server_hosts = '["piaware.flightaware.com", "piaware.flightaware.com", ["70.42.6.197", "70.42.6.198", "70.42.6.191", "70.42.6.225", "70.42.6.224", "70.42.6.156"]]'
-
 class TestMetadata(unittest.TestCase):
     def test_get_setting(self):
         testm = Metadata()
@@ -40,6 +38,7 @@ class TestMetadata(unittest.TestCase):
         assert testm.convert_value("image-type", "test_type") == "test_type"
         assert testm.convert_value("manage-config", "no") == False
         assert testm.convert_value("priority", "1") == 1
+        assert testm.convert_value("adaptive-min-gain", "1.2") == 1.2
         assert testm.convert_value("force-macaddress", "01:23:45:67:89:AB") == "01:23:45:67:89:AB"
         assert testm.convert_value("feeder-id", "e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c") == UUID("e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c", version=4)
         assert testm.convert_value("rtlsdr-gain", "-10") == "max"
@@ -100,6 +99,7 @@ class TestMetadata(unittest.TestCase):
             (testm.validate_value("image-type", "test_type")),
             (testm.validate_value("manage-config", "no")),
             (testm.validate_value("priority", "1")),
+            (testm.validate_value("adaptive-min-gain", "1.2")),
             (testm.validate_value("force-macaddress", "01:23:45:67:89:AB")),
             (testm.validate_value("feeder-id", "e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c")),
             (testm.validate_value("rtlsdr-gain", "-10"))
@@ -124,8 +124,7 @@ class TestConfigFile(unittest.TestCase):
                 "test 1", 
                 "adept-serverport 2", 
                 "adept-serverport 5",
-                "wireless-netmask 255.255.255.0",
-                f"adept-serverhosts {adept_server_hosts}"
+                "wireless-netmask 255.255.255.0"
                 ]
 
             def __exit__(self, exc_type, exc_val, exc_tb):
@@ -176,10 +175,9 @@ class TestConfigFile(unittest.TestCase):
         testc.read_config()
 
         assert testc.get("image-type") == "image"
+        assert testc.get("adaptive-min-gain") == -1
         assert testc.get("test") is None
         assert testc.get("wireless-netmask") == "255.255.255.0"
-        assert testc.get("adept-serverhosts") == json.loads(adept_server_hosts)
-        assert testc.get("adept-serverport") == 5
 
 class TestConfigGroup(unittest.TestCase):
 
