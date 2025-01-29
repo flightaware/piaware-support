@@ -6,6 +6,7 @@
 from uuid import UUID
 import re
 import os
+from ipaddress import IPv4Network, NetmaskValueError
 
 PIAWARE_CONFIG_ENUMS = {
     "country": ["AD","AE","AF","AG","AI","AL","AM","AO","AQ","AR","AS","AT","AU","AW","AX","AZ","BA","BB","BD","BE",
@@ -61,7 +62,7 @@ class Metadata():
         "wired-network" : MetadataSettings(setting_type="bool", default=True, sdonly=True, network=True),
         "wired-type" : MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True),
         "wired-address" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
-        "wired-netmask" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
+        "wired-netmask" : MetadataSettings(sdonly=True, network=True, setting_type="netmask"),
         # Setting broadcast address directly through boot/firmare/piaware-config.txt has been deprecated.
         "wired-broadcast" : MetadataSettings(sdonly=True, network=True, setting_type="str", deprecated=True),
         "wired-gateway" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
@@ -72,7 +73,7 @@ class Metadata():
         "wireless-type" : MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True),
         "wireless-address" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
         "wireless-broadcast" : MetadataSettings(sdonly=True, network=True, setting_type="str", deprecated=True),
-        "wireless-netmask" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
+        "wireless-netmask" : MetadataSettings(sdonly=True, network=True, setting_type="netmask"),
         "wireless-gateway" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
         "wireless-nameservers" : MetadataSettings(default = "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str"),
         "wireless-country" : MetadataSettings(default = "00", setting_type="country", sdonly=True, network=True),
@@ -148,7 +149,7 @@ class Metadata():
             return val
             
         match t:
-            case "str":
+            case "str" | "MAC" | "netmask":
                 return val
 
             case "bool":
@@ -159,9 +160,6 @@ class Metadata():
 
             case "double":
                 return float(val)
-
-            case "MAC":
-                return val
 
             case "UUID":
                 return self.convert_str_to_uuid(val)
@@ -217,6 +215,13 @@ class Metadata():
     def validate_gain(self, val: str) -> bool:
         return self.validate_double(val) or (isinstance(val, str) and val == "max")
 
+    def validate_netmask(self, val: str) -> bool:
+        try: 
+            IPv4Network('0.0.0.0/' + str(val))
+            return True
+        except NetmaskValueError:
+            return False
+
     def validate_value(self, key, val) -> bool:
         setting = self.settings[key]
         t = setting.setting_type
@@ -245,6 +250,9 @@ class Metadata():
 
             case "gain":
                 return self.validate_gain(val)
+
+            case "netmask":
+                return self.validate_netmask(val)
 
             case _:
                 raise TypeError(f"Cannot validate Unrecognized type {t} from {key}, {val}")

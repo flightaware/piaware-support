@@ -245,7 +245,8 @@ class TestCases(unittest.TestCase):
 
     @mock.patch("generate_network_config_bookworm.calculate_brd_by_hand")
     @mock.patch("generate_network_config_bookworm.print")
-    def test_verify_broadcast_address(self, print_mock, calculate_brd_by_hand_mock):
+    @mock.patch("generate_network_config_bookworm.get_netmask")
+    def test_verify_broadcast_address(self, net_mask_mock, print_mock, calculate_brd_by_hand_mock):
         c = Mock()
         c.get = Mock(side_effect=[None])
         verify_broadcast_address("wireless", c)
@@ -255,18 +256,20 @@ class TestCases(unittest.TestCase):
         c.get = Mock(side_effect=["192.111.1.255", None, None])
         verify_broadcast_address("wireless", c)
         calculate_brd_by_hand_mock.assert_not_called()
-        assert c.get.call_count == 3
+        assert c.get.call_count == 2
 
-        c.get = Mock(side_effect=["192.111.255.255", "192.111.1.42", 24])
+        c.get = Mock(side_effect=["192.111.255.255", "192.111.1.42"])
+        net_mask_mock.side_effect = ["255.255.0.0"]
         calculate_brd_by_hand_mock.side_effect = ["192.111.255.255"]
         print_mock.reset_mock()
-        verify_broadcast_address("wireless", c)
+        assert verify_broadcast_address("wireless", c) == True
         calculate_brd_by_hand_mock.assert_called()
         assert print_mock.call_count == 1
 
-        c.get = Mock(side_effect=["192.111.255.255", "192.111.1.42", 24])
+        c.get = Mock(side_effect=["192.111.255.255", "192.111.1.42"])
         calculate_brd_by_hand_mock.side_effect = ["not equal"]
+        net_mask_mock.side_effect = ["255.255.255.0"]
         print_mock.reset_mock()
-        verify_broadcast_address("wireless", c)
+        assert verify_broadcast_address("wireless", c) == False
         calculate_brd_by_hand_mock.assert_called()
         assert print_mock.call_count == 2

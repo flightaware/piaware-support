@@ -9,7 +9,7 @@ import ipaddress
 
 SYS_CON_DIR = "/etc/NetworkManager/system-connections"
 
-def netmask_to_cidr(netmask) -> int:
+def netmask_to_cidr(netmask: str) -> int:
     return ipaddress.IPv4Network('0.0.0.0/' + netmask).prefixlen
 
 # We're calculating broadcast address for an ipv4 address.
@@ -36,24 +36,24 @@ def calculate_brd_by_hand(addr: str, nm: int) -> str:
 def verify_broadcast_address(network: str,config: ConfigGroup) -> bool:
     assigned_ba = config.get(f"{network}-broadcast")
     if not assigned_ba:
-        return
+        return False
 
     print("Verifying broadcast address")
     addr = config.get(f"{network}-address")
-    nm = config.get(f"{network}-netmask")
 
-    if addr is None or nm is None:
-        print(f"Addr: {addr}, Netmask: {nm}")
-        return
+    if addr is None:
+        print(f"Addr not set")
+        return False
 
-    if nm > 32:
-        print("Netmask cannot be greater than 32. Stopping brd verification...")
-        return
+    nm = get_netmask(network, config)
+    nm = netmask_to_cidr(nm)
 
     calculated_ba = calculate_brd_by_hand(addr, nm)
 
     if assigned_ba != calculated_ba:
         print(f"Warning: the brd address that we've calculated: {calculated_ba} is different than the one you've assigned: {assigned_ba}")
+    
+    return assigned_ba == calculated_ba
 
 def format_dns(dns_string: str) -> str:
     names = dns_string.split()

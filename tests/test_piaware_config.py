@@ -93,6 +93,13 @@ class TestMetadata(unittest.TestCase):
 
         assert testm.validate_gain("-noasdw") == False
 
+    def test_validate_netmask(self):
+        testm = Metadata()
+        assert testm.validate_netmask("255.255.255.0") is True
+        assert testm.validate_netmask(123) is False
+        assert testm.validate_netmask(False) is False
+        assert testm.validate_netmask("adawf") is False
+
     def test_validate_value(self):
         testm = Metadata()
         tests = [
@@ -102,7 +109,8 @@ class TestMetadata(unittest.TestCase):
             (testm.validate_value("adaptive-min-gain", "1.2")),
             (testm.validate_value("force-macaddress", "01:23:45:67:89:AB")),
             (testm.validate_value("feeder-id", "e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c")),
-            (testm.validate_value("rtlsdr-gain", "-10"))
+            (testm.validate_value("rtlsdr-gain", "-10")),
+            (testm.validate_value("wireless-netmask", "255.255.0.0"))
         ]
 
         for t in tests:
