@@ -6,6 +6,7 @@
 from uuid import UUID
 import re
 import os
+import json
 
 PIAWARE_CONFIG_ENUMS = {
     "country": ["AD","AE","AF","AG","AI","AL","AM","AO","AQ","AR","AS","AT","AU","AW","AX","AZ","BA","BB","BD","BE",
@@ -24,10 +25,7 @@ PIAWARE_CONFIG_ENUMS = {
     "receiver": ["rtlsdr", "sdr", "bladerf", "beast", "relay", "radarcape", "radarcape-local", "other", "none"],
     "uat_receiver": ["sdr", "stratuxv3", "other", "none"],
     "network_type": ["static", "dhcp"],
-    "slow_cpu": ["yes", "no", "auto"],
-    "network_config_style": ["default", "buster", "jessie"]
 }
-PIAWARE_CONFIG_ENUMS["network_config_style"] = ["default", "buster", "jessie"]
 PIAWARE_IMAGE_CONF = "/usr/share/piaware-support/piaware-image-config.txt"
 PIAWARE_CONF = "/etc/piaware.conf"
 BOOT_PIAWARE_CONF = "/boot/firmware/piaware-config.txt"
@@ -39,12 +37,10 @@ def check_enums(setting_type: str, value: str) -> bool:
         return False
 
 class MetadataSettings():
-    def __init__(self, default: any = None, setting_type: str = None, protect: str = None, sdonly: bool = None, network: str = None, deprecated = False) -> None:
+    def __init__(self, default: any = None, setting_type: str = None, protect: str = None, deprecated = False) -> None:
         self.default = default
         self.setting_type = setting_type
         self.protect = protect
-        self.sdonly = sdonly
-        self.network = network
         self.deprecated = deprecated
 
 class Metadata():
@@ -53,62 +49,73 @@ class Metadata():
         "image-type" : MetadataSettings(setting_type="str"),
         "manage-config" : MetadataSettings(setting_type="bool", default=False),
         "feeder-id" : MetadataSettings(setting_type="UUID"),
+        "flightaware-user" : MetadataSettings(setting_type="str", protect=True),
+        "flightaware-password" : MetadataSettings(setting_type="str", protect=True),
         "force-macaddress" : MetadataSettings(setting_type="MAC"),
         "allow-auto-updates" : MetadataSettings(setting_type="bool", default=False),
         "allow-manual-updates" : MetadataSettings(setting_type="bool", default=False),
-        "network-config-style" : MetadataSettings(setting_type="network_config_style", default="default", sdonly=True, network=True),
-        "wired-network" : MetadataSettings(setting_type="bool", default=True, sdonly=True, network=True),
-        "wired-type" : MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True),
-        "wired-address" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
-        "wired-netmask" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
+
+        "wired-network" : MetadataSettings(setting_type="bool", default=True),
+        "wired-type" : MetadataSettings(setting_type="network_type", default="dhcp"),
+        "wired-address" : MetadataSettings(setting_type="str"),
+        "wired-netmask" : MetadataSettings(setting_type="str"),
         # Setting broadcast address directly through boot/firmare/piaware-config.txt has been deprecated.
-        "wired-broadcast" : MetadataSettings(sdonly=True, network=True, setting_type="str", deprecated=True),
-        "wired-gateway" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
-        "wired-nameservers" : MetadataSettings(default= "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str"),
-        "wireless-network" : MetadataSettings(setting_type="bool", default=False, sdonly=True, network=True),
-        "wireless-ssid" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
-        "wireless-password" : MetadataSettings(protect=True, sdonly=True, network=True, setting_type="str"),
-        "wireless-type" : MetadataSettings(setting_type="network_type", default="dhcp", sdonly=True, network=True),
-        "wireless-address" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
-        "wireless-broadcast" : MetadataSettings(sdonly=True, network=True, setting_type="str", deprecated=True),
-        "wireless-netmask" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
-        "wireless-gateway" : MetadataSettings(sdonly=True, network=True, setting_type="str"),
-        "wireless-nameservers" : MetadataSettings(default = "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str"),
-        "wireless-country" : MetadataSettings(default = "00", setting_type="country", sdonly=True, network=True),
-        "allow-dhcp-duic" : MetadataSettings(default=True, setting_type="bool", sdonly=True, network=True),
-        "http-proxy-host" : MetadataSettings(network=True),
-        "http-proxy-port" : MetadataSettings(network=True),
-        "http-proxy-user" : MetadataSettings(network=True),
-        "http-proxy-password" : MetadataSettings(protect=True, network=True),
-        "adept-serverhosts" : MetadataSettings(), # Come back to this
+        "wired-broadcast" : MetadataSettings(setting_type="str", deprecated=True),
+        "wired-gateway" : MetadataSettings(setting_type="str"),
+        "wired-nameservers" : MetadataSettings(default= "8.8.8.8 8.8.4.4", setting_type="str"),
+        
+        "wireless-network" : MetadataSettings(setting_type="bool", default=False),
+        "wireless-ssid" : MetadataSettings(  setting_type="str"),
+        "wireless-password" : MetadataSettings(protect=True, setting_type="str"),
+        "wireless-type" : MetadataSettings(setting_type="network_type", default="dhcp"),
+        "wireless-address" : MetadataSettings(  setting_type="str"),
+        "wireless-broadcast" : MetadataSettings(  setting_type="str", deprecated=True),
+        "wireless-netmask" : MetadataSettings(  setting_type="str"),
+        "wireless-gateway" : MetadataSettings(  setting_type="str"),
+        "wireless-nameservers" : MetadataSettings(default = "8.8.8.8 8.8.4.4", setting_type="str"),
+        "wireless-country" : MetadataSettings(default = "00", setting_type="country"),
+
+        "allow-dhcp-duic" : MetadataSettings(default=True, setting_type="bool"),
+
+        "http-proxy-host" : MetadataSettings(setting_type="str"),
+        "http-proxy-port" : MetadataSettings( setting_type="str"),
+        "http-proxy-user" : MetadataSettings( setting_type="str"),
+        "http-proxy-password" : MetadataSettings(protect=True),
+
+        "adept-serverhosts" : MetadataSettings(setting_type="list", default=["piaware.flightaware.com", "piaware.flightaware.com", ["70.42.6.197", "70.42.6.198", "70.42.6.191", "70.42.6.225", "70.42.6.224", "70.42.6.156"]]),
         "adept-serverport" : MetadataSettings(setting_type="int", default=1200),
-        "rfkill" : MetadataSettings(setting_type="bool", default=False, sdonly=True),
+
+        "rfkill" : MetadataSettings(setting_type="bool", default=False),
+
         "receiver-type" : MetadataSettings(setting_type="receiver", default="rtlsdr"),
-        "rtlsdr-device-index" : MetadataSettings(default=False, sdonly=True),
-        "rtlsdr-ppm" : MetadataSettings(setting_type = "int", default = 0, sdonly=True),
-        "rtlsdr-gain" : MetadataSettings(setting_type = "gain", default = "max", sdonly=True),
-        "beast-baudrate" : MetadataSettings(setting_type = "int", sdonly=True),
-        "radarcape-host" : MetadataSettings(sdonly = True),
+
+        "rtlsdr-device-index" : MetadataSettings(default=0, setting_type="int"),
+        "rtlsdr-ppm" : MetadataSettings(setting_type = "int", default = 0),
+        "rtlsdr-gain" : MetadataSettings(setting_type = "gain", default = "max"),
+
+        "beast-baudrate" : MetadataSettings(setting_type = "int"),
+
+        "radarcape-host" : MetadataSettings(setting_type="str"),
+        
+        "receiver-host":  MetadataSettings(setting_type = "str"),
         "receiver-port" : MetadataSettings(setting_type = "int", default = 30005),
-        "allow-modeac" : MetadataSettings(setting_type = "bool", default = True, sdonly=True),
+
+        "allow-modeac" : MetadataSettings(setting_type = "bool", default = True),
+
         "allow-mlat" : MetadataSettings(setting_type = "bool", default = True),
         "mlat-results" : MetadataSettings(setting_type = "bool", default = True),
         "mlat-results-anon" : MetadataSettings(setting_type = "bool", default = True),
         "mlat-results-format" : MetadataSettings(default = "beast,connect,localhost:30104 beast,listen,30105 ext_basestation,listen,30106"),
-        "slow-cpu" : MetadataSettings(default = "auto", sdonly = True),
-        "adaptive-dynamic-range" : MetadataSettings(setting_type="bool", default = True, sdonly=True),
-        "adaptive-dynamic-range-target" : MetadataSettings(setting_type="double", sdonly=True),
-        "adaptive-burst" : MetadataSettings(setting_type="bool", default=False, sdonly=True),
-        "adaptive-min-gain" : MetadataSettings(setting_type="double", sdonly=True),
-        "adaptive-max-gain" : MetadataSettings(setting_type="double", sdonly=True),
+        
         "enable-firehose" : MetadataSettings(setting_type="bool", default = False),
-        "allow-ble-setup" : MetadataSettings(default = "auto", sdonly = True),
+
         "uat-receiver-type" : MetadataSettings(setting_type = "uat_receiver", default=None),
-        "uat-receiver-host" : MetadataSettings(),
+        "uat-receiver-host" : MetadataSettings(setting_type="str"),
         "uat-receiver-port" : MetadataSettings(setting_type = "int", default = 30978),
-        "uat-sdr-gain" : MetadataSettings(setting_type = "gain", default = "max", sdonly = True),
-        "uat-sdr-ppm" : MetadataSettings(setting_type = "double", default = 0, sdonly = True),
-        "uat-sdr-device" : MetadataSettings(default = "driver=rtlsdr", sdonly = True),
+        "uat-sdr-gain" : MetadataSettings(setting_type = "gain", default = "max"),
+        "uat-sdr-ppm" : MetadataSettings(setting_type = "double", default = 0),
+        "uat-sdr-device" : MetadataSettings(default = "driver=rtlsdr"),
+
         "use-gpsd" : MetadataSettings(setting_type="bool", default = True)
     }
 
@@ -135,6 +142,9 @@ class Metadata():
             return int(val)
         else:
             return float(val)
+
+    def convert_str_to_list(self, val) -> list:
+        return json.loads(val)
     
     def convert_value(self, key, val) -> any:
         setting = self.settings[key]
@@ -147,6 +157,9 @@ class Metadata():
             case "str":
                 return val
 
+            case "MAC":
+                return val
+
             case "bool":
                 return self.convert_str_to_bool(val)
 
@@ -156,14 +169,14 @@ class Metadata():
             case "double":
                 return float(val)
 
-            case "MAC":
-                return val
-
             case "UUID":
                 return self.convert_str_to_uuid(val)
 
             case "gain":
                 return self.convert_str_to_gain(val)
+
+            case "list":
+                return self.convert_str_to_list(val)
 
             case _:
                 raise TypeError(f"Cannot convert unrecognized type {t} for {key}, {val}")
@@ -213,6 +226,13 @@ class Metadata():
     def validate_gain(self, val: str) -> bool:
         return self.validate_double(val) or (isinstance(val, str) and val == "max")
 
+    def validate_list(self, val: str) -> bool:
+        try:
+            json.loads(val)
+        except json.decoder.JSONDecodeError as e:
+            return False
+        return True
+
     def validate_value(self, key, val) -> bool:
         setting = self.settings[key]
         t = setting.setting_type
@@ -241,6 +261,9 @@ class Metadata():
 
             case "gain":
                 return self.validate_gain(val)
+
+            case "list":
+                return self.validate_list(val)
 
             case _:
                 raise TypeError(f"Cannot validate Unrecognized type {t} from {key}, {val}")
@@ -299,6 +322,9 @@ class ConfigFile():
         return None
 
     def get(self, setting_key: str) -> any:
+        if not self._metadata.get_setting(setting_key):
+            raise KeyError(f"{self.filename}: metadata for setting {setting_key} not found")
+        
         if setting_key in self.values:
             return self.values[setting_key]
         else:
