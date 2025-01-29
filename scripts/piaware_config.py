@@ -31,6 +31,7 @@ PIAWARE_CONFIG_ENUMS["network_config_style"] = ["default", "buster", "jessie"]
 PIAWARE_IMAGE_CONF = "/usr/share/piaware-support/piaware-image-config.txt"
 PIAWARE_CONF = "/etc/piaware.conf"
 BOOT_PIAWARE_CONF = "/boot/firmware/piaware-config.txt"
+WHITEOUT = "WHITEOUT"
 
 def check_enums(setting_type: str, value: str) -> bool:
     if setting_type in PIAWARE_CONFIG_ENUMS and value in PIAWARE_CONFIG_ENUMS[setting_type]:
@@ -314,7 +315,6 @@ class ConfigFile():
             return
         try:
             with open(self._filename, "r") as config:
-                values = {}
                 for idx, line in enumerate(config):
                         l = self.parse_line(line)
 
@@ -337,12 +337,12 @@ class ConfigFile():
                                 print(f"{self._filename}:{idx}: invalid value for option {key}:{val}")
                                 continue
 
-                            if key in values:
-                                print(f"{self._filename}:{idx}: {key} overrides an existing instance of {key}")
+                            if key in self.values:
+                                print(f"{self._filename}:{idx}: {key} with value {val} overrides an existing instance of {key}")
 
-                            values[key] = val
-                for k, v in values.items():
-                    self.values[k] = self._metadata.convert_value(k, v)
+                            self.values[key] = self._metadata.convert_value(key, val)
+                        else:
+                            self.values[key] = WHITEOUT
                         
         except Exception as e:
             print(f"Something went wrong while reading config file {self._filename}: {e}")
@@ -373,6 +373,8 @@ class ConfigGroup():
     def get(self, setting_key: str) -> any:
         for file in self.files:
             val = file.get(setting_key)
+            if val == WHITEOUT:
+                break
             if val is not None:
                 return val
         

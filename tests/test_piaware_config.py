@@ -125,7 +125,8 @@ class TestConfigFile(unittest.TestCase):
                 "adept-serverport 2", 
                 "adept-serverport 5",
                 "wireless-netmask 255.255.255.0",
-                "adept-serverhosts test.usa.flightaware.com"
+                "adept-serverhosts test.usa.flightaware.com",
+                "use-gpsd"
                 ]
 
             def __exit__(self, exc_type, exc_val, exc_tb):
@@ -180,6 +181,7 @@ class TestConfigFile(unittest.TestCase):
         assert testc.get("test") is None
         assert testc.get("wireless-netmask") == "255.255.255.0"
         assert testc.get("adept-serverhosts") == "test.usa.flightaware.com"
+        assert testc.get("use-gpsd") == "WHITEOUT"
 
 class TestConfigGroup(unittest.TestCase):
 
@@ -216,6 +218,40 @@ class TestConfigGroup(unittest.TestCase):
         assert cfg.get("image-type") == "image_2"
         assert cfg.get("wired-network") is False
         assert cfg.get("wireless-network") is False
+
+    @mock.patch("builtins.open", side_effect=mock_config_file)
+    @mock.patch("os.path.isfile", side_effect=is_file_mock)
+    def test_config_group_whiteout(self, config_mock, is_file_mock):
+        f1 = ConfigFile(filename="file1", priority=30, metadata = Metadata())
+        f2 = ConfigFile(filename="file2", priority=40, metadata = Metadata())
+        f3 = ConfigFile(filename="file3", priority=50, metadata = Metadata())
+
+        uat = "uat-receiver-port"
+        f3.values[uat] = WHITEOUT
+        f2.values[uat] = 10000
+
+        cfg = ConfigGroup(metadata=Metadata(), files=[f1, f2, f3])
+        cfg.read_configs()
+
+        assert cfg.get(uat) == 30978
+
+        f3.values[uat] = 10000
+        f2.values[uat] = WHITEOUT
+
+        assert cfg.get(uat) == 10000
+
+
+    @mock.patch("builtins.open", side_effect=mock_config_file)
+    @mock.patch("os.path.isfile", side_effect=is_file_mock)
+    def test_config_group_get_val_no_default(self, config_mock, is_file_mock):
+        f1 = ConfigFile(filename="file1", priority=30, metadata = Metadata())
+        f2 = ConfigFile(filename="file2", priority=40, metadata = Metadata())
+        f3 = ConfigFile(filename="file3", priority=50, metadata = Metadata())
+
+        cfg = ConfigGroup(metadata=Metadata(), files=[f1, f2, f3])
+        cfg.read_configs()
+
+        assert cfg.get("http-proxy-host") is None
 
     def test_create_standard_piaware_config_group(self):
         cfg = create_standard_piaware_config_group()
