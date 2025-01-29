@@ -124,7 +124,8 @@ class TestConfigFile(unittest.TestCase):
                 "test 1", 
                 "adept-serverport 2", 
                 "adept-serverport 5",
-                "wireless-netmask 255.255.255.0"
+                "wireless-netmask 255.255.255.0",
+                "adept-serverhosts test.usa.flightaware.com"
                 ]
 
             def __exit__(self, exc_type, exc_val, exc_tb):
@@ -178,6 +179,7 @@ class TestConfigFile(unittest.TestCase):
         assert testc.get("adaptive-min-gain") == -1
         assert testc.get("test") is None
         assert testc.get("wireless-netmask") == "255.255.255.0"
+        assert testc.get("adept-serverhosts") == "test.usa.flightaware.com"
 
 class TestConfigGroup(unittest.TestCase):
 
