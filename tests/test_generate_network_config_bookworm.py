@@ -26,64 +26,38 @@ from generate_network_config_bookworm import *
 from scripts.piaware_config import *
 import uuid
 
-wired_template = """
-[connection]
+wired_template = """[connection]
 id=wired
 uuid=e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c
 type=ethernet
 autoconnect-priority=999
 interface-name=eth0
 autoconnect=false
-
 [ethernet]
-
 [ipv4]
 {}
-
 [ipv6]
 addr-gen-mode=default
 method=auto
+[proxy]"""
 
-[proxy]
-"""
-
-wireless_template = """
-[connection]
+wireless_template = """[connection]
 id=wireless
-uuid=e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c
+uuid=acc6cf97-9575-4f41-ad85-65af044288df
 type=wifi
 autoconnect=false
-
 [wifi]
 mode=infrastructure
 ssid=jukka
-
 [wifi-security]
 key-mgmt=wpa-psk
 psk=sirasti
-
 [ipv4]
 {}
-
 [ipv6]
 addr-gen-mode=default
 method=auto
-
-[proxy]
-"""
-
-mock_ifaces = """
-    inet 127.0.0.1/8 scope host lo
-    inet 192.168.1.86/24 brd 192.168.1.255 scope global dynamic noprefixroute wlan0
-    inet 192.168.1.42/12 brd 192.168.255.255 scope global noprefixroute eth0
-
-"""
-
-mock_ifaces_no_wlan0 = """
-    inet 127.0.0.1/8 scope host lo
-    inet 192.168.1.42/12 brd 192.168.255.255 scope global noprefixroute eth0
-
-"""
+[proxy]"""
 
 class TestCases(unittest.TestCase):
     def test_format_dns(self):
@@ -98,101 +72,96 @@ class TestCases(unittest.TestCase):
         assert ret == val
 
     def test_check_address(self):
-        c = Mock()
-        c.get = Mock(side_effect=[None])
         with self.assertRaises(ValueError):
-            check_address("wireless", c)
+            check_address(None, "wireless")
         
-        c.get = Mock(side_effect=["192.123"])
         with self.assertRaises(ValueError):
-            check_address("s", c)
+            check_address(None, "wireless")
 
-        c.get = Mock(side_effect=["2001:db8:3333:4444:5555:6666:7777:8888"])
         with self.assertRaises(ValueError):
-            check_address("s", c)
+            check_address("2001:db8:3333:4444:5555:6666:7777:8888", "wireless")
 
-    def test_get_netmask(self):
+        try:
+            check_address("192.1.1.1", "wireless")
+        except Exception as e:
+            assert False, f"check_address raised exception {e}"
+
+    def test_get_prefix(self):
         c = Mock()
-
+        address = "192.1.1.1"
         test_cases = [
             {
-                "se": ["255.255.255.0"],
-                "ex": "255.255.255.0"
+                "se": [address, "255.255.255.0"],
+                "ex": 24
             },
             {
-                "se": [None, "0.0.0.0"],
-                "ex": "255.0.0.0"
+                "se": ["0.0.0.0", None],
+                "ex": 8
             },
             {
-                "se": [None, "128.0.0.0"],
-                "ex": "255.255.0.0"
+                "se": ["128.1.1.1", None],
+                "ex": 16
             },
             {
-                "se": [None, "192.0.0.0"],
-                "ex": "255.255.255.0"
+                "se": [address, None],
+                "ex": 24
             },
         ]
 
         for t in test_cases:
-            c.get = Mock(side_effect=t["se"])
-            nm = get_netmask("wireless", c)
+            nm = get_prefix(*t["se"])
             assert nm == t["ex"]
+        with self.assertRaises(NetmaskValueError):
+            get_prefix(address, "2221ds")
 
     def test_configure_static_network(self):
-        enable_g = False
-        enable_dns = False
+        address = "192.111.1.42"
+        gateway = "192.111.1.33"
+        nameservers = "8.8.8.8 8.8.4.4"
+        netmask = "255.255.255.0"
 
-        def get(k):
-            if k == "wireless-address":
-                return "192.111.1.42"
-            elif k == "wireless-netmask":
-                return "255.255.255.0"
-            elif k == "wireless-gateway" and enable_g:
-                return "192.111.1.33"
-            elif k == "wireless-nameservers" and enable_dns:
-                return "8.8.8.8"
-            else:
-                return None
+        test_cases = [
+            {
+                "test": [address, None, None, netmask],
+                "ex": [[f"address1={address}/24"], 1]
+            },
+            {
+                "test": [address, gateway, None, netmask],
+                "ex": [[f"address1={address}/24,{gateway}"], 1]
+            },
+            {
+                "test": [address, gateway, nameservers, netmask],
+                "ex": [[f"address1={address}/24,{gateway}", "dns=8.8.8.8;8.8.4.4;"], 2]
+            },
+        ]
 
-        c = Mock()
-        c.get = Mock(side_effect=get)
-        network = configure_static_network("wireless", c)
-        assert network == "address1=192.111.1.42/24\n"
-
-        enable_g = True
-        network = configure_static_network("wireless", c)
-        assert network == "address1=192.111.1.42/24,192.111.1.33\n"
-
-        enable_dns = True
-        network = configure_static_network("wireless", c)
-        assert network == "address1=192.111.1.42/24,192.111.1.33\ndns=8.8.8.8;\n"
+        for t in test_cases:
+            network = configure_static_network(*t["test"])
+            for n, ex in zip(network, t["ex"][0]):
+                assert n == ex
+            assert len(network) == t["ex"][1]
 
         with self.assertRaises(NetmaskValueError):
-            c.get = Mock(side_effect=["192.111.1.42", "255.255", "255.255"])
-            network = configure_static_network("wireless", c)
-
-    def mock_uuid():
-        return uuid.UUID("e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c", version=4)
+            configure_static_network("192.111.1.42", None, None, "255.255")
 
     def mock_csn(*args):
-        return "sample_ip\n"
+        return ["sample_ip/24"]
 
     @mock.patch("generate_network_config_bookworm.configure_static_network", side_effect=mock_csn)
-    @mock.patch("generate_network_config_bookworm.uuid4", side_effect=mock_uuid)
-    def test_get_wired_conn_file(self, uuid_mock, csn_mock):
+    def test_get_wired_conn_file(self, csn_mock):
         def get(k):
             if k == "wired-type":
                 return "static"
+            elif k == "wired-address":
+                return "192.1.1.1"
+            elif k == "wired-netmask":
+                return "255.255.255.0"
             else:
                 return None
         c = Mock()
         c.get = Mock(side_effect=get)
         template = get_wired_conn_file(c)
-        assert template == wired_template.format("sample_ip\nmethod=manual")
-
-        csn_mock.side_effect = ValueError("test")
-        with self.assertRaises(ValueError):
-            get_wired_conn_file(c)
+        assert template == wired_template.format(f"{self.mock_csn()[0]}\nmethod=manual")
 
         def get(k):
             if k == "wired-type":
@@ -202,8 +171,10 @@ class TestCases(unittest.TestCase):
         assert template == wired_template.format("method=auto")
 
     @mock.patch("generate_network_config_bookworm.configure_static_network", side_effect=mock_csn)
-    @mock.patch("generate_network_config_bookworm.uuid4", side_effect=mock_uuid)
-    def test_get_wireless_conn_file(self, uuid_mock, csn_mock):
+    def test_get_wireless_conn_file(self, csn_mock):
+        c = Mock()
+
+        valid_netmask = "255.255.255.0"
         def get(k):
             if k == "wireless-type":
                 return "static"
@@ -211,16 +182,16 @@ class TestCases(unittest.TestCase):
                 return "jukka"
             elif k == "wireless-password":
                 return "sirasti"
+            elif k == "wireless-address":
+                return "192.1.1.1"
+            elif k == "wireless-netmask":
+                return return_netmask
             else:
                 return None
-        c = Mock()
         c.get = Mock(side_effect=get)
+        return_netmask = valid_netmask
         template = get_wireless_conn_file(c)
-        assert template == wireless_template.format("sample_ip\nmethod=manual")
-
-        csn_mock.side_effect = ValueError("test")
-        with self.assertRaises(ValueError):
-            template = get_wireless_conn_file(c)
+        assert template == wireless_template.format(f"{self.mock_csn()[0]}\nmethod=manual")
 
         def get(k):
             if k == "wireless-type":
@@ -243,33 +214,29 @@ class TestCases(unittest.TestCase):
         brd = calculate_brd_by_hand("192.168.1.24", 31)
         assert brd == "192.168.1.25"
 
-    @mock.patch("generate_network_config_bookworm.calculate_brd_by_hand")
     @mock.patch("generate_network_config_bookworm.print")
-    @mock.patch("generate_network_config_bookworm.get_netmask")
-    def test_verify_broadcast_address(self, net_mask_mock, print_mock, calculate_brd_by_hand_mock):
+    def test_verify_broadcast_address(self, print_mock):
         c = Mock()
         c.get = Mock(side_effect=[None])
         verify_broadcast_address("wireless", c)
-        calculate_brd_by_hand_mock.assert_not_called()
+        print_mock.assert_not_called()
         assert c.get.call_count == 1
 
-        c.get = Mock(side_effect=["192.111.1.255", None, None])
+        c.get = Mock(side_effect=["192.111.1.255", None])
         verify_broadcast_address("wireless", c)
-        calculate_brd_by_hand_mock.assert_not_called()
+        print_mock.assert_called_with("Tried to verify broadcast address, but static IP was not set.")
+        assert print_mock.call_count == 1
         assert c.get.call_count == 2
 
-        c.get = Mock(side_effect=["192.111.255.255", "192.111.1.42"])
-        net_mask_mock.side_effect = ["255.255.0.0"]
-        calculate_brd_by_hand_mock.side_effect = ["192.111.255.255"]
+        c.get = Mock(side_effect=["192.111.255.255", "192.111.1.42", "255.255.0.0"])
         print_mock.reset_mock()
-        assert verify_broadcast_address("wireless", c) == True
-        calculate_brd_by_hand_mock.assert_called()
-        assert print_mock.call_count == 1
+        verify_broadcast_address("wireless", c)
+        assert print_mock.call_count == 0
+        assert c.get.call_count == 3
 
-        c.get = Mock(side_effect=["192.111.255.255", "192.111.1.42"])
-        calculate_brd_by_hand_mock.side_effect = ["not equal"]
-        net_mask_mock.side_effect = ["255.255.255.0"]
+        c.get = Mock(side_effect=["192.111.255.255", "192.111.1.42", "255.0.0.0"])
         print_mock.reset_mock()
-        assert verify_broadcast_address("wireless", c) == False
-        calculate_brd_by_hand_mock.assert_called()
-        assert print_mock.call_count == 2
+        verify_broadcast_address("wireless", c)
+        print_mock.assert_called_with(f"Warning: the brd address that we've calculated: 192.255.255.255 is different than the one you've assigned: 192.111.255.255.")
+        assert print_mock.call_count == 1
+        assert c.get.call_count == 3

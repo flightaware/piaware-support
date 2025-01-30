@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from piaware_config import get_standard_config_group, ConfigGroup
-from uuid import uuid4
+from uuid import UUID
 import subprocess
 import os
 import stat
@@ -9,59 +9,30 @@ import ipaddress
 
 SYS_CON_DIR = "/etc/NetworkManager/system-connections"
 
-def netmask_to_cidr(netmask: str) -> int:
-    return ipaddress.IPv4Network('0.0.0.0/' + netmask).prefixlen
+def calculate_brd_by_hand(address: str, netmask: str) -> str:
+    return format(ipaddress.IPv4Network(f"{address}/{netmask}", strict=False).broadcast_address)
 
-# We're calculating broadcast address for an ipv4 address.
-# Hence the magic number 32. Ipv4 addresses are 32 bits.
-def calculate_brd_by_hand(addr: str, nm: int) -> str:
-    values = addr.split(".")
-    binaries = [f"{int(v):08b}" for v in values]
-    full_bin = list("".join(binaries))
-    for i in range(32 - nm):
-        full_bin[i + nm] = "1"
-
-    cur = ""
-    base_10_val = []
-    for index, i in enumerate(full_bin):
-        cur += i
-
-        if (index + 1) % 8 == 0 and index > 0:
-            base_10_val.append(f"{(int(cur, 2))}")
-            cur = ""
-
-    ba = ".".join(base_10_val)
-    return ba
-
-def verify_broadcast_address(network: str,config: ConfigGroup) -> bool:
+def verify_broadcast_address(network: str, config: ConfigGroup) -> bool:
     assigned_ba = config.get(f"{network}-broadcast")
     if not assigned_ba:
-        return False
+        return
+    address = config.get(f"{network}-address")
+    if address is None:
+        print(f"Tried to verify broadcast address, but static IP was not set.")
+        return
 
-    print("Verifying broadcast address")
-    addr = config.get(f"{network}-address")
-
-    if addr is None:
-        print(f"Addr not set")
-        return False
-
-    nm = get_netmask(network, config)
-    nm = netmask_to_cidr(nm)
-
-    calculated_ba = calculate_brd_by_hand(addr, nm)
+    nm = get_prefix(address, config.get(f"{network}-netmask"))
+    calculated_ba = calculate_brd_by_hand(address, nm)
 
     if assigned_ba != calculated_ba:
-        print(f"Warning: the brd address that we've calculated: {calculated_ba} is different than the one you've assigned: {assigned_ba}")
-    
-    return assigned_ba == calculated_ba
+        print(f"Warning: the brd address that we've calculated: {calculated_ba} is different than the one you've assigned: {assigned_ba}.")
 
 def format_dns(dns_string: str) -> str:
     names = dns_string.split()
     formatted = ";".join(names) + ";"
     return formatted
 
-def check_address(network_type: str, config: ConfigGroup):
-    address = config.get(f"{network_type}-address")
+def check_address(address: str, network_type: str):
     if address is None:
         raise ValueError(f"{network_type}-type was set to static but {network_type}-address was not set")
     address = ipaddress.ip_address(address)
@@ -69,113 +40,116 @@ def check_address(network_type: str, config: ConfigGroup):
     if address.version != 4:
         raise ValueError(f"{network_type}-address needs an ipv4 address")
 
-def get_netmask(network_type: str, config: ConfigGroup) -> str:
-    netmask = config.get(f"{network_type}-netmask") 
+def get_prefix(address: str, netmask: str) -> int:
     if netmask is None:
-        address = config.get(f"{network_type}-address")
         address = ipaddress.ip_address(address)
-        address = '{:#b}'.format(address)
-        address = address[2:]
-        match address[0:3]:
-            case "000":
-                return "255.0.0.0"
-            case "100":
-                return "255.255.0.0"
-            case "110":
-                return "255.255.255.0"
-    else:
-        return netmask
+        match address.packed[0]:
+            case 0:
+                return 8
+            case 128:
+                return 16
+            case 192:
+                return 24
 
-def configure_static_network(network_type: str, config: ConfigGroup) -> str:
-    check_address(network_type, config)
-    nm = get_netmask(network_type, config)
-    cidr = str(netmask_to_cidr(nm))
-    ip = ""
-    static_ip = config.get(f"{network_type}-address") + "/" + cidr
-    gateway = config.get(f"{network_type}-gateway")
+    return ipaddress.IPv4Network('0.0.0.0/' + netmask).prefixlen
+
+def configure_static_network(address: str, gateway: str, name_servers: str, netmask: str) -> str:
+    prefix = str(get_prefix(address, netmask))
+    ip = []
+    static_ip = f"{address}/{prefix}"
     if gateway is not None:
         static_ip += f",{gateway}"
-    ip += f"address1={static_ip}\n"
+    ip.append(f"address1={static_ip}")
 
-    name_servers = config.get(f"{network_type}-nameservers")
     if name_servers is not None:
-        ip += f"dns={format_dns(name_servers)}\n"
+        ip.append(f"dns={format_dns(name_servers)}")
+
     return ip
 
 def get_wired_conn_file(config: ConfigGroup):
-    new_uuid = uuid4()
+    uuid = UUID("e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c", version=4)
     connect = "true" if config.get("wired-network") else "false"
 
-    file = f"""
-[connection]
-id=wired
-uuid={new_uuid}
-type=ethernet
-autoconnect-priority=999
-interface-name=eth0
-autoconnect={connect}
-
-[ethernet]
-"""
-    ipv4 = """
-[ipv4]
-"""
+    file = [
+        "[connection]",
+        "id=wired",
+        f"uuid={uuid}",
+        "type=ethernet",
+        "autoconnect-priority=999",
+        "interface-name=eth0",
+        f"autoconnect={connect}",
+        "[ethernet]",
+        "[ipv4]"
+    ]
+    ipv4 = []
     if config.get("wired-type") == "static":
-        ipv4 += configure_static_network("wired", config)
-        ipv4 += "method=manual\n"
+        address = config.get("wired-address")
+        gateway = config.get("wired-gateway")
+        nameservers = config.get("wired-nameservers")
+        netmask = config.get("wired-netmask")
+
+        check_address(address, "wired")
+
+        ipv4.extend(configure_static_network(address, gateway, nameservers, netmask))
+        ipv4.append("method=manual")
+
     else:
-        ipv4 += "method=auto\n"
-    file += ipv4
-    file += """
-[ipv6]
-addr-gen-mode=default
-method=auto
+        ipv4.append("method=auto")
 
-[proxy]
-"""
+    file.extend(ipv4)
+    ipv6 = [
+        "[ipv6]",
+        "addr-gen-mode=default",
+        "method=auto",
+        "[proxy]"
+    ]
 
-    return file
+    file.extend(ipv6)
+
+    return '\n'.join(file)
 
 def get_wireless_conn_file(config: ConfigGroup):
-    new_uuid = uuid4()
+    uuid = UUID("acc6cf97-9575-4f41-ad85-65af044288df", version=4)
     ssid = config.get("wireless-ssid")
     psk = config.get("wireless-password")
     connect = "true" if config.get("wireless-network") else "false"
 
-    file = f"""
-[connection]
-id=wireless
-uuid={new_uuid}
-type=wifi
-autoconnect={connect}
-
-[wifi]
-mode=infrastructure
-ssid={ssid}
-
-[wifi-security]
-key-mgmt=wpa-psk
-psk={psk}
-"""
-
-    ipv4 = """
-[ipv4]
-"""
+    file = [
+        "[connection]",
+        "id=wireless",
+        f"uuid={uuid}",
+        "type=wifi",
+        f"autoconnect={connect}",
+        "[wifi]",
+        "mode=infrastructure",
+        f"ssid={ssid}",
+        "[wifi-security]",
+        "key-mgmt=wpa-psk",
+        f"psk={psk}",
+        "[ipv4]",
+    ]
+    ipv4 = []
     if config.get("wireless-type") == "static":
-        ipv4 += configure_static_network("wireless", config)
-        ipv4 += f"method=manual\n"
+        address = config.get("wireless-address")
+        gateway = config.get("wireless-gateway")
+        nameservers = config.get("wireless-nameservers")
+        netmask = config.get("wireless-netmask")
+        check_address(address, "wireless")
+
+        ipv4.extend(configure_static_network(address, gateway, nameservers, netmask))
+        ipv4.append("method=manual")
     else:
-        ipv4 += "method=auto\n"
-
-    ipv4 += """
-[ipv6]
-addr-gen-mode=default
-method=auto
-
-[proxy]
-"""
-    file += ipv4
-    return file
+        ipv4.append("method=auto")
+    file.extend(ipv4)
+    
+    ipv6 = [    
+        "[ipv6]",
+        "addr-gen-mode=default",
+        "method=auto",
+        "[proxy]"
+    ]
+    file.extend(ipv6)
+    return '\n'.join(file)
 
 def generate_wired_network_config(config: ConfigGroup):
     with open(f"{SYS_CON_DIR}/wired.nmconnection", "w") as conn_file:

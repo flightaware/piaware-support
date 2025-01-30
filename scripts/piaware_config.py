@@ -126,7 +126,7 @@ class Metadata():
     def convert_str_to_bool(self, val: str) -> bool:
         if val.lower() == "yes":
             return True
-        elif val.lower() == "no":
+        else:
             return False
 
     def convert_str_to_uuid(self, val: str , version = 4) -> UUID:
@@ -172,11 +172,7 @@ class Metadata():
 
     def validate_bool(self, val: str) -> bool:
         val = val.lower()
-        if val == "yes" or val == "no":
-            return True
-        else:
-            return False
-
+        return val == "yes" or val == "no"
 
     def validate_int(self, val: str) -> bool:
         try: 
@@ -199,11 +195,7 @@ class Metadata():
         m = re.fullmatch("^[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}$", val)
         if m is None:
             return False
-        
-        if m.start() == 0 and m.end() == len(val):
-            return True
-        else:
-            return False
+        return True
 
     def validate_uuid(self, val: str, version=4) -> bool:
         try:
