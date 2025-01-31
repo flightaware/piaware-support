@@ -139,14 +139,14 @@ class TestConfigFile(unittest.TestCase):
     def mock_config_file(*args):
         class Example:
             def __enter__(self):
-                return ["image-type image", 
-                "adaptive-min-gain -1" , 
-                "manage-config 1232", 
-                "adept-serverport 2", 
-                "adept-serverport 5",
-                "wireless-netmask 255.255.255.0",
-                "adept-serverhosts test.usa.flightaware.com",
-                "use-gpsd"
+                return ["image-type image\n", 
+                "adaptive-min-gain -1\n" , 
+                "manage-config 1232\n", 
+                "adept-serverport 2\n", 
+                "adept-serverport 5\n",
+                "wireless-netmask 255.255.255.0\n",
+                "adept-serverhosts test.usa.flightaware.com\n",
+                "use-gpsd\n"
                 ]
 
             def __exit__(self, exc_type, exc_val, exc_tb):
@@ -154,8 +154,27 @@ class TestConfigFile(unittest.TestCase):
 
         return Example()
 
-    def is_file_mock(*args):
-        return True
+    @mock.patch("builtins.open", side_effect=mock_config_file)
+    @mock.patch("os.path.isfile")
+    def test_get_config(self, file_mock, open_mock):
+
+        file_mock.side_effect = [False]
+        f = ConfigFile("test.txt")
+        with self.assertRaises(ValueError):
+            f.get_config()
+        
+        file_mock.side_effect = [True]
+        l = f.get_config()
+        assert len(l) == 8
+        assert l[0] == "image-type image"
+        assert l[1] =="adaptive-min-gain -1"
+        assert l[2] =="manage-config 1232"
+        assert l[3] =="adept-serverport 2"
+        assert l[4] =="adept-serverport 5"
+        assert l[5] =="wireless-netmask 255.255.255.0"
+        assert l[6] =="adept-serverhosts test.usa.flightaware.com"
+        assert l[7] =="use-gpsd"
+
 
     def test_process_quotes(self):
         testc = ConfigFile("file")
@@ -188,46 +207,86 @@ class TestConfigFile(unittest.TestCase):
         assert key == "option"
         assert val == "yes"
 
-    @mock.patch("builtins.open", side_effect=mock_config_file)
-    @mock.patch("os.path.isfile", side_effect=is_file_mock)
-    def test_read_config(self, open_mock, is_file_mock):
+    def test_read_config(self):
         testm = Metadata()
         testm.settings["test"] = MetadataSettings(IntegerProcessor(), deprecated=True)
-        testc = ConfigFile("file", metadata = testm)
-        testc.read_config()
 
-        assert testc.get("image-type") == "image"
-        assert testc.get("adaptive-min-gain") == -1
-        assert testc.get("test") is None
-        assert testc.get("wireless-netmask") == "255.255.255.0"
-        assert testc.get("adept-serverhosts") == "test.usa.flightaware.com"
-        assert testc.get("use-gpsd") == "WHITEOUT"
+        test_cases = [
+            {
+                "get_config": [
+                    "wireless-netmask 255.255.255.0",
+                    "doesnt_exist nothing"
+                ],
+                "raises_error": True,
+                "error_type": ValueError
+            },
+            {
+                "get_config": [
+                    "wireless-netmask 255.255.255.0",
+                    "test nothing"
+                ],
+                "raises_error": True,
+                "error_type": ValueError
+            },
+            {
+                "get_config": [
+                    "wireless-netmask 255.255.255.0",
+                    "rfkill not_bool"
+                ],
+                "raises_error": True,
+                "error_type": ValueError
+            },
+            {
+                "get_config": [
+                    "wireless-netmask 255.255.255.0",
+                    "wireless-netmask 255.255.0.0"
+                ],
+                "raises_error": True,
+                "error_type": ValueError
+            },
+        ]
+
+        for test in test_cases:
+            f = ConfigFile("file", metadata = testm)
+            f.get_config = mock.Mock(return_value=test["get_config"])
+            if test["raises_error"]:
+                with self.assertRaises(test["error_type"]):
+                    f.read_config()
+
+        f = ConfigFile("file", metadata = Metadata())
+        f.get_config = mock.Mock(side_effect=[[
+            "wireless-netmask 255.255.255.0",
+            "rfkill",
+            "image-type image",
+            "adaptive-min-gain -12.12",
+            "adept-serverhosts test.usa.flightaware.com",
+            "use-gpsd yes",
+            "slow-cpu auto",
+            "priority 1"
+        ]])
+
+        f.read_config()
+        assert f.get("wireless-netmask") == "255.255.255.0"
+        assert f.get("rkfill") is None
+        assert f.get("image-type") == "image"
+        assert f.get("adaptive-min-gain") == -12.12
+        assert f.get("adept-serverhosts") == "test.usa.flightaware.com"
+        assert f.get("use-gpsd") is True
+        assert f.get("slow-cpu") == "auto"
+        assert f.get("priority") == 1
 
 class TestConfigGroup(unittest.TestCase):
 
-    def mock_config_file(*args, **kwargs):
+    def default_config_data(self):
+        return ["image-type image", "adaptive-min-gain -1"]
 
-        class Example:
-            def __enter__(self):
-                if args[0] == "file1":
-                    return ["image-type image", "adaptive-min-gain -1"]
-                else:
-                    return ["image-type image_2", "adaptive-min-gain -2", "wired-network no"]
-
-            def __exit__(self, exc_type, exc_val, exc_tb):
-                pass
-
-        return Example()
-
-    def is_file_mock(*args):
-        return True
-
-    @mock.patch("builtins.open", side_effect=mock_config_file)
-    @mock.patch("os.path.isfile", side_effect=is_file_mock)
-    def test_config_group(self, config_mock, is_file_mock):
+    def test_config_group(self):
 
         f1 = ConfigFile(filename="file1", priority=30, metadata = Metadata())
+        f1.get_config = mock.Mock(return_value=self.default_config_data())
+
         f2 = ConfigFile(filename="file2", priority=40, metadata = Metadata())
+        f2.get_config = mock.Mock(return_value=["image-type image_2", "adaptive-min-gain -2", "wired-network no"])
 
         cfg = ConfigGroup(metadata=Metadata(), files=[f1, f2])
         cfg.read_configs()
@@ -238,12 +297,20 @@ class TestConfigGroup(unittest.TestCase):
         assert cfg.get("wired-network") is False
         assert cfg.get("wireless-network") is False
 
-    @mock.patch("builtins.open", side_effect=mock_config_file)
-    @mock.patch("os.path.isfile", side_effect=is_file_mock)
-    def test_config_group_whiteout(self, config_mock, is_file_mock):
-        f1 = ConfigFile(filename="file1", priority=30, metadata = Metadata())
-        f2 = ConfigFile(filename="file2", priority=40, metadata = Metadata())
-        f3 = ConfigFile(filename="file3", priority=50, metadata = Metadata())
+    def three_files(self):
+        files = [
+            ConfigFile(filename="file1", priority=30, metadata = Metadata()),
+            ConfigFile(filename="file2", priority=40, metadata = Metadata()),
+            ConfigFile(filename="file3", priority=50, metadata = Metadata())
+        ]
+
+        for f in files:
+            f.get_config = self.default_config_data
+
+        return files
+
+    def test_config_group_whiteout(self):
+        f1, f2, f3 = self.three_files()
 
         uat = "uat-receiver-port"
         f3.values[uat] = WHITEOUT
@@ -259,13 +326,8 @@ class TestConfigGroup(unittest.TestCase):
 
         assert cfg.get(uat) == 10000
 
-
-    @mock.patch("builtins.open", side_effect=mock_config_file)
-    @mock.patch("os.path.isfile", side_effect=is_file_mock)
-    def test_config_group_get_val_no_default(self, config_mock, is_file_mock):
-        f1 = ConfigFile(filename="file1", priority=30, metadata = Metadata())
-        f2 = ConfigFile(filename="file2", priority=40, metadata = Metadata())
-        f3 = ConfigFile(filename="file3", priority=50, metadata = Metadata())
+    def test_config_group_get_val_no_default(self):
+        f1, f2, f3 = self.three_files()
 
         cfg = ConfigGroup(metadata=Metadata(), files=[f1, f2, f3])
         cfg.read_configs()

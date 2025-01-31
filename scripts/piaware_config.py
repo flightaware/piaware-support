@@ -235,20 +235,20 @@ class Metadata():
 
     def get_setting(self, key: str) -> MetadataSettings:
         if key not in self.settings:
-            raise ValueError(f"Getting. Could not find {key} settings")
+            raise ValueError(f"Getting {key}. Could not find {key} in settings")
         
         return self.settings[key]
     
     def parse_value(self, key: str, val: str) -> any:
         if key not in self.settings:
-            raise ValueError(f"Parsing. Could not find {key} settings")
+            raise ValueError(f"Parsing value {val} for setting {key}. Could not find {key} in settings")
 
         setting = self.settings[key]
         return setting.processor.parse(val)
 
     def validate_value(self, key: str, val: str) -> bool:
         if key not in self.settings:
-            raise ValueError(f"Validating. Could not find {key} settings")
+            raise ValueError(f"Validating value {val} for setting {key}. Could not find {key} in settings")
 
         setting = self.settings[key]
         return setting.processor.validate(val)
@@ -311,44 +311,39 @@ class ConfigFile():
         else:
             return None
 
-    def read_config(self) -> None:
-
+    def get_config(self) -> list:
         if not os.path.isfile(self._filename):
-            print(f"{self._filename} does not exist.")
-            return
-        try:
-            with open(self._filename, "r") as config:
-                for idx, line in enumerate(config):
-                        l = self.parse_line(line)
+            raise ValueError(f"{self._filename} does not exist.")
 
-                        if not l:
-                            continue
+        return_value = []
+        with open(self._filename, "r") as config:
+            for line in config:
+                return_value.append(line.strip())
+        
+        return return_value
+
+    def read_config(self) -> None:
+        config = self.get_config()
+        for idx, line in enumerate(config):
+            l = self.parse_line(line)
+            if not l:
+                continue
+            
+            key, val = l
+            key = key.lower()
+            setting = self._metadata.get_setting(key)
+            if setting.deprecated:
+                raise ValueError(f"{self._filename}:{idx}: option {key} is deprecated. Skipping...")
+            if val != "":
+                if not self._metadata.validate_value(key, val):
+                    raise ValueError(f"{self._filename}:{idx}: invalid value for option {key}:{val}")
+
+                if key in self.values:
+                    raise ValueError(f"{self._filename}:{idx}: {key} with value {val} overrides an existing instance of {key}")
+                self.values[key] = self._metadata.parse_value(key, val)
+            else:
+                self.values[key] = WHITEOUT
                         
-                        key, val = l
-                        key = key.lower()
-                        setting = self._metadata.get_setting(key)
-                        if setting is None:
-                            print(f"{self._filename}:{idx}: unrecognized option {key}")
-                            continue
-
-                        if setting.deprecated:
-                            print(f"{self._filename}:{idx}: option {key} is deprecated. Skipping...")
-                            continue
-                        
-                        if val != "":
-                            if not self._metadata.validate_value(key, val):
-                                print(f"{self._filename}:{idx}: invalid value for option {key}:{val}")
-                                continue
-
-                            if key in self.values:
-                                print(f"{self._filename}:{idx}: {key} with value {val} overrides an existing instance of {key}")
-
-                            self.values[key] = self._metadata.parse_value(key, val)
-                        else:
-                            self.values[key] = WHITEOUT
-                        
-        except Exception as e:
-            print(f"Something went wrong while reading config file {self._filename}: {e}")
 
 class ConfigGroup():
     files: list[ConfigFile]
