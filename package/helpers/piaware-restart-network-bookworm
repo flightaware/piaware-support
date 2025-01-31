@@ -8,7 +8,7 @@
 
 echo "Generating network configuration..."
 
-/bin/systemctl --quiet restart gednerate-network-config || exit 1
+/bin/systemctl --quiet restart generate-network-config || exit 1
 
 echo "Applying network configuration changes..."
 
