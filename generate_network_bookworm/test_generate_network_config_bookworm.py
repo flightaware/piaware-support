@@ -5,25 +5,9 @@ import os
 import unittest
 import importlib  
 import sys
-sys.path.append("./scripts/")
+sys.path.append("./flightaware_piaware_config/src/flightaware_piaware_config/")
 
-
-def import_bookworm():
-    from importlib.machinery import SourceFileLoader
-    import importlib.util
-    loader = SourceFileLoader("generate_network_config_bookworm", "./scripts/generate_network_config_bookworm")
-
-    spec = importlib.util.spec_from_loader("generate_network_config_bookworm", loader)
-    generate_network_config_bookworm = importlib.util.module_from_spec(spec)
-    sys.modules["generate_network_config_bookworm"] = generate_network_config_bookworm
-    spec.loader.exec_module(generate_network_config_bookworm)
-
-    return generate_network_config_bookworm
-
-
-generate_network_config_bookworm = import_bookworm()
 from generate_network_config_bookworm import *
-from scripts.piaware_config import *
 import uuid
 
 wired_template = """[connection]

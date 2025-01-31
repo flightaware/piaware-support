@@ -163,7 +163,7 @@ def generate_wireless_network_config(config: ConfigGroup):
 
     os.chmod(f"{SYS_CON_DIR}/wireless.nmconnection", stat.S_IRUSR | stat.S_IWUSR)
     
-def main(dryrun=False, extra_file_path: str = None):
+def run(dryrun=False, extra_file_path: str = None):
     config_group = get_standard_config_group(extra_file_path)
     generate_wired_network_config(config_group)
     generate_wireless_network_config(config_group)
@@ -171,4 +171,4 @@ def main(dryrun=False, extra_file_path: str = None):
     verify_broadcast_address("wired", config_group)
 
 if __name__ == "__main__":
-    main()
+    run()

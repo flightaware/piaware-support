@@ -1,7 +1,7 @@
 from unittest import mock
 import os
 import unittest
-from scripts.piaware_config import *
+from flightaware_piaware_config.src.flightaware_piaware_config.piaware_config import *
 from uuid import UUID
 
 class TestMetadata(unittest.TestCase):
@@ -336,6 +336,6 @@ class TestConfigGroup(unittest.TestCase):
 
     def test_create_standard_piaware_config_group(self):
         cfg = create_standard_piaware_config_group()
-        assert cfg.files[0]._priority == 30
+        assert cfg.files[0]._priority == 50
         assert cfg.files[1]._priority == 40
-        assert cfg.files[2]._priority == 50
+        assert cfg.files[2]._priority == 30

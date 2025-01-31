@@ -356,17 +356,14 @@ class ConfigGroup():
             self.files = files
         self._metadata = metadata
 
+        self.reorder_files_in_priority()
+
     def reorder_files_in_priority(self):
         self.files = sorted(self.files, key=lambda x: x._priority, reverse=True)
     
     def read_configs(self):
         for file in self.files:
             file.read_config()
-        
-        if len(self.files) > 0:
-            self.reorder_files_in_priority()
-        else:
-            print(f"No files to sort for ConfigGroup")
 
     def get(self, setting_key: str) -> any:
         for file in self.files:
