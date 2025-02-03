@@ -1,20 +1,17 @@
 #!/bin/sh
 
-# Tries to reconfigure and restart networking.
+#
+# Executable script to apply network piaware-config changes without rebooting
+#
+# Compatible with a Bookworm PiAware SD images that use NetworkManager
+#
 
-status=0
+echo "Generating network configuration..."
 
-echo "Stopping network..."
+/bin/systemctl --quiet restart generate-network-config || exit 1
 
-nmcli con down wireless
+echo "Applying network configuration changes..."
 
-/bin/systemctl --quiet restart NetworkManager || status=1
+/bin/nmcli connection reload || exit 1
 
-sleep 10s
-
-nmcli con up wireless
-
-
-echo "Done. Wait a moment for networking changes to take effect"
-
-exit $status
+echo "Done. Wait a moment for networking changes to take effect."
