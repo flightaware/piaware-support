@@ -40,7 +40,7 @@ PIAWARE_CONF = "/etc/piaware.conf"
 BOOT_PIAWARE_CONF = "/boot/firmware/piaware-config.txt"
 WHITEOUT = "WHITEOUT"
 
-class ENUMProcessor():
+class EnumProcessor():
     def __init__(self, enum: str):
         self.enum = enum
 
@@ -54,14 +54,17 @@ class ENUMProcessor():
         return val
 
 class StrProcessor():
-    def validate(self, val) -> bool:
+    @staticmethod
+    def validate(val) -> bool:
         return True
 
-    def parse(self, val) -> str:
+    @staticmethod
+    def parse(val) -> str:
         return val
 
 class IntegerProcessor():
-    def validate(self, val) -> bool:
+    @staticmethod
+    def validate(val) -> bool:
         try: 
             int(val)
         except ValueError:
@@ -69,11 +72,13 @@ class IntegerProcessor():
         else:
             return True
 
-    def parse(self, val) -> int:
+    @staticmethod
+    def parse(val) -> int:
         return int(val)
 
 class DoubleProcessor():
-    def validate(self, val) -> bool:
+    @staticmethod
+    def validate(val) -> bool:
         try: 
             float(val)
         except ValueError:
@@ -81,67 +86,77 @@ class DoubleProcessor():
         else:
             return True
 
-    def parse(self, val) -> float:
+    @staticmethod
+    def parse(val) -> float:
         return float(val)
 
 class BoolProcessor():
-    def validate(self, val) -> bool:
+    @staticmethod
+    def validate(val) -> bool:
         val = val.lower()
         return val == "yes" or val == "no"
 
-    def parse(self, val) -> bool:
+    @staticmethod
+    def parse(val) -> bool:
         if val.lower() == "yes":
             return True
         else:
             return False
 
 class MACProcessor():
-    def validate(self, val) -> bool:
+    @staticmethod
+    def validate(val) -> bool:
         val = val.lower()
         m = re.fullmatch("^[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}$", val)
         if m is None:
             return False
         return True
 
-    def parse(self, val) -> str:
+    @staticmethod
+    def parse(val) -> str:
         return val
 
 class UUIDProcessor():
-    def validate(self, val, version=4) -> bool:
+    @staticmethod
+    def validate(val, version=4) -> bool:
         try:
             uuid_obj = UUID(val, version=version)
         except ValueError:
             return False
         return str(uuid_obj) == val
 
-    def parse(self, val, version=4) -> uuid4:
+    @staticmethod
+    def parse(val, version=4) -> uuid4:
         return UUID(val, version=version)
 
 
 class GainProcessor():
-    int_proc = IntegerProcessor()
 
-    def validate(self, val: str) -> bool:
-        return DoubleProcessor().validate(val) or (isinstance(val, str) and val == "max")
+    @staticmethod
+    def validate(val: str) -> bool:
+        return DoubleProcessor.validate(val) or (isinstance(val, str) and val == "max")
 
-    def parse(self, val) -> str | float:
+    @staticmethod
+    def parse(val) -> str | float:
         val = val.lower()
-        if (isinstance(val, str) and val == "max") or (GainProcessor.int_proc.validate(val) and int(val) <= -10):
+        if (isinstance(val, str) and val == "max") or (IntegerProcessor.validate(val) and int(val) <= -10):
             return "max"
-        elif GainProcessor.int_proc.validate(val):
+        elif IntegerProcessor.validate(val):
             return int(val)
         else:
             return float(val)
 
 class NetmaskProcessor():
-    def validate(self, val: str) -> bool:
+    @staticmethod
+    def validate(val: str) -> bool:
         try: 
             IPv4Network(f"0.0.0.0/{val}")
             return True
         except NetmaskValueError:
             return False
 
-    def parse(self, val: str) -> str:
+    @staticmethod
+    def parse(val: str) -> str:
         return val
 
 class MetadataSettings():
@@ -155,82 +170,73 @@ class MetadataSettings():
         self.processor = processor
 
 class Metadata():
-    int_proc = IntegerProcessor()
-    str_proc = StrProcessor()
-    bool_proc = BoolProcessor()
-    gain_proc = GainProcessor()
-    double_proc = DoubleProcessor()
-    mac_proc = MACProcessor()
-    netmask_proc = NetmaskProcessor()
-    uuid_proc = UUIDProcessor()
-
     settings: MetadataSettings = {
-        "priority":                         MetadataSettings(int_proc),
-        "image-type":                       MetadataSettings(str_proc),
-        "manage-config":                    MetadataSettings(bool_proc, setting_type="bool", default=False),
-        "feeder-id":                        MetadataSettings(uuid_proc, setting_type="UUID",),
-        "force-macaddress":                 MetadataSettings(mac_proc, setting_type="MAC"),
-        "allow-auto-updates":               MetadataSettings(bool_proc, setting_type="bool", default=False),
-        "allow-manual-updates":             MetadataSettings(bool_proc, setting_type="bool", default=False),
-        "network-config-style":             MetadataSettings(ENUMProcessor(NETWORK_CONFIG_STYLE), setting_type="network_config_style", default="default", sdonly=True, network=True),
-        "wired-network":                    MetadataSettings(bool_proc, setting_type="bool", default=True, sdonly=True, network=True),
-        "wired-type":                       MetadataSettings(ENUMProcessor(NETWORK_TYPE), setting_type="network_type", default="dhcp", sdonly=True, network=True),
-        "wired-address":                    MetadataSettings(str_proc, sdonly=True, network=True, setting_type="str"),
-        "wired-netmask":                    MetadataSettings(netmask_proc, sdonly=True, network=True, setting_type="netmask"),
+        "priority":                         MetadataSettings(IntegerProcessor),
+        "image-type":                       MetadataSettings(StrProcessor),
+        "manage-config":                    MetadataSettings(BoolProcessor, setting_type="bool", default=False),
+        "feeder-id":                        MetadataSettings(UUIDProcessor, setting_type="UUID",),
+        "force-macaddress":                 MetadataSettings(MACProcessor, setting_type="MAC"),
+        "allow-auto-updates":               MetadataSettings(BoolProcessor, setting_type="bool", default=False),
+        "allow-manual-updates":             MetadataSettings(BoolProcessor, setting_type="bool", default=False),
+        "network-config-style":             MetadataSettings(EnumProcessor(NETWORK_CONFIG_STYLE), setting_type="network_config_style", default="default", sdonly=True, network=True),
+        "wired-network":                    MetadataSettings(BoolProcessor, setting_type="bool", default=True, sdonly=True, network=True),
+        "wired-type":                       MetadataSettings(EnumProcessor(NETWORK_TYPE), setting_type="network_type", default="dhcp", sdonly=True, network=True),
+        "wired-address":                    MetadataSettings(StrProcessor, sdonly=True, network=True, setting_type="str"),
+        "wired-netmask":                    MetadataSettings(NetmaskProcessor, sdonly=True, network=True, setting_type="netmask"),
         # Setting broadcast address directly through boot/firmare/piaware-config.txt has been deprecated.
-        "wired-broadcast":                  MetadataSettings(str_proc, sdonly=True, network=True, setting_type="str", deprecated=True),
-        "wired-gateway":                    MetadataSettings(str_proc, sdonly=True, network=True, setting_type="str"),
+        "wired-broadcast":                  MetadataSettings(StrProcessor, sdonly=True, network=True, setting_type="str", deprecated=True),
+        "wired-gateway":                    MetadataSettings(StrProcessor, sdonly=True, network=True, setting_type="str"),
 
-        "wired-nameservers":                MetadataSettings(str_proc, default="8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str"),
+        "wired-nameservers":                MetadataSettings(StrProcessor, default="8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str"),
 
-        "wireless-network":                 MetadataSettings(bool_proc, setting_type="bool", default=False, sdonly=True, network=True),
-        "wireless-ssid":                    MetadataSettings(str_proc, sdonly=True, network=True, setting_type="str"),
-        "wireless-password":                MetadataSettings(str_proc, protect=True, sdonly=True, network=True, setting_type="str"),
-        "wireless-type":                    MetadataSettings(ENUMProcessor(NETWORK_TYPE), setting_type="network_type", default="dhcp", sdonly=True, network=True),
-        "wireless-address":                 MetadataSettings(str_proc, sdonly=True, network=True, setting_type="str"),
-        "wireless-broadcast":               MetadataSettings(str_proc, sdonly=True, network=True, setting_type="str", deprecated=True),
-        "wireless-netmask":                 MetadataSettings(netmask_proc, sdonly=True, network=True, setting_type="netmask"),
-        "wireless-gateway":                 MetadataSettings(str_proc, sdonly=True, network=True, setting_type="str"),
-        "wireless-nameservers":             MetadataSettings(str_proc, default = "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str"),
-        "wireless-country":                 MetadataSettings(ENUMProcessor(COUNTRY), default = "00", setting_type="country", sdonly=True, network=True),
-        "allow-dhcp-duic":                  MetadataSettings(bool_proc, default=True, setting_type="bool", sdonly=True, network=True),
-        "http-proxy-host":                  MetadataSettings(str_proc, network=True, setting_type="str"),
-        "http-proxy-port":                  MetadataSettings(str_proc, network=True, setting_type="str"),
-        "http-proxy-user":                  MetadataSettings(str_proc, network=True, setting_type="str"),
-        "http-proxy-password":              MetadataSettings(str_proc, protect=True, network=True, setting_type="str"),
-        "adept-serverhosts":                MetadataSettings(str_proc, default=["piaware.flightaware.com", "piaware.flightaware.com", 
+        "wireless-network":                 MetadataSettings(BoolProcessor, setting_type="bool", default=False, sdonly=True, network=True),
+        "wireless-ssid":                    MetadataSettings(StrProcessor, sdonly=True, network=True, setting_type="str"),
+        "wireless-password":                MetadataSettings(StrProcessor, protect=True, sdonly=True, network=True, setting_type="str"),
+        "wireless-type":                    MetadataSettings(EnumProcessor(NETWORK_TYPE), setting_type="network_type", default="dhcp", sdonly=True, network=True),
+        "wireless-address":                 MetadataSettings(StrProcessor, sdonly=True, network=True, setting_type="str"),
+        "wireless-broadcast":               MetadataSettings(StrProcessor, sdonly=True, network=True, setting_type="str", deprecated=True),
+        "wireless-netmask":                 MetadataSettings(NetmaskProcessor, sdonly=True, network=True, setting_type="netmask"),
+        "wireless-gateway":                 MetadataSettings(StrProcessor, sdonly=True, network=True, setting_type="str"),
+        "wireless-nameservers":             MetadataSettings(StrProcessor, default = "8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str"),
+        "wireless-country":                 MetadataSettings(EnumProcessor(COUNTRY), default = "00", setting_type="country", sdonly=True, network=True),
+        "allow-dhcp-duic":                  MetadataSettings(BoolProcessor, default=True, setting_type="bool", sdonly=True, network=True),
+        "http-proxy-host":                  MetadataSettings(StrProcessor, network=True, setting_type="str"),
+        "http-proxy-port":                  MetadataSettings(StrProcessor, network=True, setting_type="str"),
+        "http-proxy-user":                  MetadataSettings(StrProcessor, network=True, setting_type="str"),
+        "http-proxy-password":              MetadataSettings(StrProcessor, protect=True, network=True, setting_type="str"),
+        "adept-serverhosts":                MetadataSettings(StrProcessor, default=["piaware.flightaware.com", "piaware.flightaware.com", 
         ["206.253.80.196", "206.253.80.197", "206.253.80.198", "206.253.80.199", "206.253.80.200", "206.253.80.201"], 
         ["206.253.84.193", "206.253.84.194", "206.253.84.195", "206.253.84.196", "206.253.84.197", "206.253.84.198"]], setting_type="str"),
 
-        "adept-serverport":                 MetadataSettings(int_proc, setting_type="int", default=1200),
-        "rfkill":                           MetadataSettings(bool_proc, setting_type="bool", default=False, sdonly=True),
-        "receiver-type":                    MetadataSettings(ENUMProcessor(RECEIVER), setting_type="receiver", default="rtlsdr"),
-        "rtlsdr-device-index":              MetadataSettings(str_proc, default=False, sdonly=True, setting_type="str"),
-        "rtlsdr-ppm":                       MetadataSettings(int_proc, setting_type = "int", default = 0, sdonly=True),
-        "rtlsdr-gain":                      MetadataSettings(gain_proc, setting_type = "gain", default = "max", sdonly=True),
-        "beast-baudrate":                   MetadataSettings(int_proc, setting_type = "int", sdonly=True),
-        "radarcape-host":                   MetadataSettings(str_proc, sdonly = True, setting_type="str"),
-        "receiver-port":                    MetadataSettings(int_proc, setting_type = "int", default = 30005),
-        "allow-modeac":                     MetadataSettings(bool_proc, setting_type = "bool", default = True, sdonly=True),
-        "allow-mlat":                       MetadataSettings(bool_proc, setting_type = "bool", default = True),
-        "mlat-results":                     MetadataSettings(bool_proc, setting_type = "bool", default = True),
-        "mlat-results-anon":                MetadataSettings(bool_proc, setting_type = "bool", default = True),
-        "mlat-results-format":              MetadataSettings(str_proc, default = "beast,connect,localhost:30104 beast,listen,30105 ext_basestation,listen,30106", setting_type="str"),
-        "slow-cpu":                         MetadataSettings(ENUMProcessor(SLOW_CPU), default = "auto", sdonly = True, setting_type="slow_cpu"),
-        "adaptive-dynamic-range":           MetadataSettings(bool_proc, setting_type="bool", default = True, sdonly=True),
-        "adaptive-dynamic-range-target":    MetadataSettings(double_proc, setting_type="double", sdonly=True),
-        "adaptive-burst":                   MetadataSettings(bool_proc, setting_type="bool", default=False, sdonly=True),
-        "adaptive-min-gain":                MetadataSettings(double_proc, setting_type="double", sdonly=True),
-        "adaptive-max-gain":                MetadataSettings(double_proc, setting_type="double", sdonly=True),
-        "enable-firehose":                  MetadataSettings(bool_proc, setting_type="bool", default = False),
-        "allow-ble-setup":                  MetadataSettings(str_proc, default = "auto", sdonly = True, setting_type="str"),
-        "uat-receiver-type":                MetadataSettings(ENUMProcessor(UAT_RECEIVER), setting_type = "uat_receiver", default=None),
-        "uat-receiver-host":                MetadataSettings(str_proc, setting_type="str"),
-        "uat-receiver-port":                MetadataSettings(int_proc, setting_type = "int", default = 30978),
-        "uat-sdr-gain":                     MetadataSettings(gain_proc, setting_type = "gain", default = "max", sdonly = True),
-        "uat-sdr-ppm":                      MetadataSettings(double_proc, setting_type = "double", default = 0, sdonly = True),
-        "uat-sdr-device":                   MetadataSettings(str_proc, default = "driver=rtlsdr", sdonly = True, setting_type="str"),
-        "use-gpsd":                         MetadataSettings(bool_proc, setting_type="bool", default = True)
+        "adept-serverport":                 MetadataSettings(IntegerProcessor, setting_type="int", default=1200),
+        "rfkill":                           MetadataSettings(BoolProcessor, setting_type="bool", default=False, sdonly=True),
+        "receiver-type":                    MetadataSettings(EnumProcessor(RECEIVER), setting_type="receiver", default="rtlsdr"),
+        "rtlsdr-device-index":              MetadataSettings(StrProcessor, default=False, sdonly=True, setting_type="str"),
+        "rtlsdr-ppm":                       MetadataSettings(IntegerProcessor, setting_type = "int", default = 0, sdonly=True),
+        "rtlsdr-gain":                      MetadataSettings(GainProcessor, setting_type = "gain", default = "max", sdonly=True),
+        "beast-baudrate":                   MetadataSettings(IntegerProcessor, setting_type = "int", sdonly=True),
+        "radarcape-host":                   MetadataSettings(StrProcessor, sdonly = True, setting_type="str"),
+        "receiver-port":                    MetadataSettings(IntegerProcessor, setting_type = "int", default = 30005),
+        "allow-modeac":                     MetadataSettings(BoolProcessor, setting_type = "bool", default = True, sdonly=True),
+        "allow-mlat":                       MetadataSettings(BoolProcessor, setting_type = "bool", default = True),
+        "mlat-results":                     MetadataSettings(BoolProcessor, setting_type = "bool", default = True),
+        "mlat-results-anon":                MetadataSettings(BoolProcessor, setting_type = "bool", default = True),
+        "mlat-results-format":              MetadataSettings(StrProcessor, default = "beast,connect,localhost:30104 beast,listen,30105 ext_basestation,listen,30106", setting_type="str"),
+        "slow-cpu":                         MetadataSettings(EnumProcessor(SLOW_CPU), default = "auto", sdonly = True, setting_type="slow_cpu"),
+        "adaptive-dynamic-range":           MetadataSettings(BoolProcessor, setting_type="bool", default = True, sdonly=True),
+        "adaptive-dynamic-range-target":    MetadataSettings(DoubleProcessor, setting_type="double", sdonly=True),
+        "adaptive-burst":                   MetadataSettings(BoolProcessor, setting_type="bool", default=False, sdonly=True),
+        "adaptive-min-gain":                MetadataSettings(DoubleProcessor, setting_type="double", sdonly=True),
+        "adaptive-max-gain":                MetadataSettings(DoubleProcessor, setting_type="double", sdonly=True),
+        "enable-firehose":                  MetadataSettings(BoolProcessor, setting_type="bool", default = False),
+        "allow-ble-setup":                  MetadataSettings(StrProcessor, default = "auto", sdonly = True, setting_type="str"),
+        "uat-receiver-type":                MetadataSettings(EnumProcessor(UAT_RECEIVER), setting_type = "uat_receiver", default=None),
+        "uat-receiver-host":                MetadataSettings(StrProcessor, setting_type="str"),
+        "uat-receiver-port":                MetadataSettings(IntegerProcessor, setting_type = "int", default = 30978),
+        "uat-sdr-gain":                     MetadataSettings(GainProcessor, setting_type = "gain", default = "max", sdonly = True),
+        "uat-sdr-ppm":                      MetadataSettings(DoubleProcessor, setting_type = "double", default = 0, sdonly = True),
+        "uat-sdr-device":                   MetadataSettings(StrProcessor, default = "driver=rtlsdr", sdonly = True, setting_type="str"),
+        "use-gpsd":                         MetadataSettings(BoolProcessor, setting_type="bool", default = True)
     }
 
     def get_setting(self, key: str) -> MetadataSettings:
@@ -291,7 +297,6 @@ class ConfigFile():
             val += char
         return val.strip()
 
-
     def parse_line(self, line) -> tuple | None:
         if re.search(r"^\s*#.*", line):
             return None
@@ -310,11 +315,12 @@ class ConfigFile():
             return self.values[setting_key]
         else:
             return None
+    
+    def load_config_from_file(self) -> None:
+        config = self.read_config_into_list()
+        self.parse_config_from_list(config)
 
-    def get_config(self) -> list:
-        if not os.path.isfile(self._filename):
-            raise ValueError(f"{self._filename} does not exist.")
-
+    def read_config_into_list(self) -> list:
         return_value = []
         with open(self._filename, "r") as config:
             for line in config:
@@ -322,8 +328,7 @@ class ConfigFile():
         
         return return_value
 
-    def read_config(self) -> None:
-        config = self.get_config()
+    def parse_config_from_list(self, config) -> None:
         for idx, line in enumerate(config):
             l = self.parse_line(line)
             if not l:
@@ -333,13 +338,13 @@ class ConfigFile():
             key = key.lower()
             setting = self._metadata.get_setting(key)
             if setting.deprecated:
-                raise ValueError(f"{self._filename}:{idx}: option {key} is deprecated. Skipping...")
+                raise ValueError(f"{self._filename}:{idx}: option {key} is deprecated.")
             if val != "":
                 if not self._metadata.validate_value(key, val):
                     raise ValueError(f"{self._filename}:{idx}: invalid value for option {key}:{val}")
 
                 if key in self.values:
-                    raise ValueError(f"{self._filename}:{idx}: {key} with value {val} overrides an existing instance of {key}")
+                    print(f"{self._filename}:{idx}: {key} with value {val} overrides an existing instance of {key}")
                 self.values[key] = self._metadata.parse_value(key, val)
             else:
                 self.values[key] = WHITEOUT
@@ -356,14 +361,11 @@ class ConfigGroup():
             self.files = files
         self._metadata = metadata
 
-        self.reorder_files_in_priority()
-
-    def reorder_files_in_priority(self):
         self.files = sorted(self.files, key=lambda x: x._priority, reverse=True)
-    
-    def read_configs(self):
+
+    def load_configs(self):
         for file in self.files:
-            file.read_config()
+            file.load_config_from_file()
 
     def get(self, setting_key: str) -> any:
         for file in self.files:
@@ -398,6 +400,6 @@ def create_standard_piaware_config_group(extra_file_path: str = None) -> ConfigG
 # Validate and read in the values.
 def get_standard_config_group(extra_file_path: str = None) -> ConfigGroup():
     cg = create_standard_piaware_config_group(extra_file_path=extra_file_path)
-    cg.read_configs()
+    cg.load_configs()
     return cg
 

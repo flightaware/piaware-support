@@ -83,20 +83,56 @@ class TestCases(unittest.TestCase):
                 "ex": 8
             },
             {
+                "se": ["10.0.0.0", None],
+                "ex": 8
+            },
+            {
+                "se": ["124.0.0.0", None],
+                "ex": 8
+            },
+            {
+                "se": ["127.0.0.0", None],
+                "ex": 8
+            },
+            {
                 "se": ["128.1.1.1", None],
+                "ex": 16
+            },
+            {
+                "se": ["154.1.1.1", None],
+                "ex": 16
+            },
+            {
+                "se": ["191.1.1.1", None],
                 "ex": 16
             },
             {
                 "se": [address, None],
                 "ex": 24
             },
+            {
+                "se": ["200.1.1.1", None],
+                "ex": 24
+            },
+            {
+                "se": ["223.1.1.1", None],
+                "ex": 24
+            },
         ]
 
-        for t in test_cases:
+        for n, t in enumerate(test_cases):
+            print(f"test case {n}")
             nm = get_prefix(*t["se"])
             assert nm == t["ex"]
+
         with self.assertRaises(NetmaskValueError):
             get_prefix(address, "2221ds")
+
+        with self.assertRaises(NetmaskValueError):
+            get_prefix(address, "192.1")
+
+        with self.assertRaises(ValueError):
+            get_prefix("255.1.1.1", None)
 
     def test_configure_static_network(self):
         address = "192.111.1.42"

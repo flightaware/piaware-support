@@ -43,14 +43,16 @@ def check_address(address: str, network_type: str):
 def get_prefix(address: str, netmask: str) -> int:
     if netmask is None:
         address = ipaddress.ip_address(address)
-        match address.packed[0]:
-            case 0:
-                return 8
-            case 128:
-                return 16
-            case 192:
-                return 24
-
+        first_byte = address.packed[0]
+        if (first_byte >> 7) == 0b0:
+            return 8
+        elif (first_byte >> 6) == 0b10:
+            return 16
+        elif (first_byte >> 5) == 0b110:
+            return 24
+        else:
+            raise ValueError(f"Cannot calculate default subnet prefix for ipaddress {address}")
+        
     return ipaddress.IPv4Network('0.0.0.0/' + netmask).prefixlen
 
 def configure_static_network(address: str, gateway: str, name_servers: str, netmask: str) -> str:

@@ -16,13 +16,13 @@ class TestMetadata(unittest.TestCase):
         assert exists.default == True
 
     def test_enum_processor(self):
-        e = ENUMProcessor(SLOW_CPU)
+        e = EnumProcessor(SLOW_CPU)
         assert e.validate("yes") is True
         assert e.validate("adwaiocmisow") is False
         assert e.parse("yes") == "yes"
 
     def test_bool_processor(self):
-        bp = BoolProcessor()
+        bp = BoolProcessor
         assert bp.validate("yes") is True
         assert bp.validate("no") is True
         assert bp.validate("No") is True
@@ -32,7 +32,7 @@ class TestMetadata(unittest.TestCase):
         assert bp.parse("no") is False
 
     def test_uuid_processor(self):
-        p = UUIDProcessor()
+        p = UUIDProcessor
         assert p.validate("123") == False
         assert p.validate("e8a2fe66-8ecd-4b91-b6d5-7700a1c") == False
         assert p.validate("e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c") == True
@@ -40,7 +40,7 @@ class TestMetadata(unittest.TestCase):
         assert p.parse("e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c") == UUID("e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c", version=4)
         
     def test_gain_processor(self):
-        g = GainProcessor()
+        g = GainProcessor
         assert g.validate("-10") is True
         assert g.validate("-11") is True
         assert g.validate("10") is True
@@ -56,7 +56,7 @@ class TestMetadata(unittest.TestCase):
         assert g.parse("4.5") == 4.5
 
     def test_int_processor(self):
-        a = IntegerProcessor()
+        a = IntegerProcessor
         assert a.validate("1") is True
         assert a.validate("-1") is True
         assert a.validate("no") is False
@@ -67,7 +67,7 @@ class TestMetadata(unittest.TestCase):
     
 
     def test_double_processor(self):
-        d = DoubleProcessor()
+        d = DoubleProcessor
         assert d.validate("1") is True
         assert d.validate("-1") is True
         assert d.validate("no") is False
@@ -81,7 +81,7 @@ class TestMetadata(unittest.TestCase):
         assert d.parse("-12.23") == -12.23
 
     def test_mac_processor(self):
-        m = MACProcessor()
+        m = MACProcessor
         assert m.validate("01:23:45:67:89:AB") == True
         assert m.validate("01:23:45:67:89") == False
         assert m.validate("01:23:45:67:89:") == False
@@ -92,7 +92,7 @@ class TestMetadata(unittest.TestCase):
         assert m.parse("01:23:45:67:89:AB") == "01:23:45:67:89:AB"
 
     def test_netmask_processor(self):
-        n = NetmaskProcessor()
+        n = NetmaskProcessor
         assert n.validate("255.255.255.0") is True
         assert n.validate("255.255.0") is False
         assert n.validate("255.301.0.0") is False
@@ -155,16 +155,9 @@ class TestConfigFile(unittest.TestCase):
         return Example()
 
     @mock.patch("builtins.open", side_effect=mock_config_file)
-    @mock.patch("os.path.isfile")
-    def test_get_config(self, file_mock, open_mock):
-
-        file_mock.side_effect = [False]
-        f = ConfigFile("test.txt")
-        with self.assertRaises(ValueError):
-            f.get_config()
-        
-        file_mock.side_effect = [True]
-        l = f.get_config()
+    def test_read_config_into_list(self, open_mock):
+        f = ConfigFile("test.txt")        
+        l = f.read_config_into_list()
         assert len(l) == 8
         assert l[0] == "image-type image"
         assert l[1] =="adaptive-min-gain -1"
@@ -207,13 +200,17 @@ class TestConfigFile(unittest.TestCase):
         assert key == "option"
         assert val == "yes"
 
-    def test_read_config(self):
+        key, val = testc.parse_line("   option \"   yes    ")
+        assert key == "option"
+        assert val == "yes"
+
+    def test_parse_config_from_list(self):
         testm = Metadata()
         testm.settings["test"] = MetadataSettings(IntegerProcessor(), deprecated=True)
 
         test_cases = [
             {
-                "get_config": [
+                "config": [
                     "wireless-netmask 255.255.255.0",
                     "doesnt_exist nothing"
                 ],
@@ -221,7 +218,7 @@ class TestConfigFile(unittest.TestCase):
                 "error_type": ValueError
             },
             {
-                "get_config": [
+                "config": [
                     "wireless-netmask 255.255.255.0",
                     "test nothing"
                 ],
@@ -229,32 +226,23 @@ class TestConfigFile(unittest.TestCase):
                 "error_type": ValueError
             },
             {
-                "get_config": [
+                "config": [
                     "wireless-netmask 255.255.255.0",
                     "rfkill not_bool"
                 ],
                 "raises_error": True,
                 "error_type": ValueError
-            },
-            {
-                "get_config": [
-                    "wireless-netmask 255.255.255.0",
-                    "wireless-netmask 255.255.0.0"
-                ],
-                "raises_error": True,
-                "error_type": ValueError
-            },
+            }
         ]
 
         for test in test_cases:
             f = ConfigFile("file", metadata = testm)
-            f.get_config = mock.Mock(return_value=test["get_config"])
             if test["raises_error"]:
                 with self.assertRaises(test["error_type"]):
-                    f.read_config()
+                    f.parse_config_from_list(test["config"])
 
         f = ConfigFile("file", metadata = Metadata())
-        f.get_config = mock.Mock(side_effect=[[
+        f.parse_config_from_list([
             "wireless-netmask 255.255.255.0",
             "rfkill",
             "image-type image",
@@ -262,10 +250,9 @@ class TestConfigFile(unittest.TestCase):
             "adept-serverhosts test.usa.flightaware.com",
             "use-gpsd yes",
             "slow-cpu auto",
-            "priority 1"
-        ]])
-
-        f.read_config()
+            "priority 1",
+            "allow-ble-setup yes"
+        ])
         assert f.get("wireless-netmask") == "255.255.255.0"
         assert f.get("rkfill") is None
         assert f.get("image-type") == "image"
@@ -274,6 +261,7 @@ class TestConfigFile(unittest.TestCase):
         assert f.get("use-gpsd") is True
         assert f.get("slow-cpu") == "auto"
         assert f.get("priority") == 1
+        assert f.get("allow-ble-setup") == "yes"
 
 class TestConfigGroup(unittest.TestCase):
 
@@ -283,13 +271,13 @@ class TestConfigGroup(unittest.TestCase):
     def test_config_group(self):
 
         f1 = ConfigFile(filename="file1", priority=30, metadata = Metadata())
-        f1.get_config = mock.Mock(return_value=self.default_config_data())
+        f1.read_config_into_list = mock.Mock(return_value=self.default_config_data())
 
         f2 = ConfigFile(filename="file2", priority=40, metadata = Metadata())
-        f2.get_config = mock.Mock(return_value=["image-type image_2", "adaptive-min-gain -2", "wired-network no"])
+        f2.read_config_into_list = mock.Mock(return_value=["image-type image_2", "adaptive-min-gain -2", "wired-network no"])
 
         cfg = ConfigGroup(metadata=Metadata(), files=[f1, f2])
-        cfg.read_configs()
+        cfg.load_configs()
 
         assert cfg.files[0]._priority == 40
         assert cfg.files[1]._priority == 30
@@ -305,7 +293,7 @@ class TestConfigGroup(unittest.TestCase):
         ]
 
         for f in files:
-            f.get_config = self.default_config_data
+            f.read_config_into_list = self.default_config_data
 
         return files
 
@@ -317,7 +305,7 @@ class TestConfigGroup(unittest.TestCase):
         f2.values[uat] = 10000
 
         cfg = ConfigGroup(metadata=Metadata(), files=[f1, f2, f3])
-        cfg.read_configs()
+        cfg.load_configs()
 
         assert cfg.get(uat) == 30978
 
@@ -330,7 +318,7 @@ class TestConfigGroup(unittest.TestCase):
         f1, f2, f3 = self.three_files()
 
         cfg = ConfigGroup(metadata=Metadata(), files=[f1, f2, f3])
-        cfg.read_configs()
+        cfg.load_configs()
 
         assert cfg.get("http-proxy-host") is None
 
