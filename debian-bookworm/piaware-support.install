@@ -1,14 +1,14 @@
 package/*.tcl usr/lib/piaware-support/
-scripts/generate-network-config-bookworm.py usr/lib/piaware-support/
+generate_network_bookworm/generate_network_config_bookworm usr/lib/piaware-support/
+generate_network_bookworm/generate_network_config_bookworm.py usr/lib/piaware-support/
 scripts/generate-receiver-config usr/lib/piaware-support/
-scripts/piaware_config.py usr/lib/piaware-support/
+flightaware_piaware_config/src/flightaware_piaware_config/piaware_config.py usr/lib/piaware-support/
 scripts/set-rfkill usr/lib/piaware-support/
 scripts/piaware-console-status usr/lib/piaware-support/
 scripts/rpi-bootconfig usr/lib/piaware-support/
 etc/modprobe.d/
 piaware-config.txt boot/firmware
 debian/piaware-image-config.txt usr/share/piaware-support/
-systemd/NetworkManager.service.d/restart.conf lib/systemd/system/NetworkManager.service.d/
 systemd/config-ready.target lib/systemd/system/
 etc/profile.d/
 etc/initramfs/post-update.d/rpi-bootconfig
@@ -17,5 +17,5 @@ etc/kernel/postinst.d/rpi-bootconfig
 etc/kernel/postinst.d/zz-update-bootconfig
 etc/kernel/postrm.d/rpi-bootconfig
 etc/kernel/postrm.d/zz-update-bootconfig
-package/helpers/piaware-restart-network-bookworm usr/bin/
+package/helpers/piaware-restart-network-bookworm usr/bin/piaware-restart-network
 package/helpers/piaware-restart-receiver usr/bin/
