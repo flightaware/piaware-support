@@ -183,6 +183,14 @@ class TestConfigFile(unittest.TestCase):
     def test_parse_line(self):
         testc = ConfigFile("file")
 
+        key, val = testc.parse_line("  option      # whiteout entry, updated by fa_piaware_config in settings")
+        assert key == "option"
+        assert val == ""
+
+        key, val = testc.parse_line("  option   \"   yes  \"    # updated by fa_piaware_config in settings")
+        assert key == "option"
+        assert val == "yes"
+
         assert testc.parse_line("    # commented") is None
         key, val = testc.parse_line("option ")
         assert key == "option"

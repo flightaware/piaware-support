@@ -301,8 +301,9 @@ class ConfigFile():
         if re.search(r"^\s*#.*", line):
             return None
 
-        if re.search(r"^\s*([a-zA-Z0-9_-]+)\s*(?:#.*)?$", line):
-            return (line.strip(), "")
+        option_line = re.search(r"^\s*([a-zA-Z0-9_-]+)\s*(?:#.*)?$", line)
+        if option_line:
+            return (option_line.group(1), "")
 
         option_line = re.search(r"^\s*([a-zA-Z0-9_-]+)\s+(.+)$", line)
         if option_line:
