@@ -6,6 +6,8 @@
 # Compatible with a Bookworm PiAware SD images that use NetworkManager
 #
 
+/bin/nmcli connection down wired > /dev/null 2>&1
+
 echo "Generating network configuration..."
 
 /bin/systemctl --quiet restart generate-network-config || exit 1
