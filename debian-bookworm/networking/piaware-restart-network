@@ -1,0 +1,19 @@
+#!/bin/sh
+
+#
+# Executable script to apply network piaware-config changes without rebooting
+#
+# Compatible with a Bookworm PiAware SD images that use NetworkManager
+#
+
+/bin/nmcli connection down wired > /dev/null 2>&1
+
+echo "Generating network configuration..."
+
+/bin/systemctl --quiet restart generate-network-config || exit 1
+
+echo "Applying network configuration changes..."
+
+/bin/systemctl --quiet restart NetworkManager || exit 1
+
+echo "Done. Wait a moment for networking changes to take effect."
