@@ -1,8 +1,9 @@
-piaware-support (10.0~dev) UNRELEASED; urgency=medium
+piaware-support (10.0) stable; urgency=medium
 
-  * Testing bookworm network manager
+  * Update current distribution to Bookworm
+  * Add python script, shell script, systemd files, and unit tests for NetworkManager connection files
 
- -- Nick Wan <nicholas.wan@flightaware.com>  Tue, 03 Dec 2024 21:54:55 +0000
+ -- Nicholas Wan <nicholas.wan@flightaware.com>  Wed, 26 Feb 2025 19:02:33 +0000
 
 piaware-support (9.0.1) stable; urgency=medium
 
