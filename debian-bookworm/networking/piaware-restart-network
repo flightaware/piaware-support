@@ -10,10 +10,10 @@
 
 echo "Generating network configuration..."
 
-/bin/systemctl --quiet restart generate-network-config || exit 1
+/bin/systemctl restart generate-network-config || exit 1
 
 echo "Applying network configuration changes..."
 
-/bin/systemctl --quiet restart NetworkManager || exit 1
+/bin/systemctl restart NetworkManager || exit 1
 
 echo "Done. Wait a moment for networking changes to take effect."
