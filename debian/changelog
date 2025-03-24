@@ -1,3 +1,10 @@
+piaware-support (10.0.1~dev) UNRELEASED; urgency=medium
+
+  * Update splash page
+  * Remove quiet flag from piaware-restart-network
+
+ -- Nicholas Wan <nicholas.wan@flightaware.com>  Mon, 24 Mar 2025 09:32:40 -0500
+
 piaware-support (10.0) stable; urgency=medium
 
   * Update current distribution to Bookworm
