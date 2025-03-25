@@ -18,10 +18,10 @@ set -e
 # the debian-policy package
 
 splashscreen_setup() {
-    test -f /boot/cmdline.txt || return 0
+    test -f /boot/firmware/cmdline.txt || return 0
 
     newargs=""
-    for arg in $(cat /boot/cmdline.txt)
+    for arg in $(cat /boot/firmware/cmdline.txt)
     do
         case "$arg" in
             splash|quiet|plymouth.ignore-serial-consoles)
@@ -39,8 +39,8 @@ splashscreen_setup() {
 
     echo "Configuring boot splashscreen.."
     /usr/sbin/plymouth-set-default-theme piaware
-    echo "${newargs}quiet splash plymouth.ignore-serial-consoles" >/boot/cmdline.txt.new
-    mv /boot/cmdline.txt.new /boot/cmdline.txt
+    echo "${newargs}quiet splash plymouth.ignore-serial-consoles" >/boot/firmware/cmdline.txt.new
+    mv /boot/firmware/cmdline.txt.new /boot/firmware/cmdline.txt
     return 0
 }
 
@@ -109,7 +109,7 @@ case "$1" in
         fi
 
         # splashscreen contents change on every version
-        if grep -q " splash" /boot/cmdline.txt && [ $(/usr/sbin/plymouth-set-default-theme) = "piaware" ]
+        if grep -q " splash" /boot/firmware/cmdline.txt && [ $(/usr/sbin/plymouth-set-default-theme) = "piaware" ]
         then
             update-initramfs -u
         fi
