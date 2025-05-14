@@ -1,3 +1,9 @@
+piaware-support (10.0.2~dev) UNRELEASED; urgency=medium
+
+  * In development
+
+ -- Eric Tran <eric.tran@flightaware.com>  Tue, 13 May 2025 09:34:00 -0600
+
 piaware-support (10.0.1) stable; urgency=medium
 
   * Update splash page
