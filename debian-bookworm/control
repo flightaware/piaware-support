@@ -15,13 +15,13 @@ Description: Support package for PiAware sdcard images.
 Package: piaware-release
 Architecture: all
 Depends: piaware-support (= ${binary:Version}),
- piaware (= 10.1~dev),
+ piaware (= 10.1),
  beast-splitter (= 10.1),
- dump1090-fa (= 10.1~dev),
+ dump1090-fa (= 10.1),
  dump978-fa (= 10.1), skyaware978 (= 10.1),
  piaware-web (= 10.1),
  piaware-configurator (= 10.1),
- piaware-ble-connect (= 10.1~dev),
+ piaware-ble-connect (= 10.1),
  flightaware-apt-repository (>= 1.2),
  raspi-config, usbutils, nano,
  rtl-sdr, soapysdr-module-rtlsdr,
