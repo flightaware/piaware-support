@@ -267,10 +267,11 @@ class ConfigFile():
         self._filename = filename
         self.values = {}
     
-    def process_quotes(self, line: str) -> str:
+    def process_quotes(self, line: str, processing_password: bool = False) -> str:
         if len(line) == 0:
             return line
 
+        line = line.strip()
         if line[0] != "\"" and line[0] != "'":
             comment_index = line.find("#")
             if comment_index == -1:
@@ -280,22 +281,27 @@ class ConfigFile():
 
         val = ""
         esc = False
+        terminating_char = "\"" if line[0] == "\"" else "'"
+
         for i in range(1, len(line)):
             char = line[i]
             if esc:
+                # NetworkManager specifically needs \ to be escaped
+                if processing_password and char == "\\":
+                    val += "\\"
                 val += char
                 esc = False
                 continue
 
-            if char == "\"" or char == "'":
+            if char == terminating_char:
                 break
 
             if char == "\\":
                 esc = True
                 continue
-
             val += char
-        return val.strip()
+
+        return val
 
     def parse_line(self, line) -> tuple | None:
         if re.search(r"^\s*#.*", line):
@@ -307,7 +313,8 @@ class ConfigFile():
 
         option_line = re.search(r"^\s*([a-zA-Z0-9_-]+)\s+(.+)$", line)
         if option_line:
-            return (option_line.group(1), self.process_quotes(option_line.group(2)))
+            key = option_line.group(1)
+            return (key, self.process_quotes(option_line.group(2), processing_password=(key=="wireless-password")))
 
         return None
 
