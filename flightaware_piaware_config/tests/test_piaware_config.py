@@ -4,6 +4,18 @@ import unittest
 from flightaware_piaware_config.src.flightaware_piaware_config.piaware_config import *
 from uuid import UUID
 
+class TestMetadataSettings(unittest.TestCase):
+    def test_initialization(seflf):
+        testm = MetadataSettings(IntegerProcessor)
+        assert testm.processor is not None
+        assert testm.setting_type is None
+        assert testm.default is None
+        assert testm.protect is None
+        assert testm.sdonly is None
+        assert testm.network is None
+        assert testm.network_manager_value is False
+        assert testm.deprecated is False
+
 class TestMetadata(unittest.TestCase):
     def test_get_setting(self):
         testm = Metadata()
@@ -217,15 +229,17 @@ class TestConfigFile(unittest.TestCase):
         # Te!st"\pas\s -> "Te!st\"\\pas\\s"
         assert testc.process_quotes("\"Te!st\\\"\\\\pas\\\\s\"") == "Te!st\"\\pas\\s"
 
-        assert testc.process_quotes("\"Te!st\\\"\\\\pas\\\\s\"", processing_password=True) == "Te!st\"\\\\pas\\\\s"
-        assert testc.process_quotes("Password's with comma", processing_password=True) == "Password's with comma"
-        assert testc.process_quotes("\"Password's with comma\" # comments", processing_password=True) == "Password's with comma"
-        assert testc.process_quotes("'Something\" with apostrophe' # comments ", processing_password=True) == "Something\" with apostrophe"
-        assert testc.process_quotes("\"   Password's   with      lot's   of spaces   \"", processing_password=True) == "   Password's   with      lot's   of spaces   "
-        assert testc.process_quotes("\"'/()$&@\\\"-[]{}#%^*+\\\\\"", processing_password=True) == "'/()$&@\"-[]{}#%^*+\\\\"
+        assert testc.process_quotes("\"Te!st\\\"\\\\pas\\\\s\"", processing_for_nm=True) == "Te!st\"\\\\pas\\\\s"
+        assert testc.process_quotes("Password's with comma", processing_for_nm=True) == "Password's with comma"
+        assert testc.process_quotes("\"Password's with comma\" # comments", processing_for_nm=True) == "Password's with comma"
+        assert testc.process_quotes("'Something\" with apostrophe' # comments ", processing_for_nm=True) == "Something\" with apostrophe"
+        assert testc.process_quotes("\"   Password's   with      lot's   of spaces   \"", processing_for_nm=True) == "   Password's   with      lot's   of spaces   "
+        assert testc.process_quotes("\"'/()$&@\\\"-[]{}#%^*+\\\\\"", processing_for_nm=True) == "'/()$&@\"-[]{}#%^*+\\\\"
 
     def test_parse_line(self):
-        testc = ConfigFile("file")
+        testm = Metadata()
+        testm.settings["option"] = MetadataSettings(StrProcessor)
+        testc = ConfigFile("file", metadata = testm)
 
         key, val = testc.parse_line("  option      # whiteout entry, updated by fa_piaware_config in settings")
         assert key == "option"
@@ -258,7 +272,7 @@ class TestConfigFile(unittest.TestCase):
 
     def test_parse_config_from_list(self):
         testm = Metadata()
-        testm.settings["test"] = MetadataSettings(IntegerProcessor(), deprecated=True)
+        testm.settings["test"] = MetadataSettings(IntegerProcessor, deprecated=True)
 
         test_cases = [
             {
