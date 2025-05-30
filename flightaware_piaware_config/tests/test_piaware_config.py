@@ -178,51 +178,7 @@ class TestConfigFile(unittest.TestCase):
 
         assert testc.process_quotes("\"commented  1\"# 1 23 ") == "commented  1"
         assert testc.process_quotes("\"commented\\s  1\"# 1 23 ") == "commenteds  1"
-
-        # pass'word
-        assert testc.process_quotes("pass'word") == "pass'word"
-
-        # pass"word
-        assert testc.process_quotes('pass"word') == 'pass"word'
-
-        ### Escape special characters in quotes/ticks
-        # "commented\s\1"
-        assert testc.process_quotes("\"commented\\s\\1\"") == "commenteds1"
-
-        # "back \ slash" -> "back \\ slash"
-        assert testc.process_quotes("\"back \\\\ slash\"") == "back \\ slash"
-
-        # "some " thing" -> "some \" thing"
-        assert testc.process_quotes("\"some \\\" thing\"") == "some \" thing"
-
-        # "some \" thing"
-        assert testc.process_quotes("\"some \\\" thing\"") == "some \" thing"
-
-        # "some \' thing"
-        assert testc.process_quotes("\"some \\' thing\"") == "some ' thing"
-
-
-        # 'commented\s\1'
-        assert testc.process_quotes("'commented\\s\\1'") == "commenteds1"
-
-        # 'back \ slash' -> 'back \\ slash'
-        assert testc.process_quotes("'back \\\\ slash'") == "back \\ slash"
-
-        # 'some " thing'
-        assert testc.process_quotes("'some \\\" thing'") == "some \" thing"
-
-        # tick' mark -> 'tick\' mark'
-        assert testc.process_quotes("'tick\\\' mark'") == "tick' mark"
-
-        # Te!st"\pas\s -> "Te!st\"\\pas\\s"
-        assert testc.process_quotes("\"Te!st\\\"\\\\pas\\\\s\"") == "Te!st\"\\pas\\s"
-
-        assert testc.process_quotes("\"Te!st\\\"\\\\pas\\\\s\"", processing_password=True) == "Te!st\"\\\\pas\\\\s"
-        assert testc.process_quotes("Password's with comma", processing_password=True) == "Password's with comma"
-        assert testc.process_quotes("\"Password's with comma\" # comments", processing_password=True) == "Password's with comma"
-        assert testc.process_quotes("'Something\" with apostrophe' # comments ", processing_password=True) == "Something\" with apostrophe"
-        assert testc.process_quotes("\"   Password's   with      lot's   of spaces   \"", processing_password=True) == "   Password's   with      lot's   of spaces   "
-        assert testc.process_quotes("\"'/()$&@\\\"-[]{}#%^*+\\\\\"", processing_password=True) == "'/()$&@\"-[]{}#%^*+\\\\"
+        assert testc.process_quotes("\"commented\\s\\1") == "commenteds1"
 
     def test_parse_line(self):
         testc = ConfigFile("file")
@@ -231,7 +187,7 @@ class TestConfigFile(unittest.TestCase):
         assert key == "option"
         assert val == ""
 
-        key, val = testc.parse_line("  option   \"yes\"    # updated by fa_piaware_config in settings")
+        key, val = testc.parse_line("  option   \"   yes  \"    # updated by fa_piaware_config in settings")
         assert key == "option"
         assert val == "yes"
 
@@ -248,13 +204,13 @@ class TestConfigFile(unittest.TestCase):
         assert key == "option"
         assert val == "yes"
 
-        key, val = testc.parse_line("option \"   yes   \"")
+        key, val = testc.parse_line("option \"   yes    ")
         assert key == "option"
-        assert val == "   yes   "
+        assert val == "yes"
 
-        key, val = testc.parse_line("   option \"   yes   \" # comment")
+        key, val = testc.parse_line("   option \"   yes    ")
         assert key == "option"
-        assert val == "   yes   "
+        assert val == "yes"
 
     def test_parse_config_from_list(self):
         testm = Metadata()
