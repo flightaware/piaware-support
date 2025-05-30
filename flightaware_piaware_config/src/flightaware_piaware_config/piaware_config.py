@@ -160,14 +160,13 @@ class NetmaskProcessor():
         return val
 
 class MetadataSettings():
-    def __init__(self, processor, default: any = None, setting_type: str = None, protect: str = None, sdonly: bool = None, network: str = None, network_manager_value = False, deprecated = False) -> None:
+    def __init__(self, processor, default: any = None, setting_type: str = None, protect: str = None, sdonly: bool = None, network: str = None, deprecated = False) -> None:
         self.default = default
         self.setting_type = setting_type
         self.protect = protect
         self.sdonly = sdonly
         self.network = network
         self.deprecated = deprecated
-        self.network_manager_value = network_manager_value
         self.processor = processor
 
 class Metadata():
@@ -268,7 +267,7 @@ class ConfigFile():
         self._filename = filename
         self.values = {}
     
-    def process_quotes(self, line: str, processing_for_nm: bool = False) -> str:
+    def process_quotes(self, line: str) -> str:
         if len(line) == 0:
             return line
 
@@ -287,9 +286,6 @@ class ConfigFile():
         for i in range(1, len(line)):
             char = line[i]
             if esc:
-                # NetworkManager specifically needs \ to be escaped
-                if processing_for_nm and char == "\\":
-                    val += "\\"
                 val += char
                 esc = False
                 continue
@@ -314,9 +310,7 @@ class ConfigFile():
 
         option_line = re.search(r"^\s*([a-zA-Z0-9_-]+)\s+(.+)$", line)
         if option_line:
-            key = option_line.group(1)
-            needs_network_manager_specific_parsing = self._metadata.get_setting(key).network_manager_value
-            return (key, self.process_quotes(option_line.group(2), processing_for_nm=needs_network_manager_specific_parsing))
+            return (option_line.group(1), self.process_quotes(option_line.group(2)))
 
         return None
 

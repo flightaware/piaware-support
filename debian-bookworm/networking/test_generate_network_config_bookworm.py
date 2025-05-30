@@ -134,6 +134,9 @@ class TestCases(unittest.TestCase):
         with self.assertRaises(ValueError):
             get_prefix("255.1.1.1", None)
 
+    def test_escape_backslashes_for_network_manager(self):
+        assert escape_backslashes_for_network_manager("value with \\") == "value with \\\\"
+
     def test_configure_static_network(self):
         address = "192.111.1.42"
         gateway = "192.111.1.33"
