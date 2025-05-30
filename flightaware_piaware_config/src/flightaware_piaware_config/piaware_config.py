@@ -160,13 +160,14 @@ class NetmaskProcessor():
         return val
 
 class MetadataSettings():
-    def __init__(self, processor, default: any = None, setting_type: str = None, protect: str = None, sdonly: bool = None, network: str = None, deprecated = False) -> None:
+    def __init__(self, processor, default: any = None, setting_type: str = None, protect: str = None, sdonly: bool = None, network: str = None, network_manager_value = False, deprecated = False) -> None:
         self.default = default
         self.setting_type = setting_type
         self.protect = protect
         self.sdonly = sdonly
         self.network = network
         self.deprecated = deprecated
+        self.network_manager_value = network_manager_value
         self.processor = processor
 
 class Metadata():
@@ -267,10 +268,11 @@ class ConfigFile():
         self._filename = filename
         self.values = {}
     
-    def process_quotes(self, line: str) -> str:
+    def process_quotes(self, line: str, processing_for_nm: bool = False) -> str:
         if len(line) == 0:
             return line
 
+        line = line.strip()
         if line[0] != "\"" and line[0] != "'":
             comment_index = line.find("#")
             if comment_index == -1:
@@ -280,22 +282,27 @@ class ConfigFile():
 
         val = ""
         esc = False
+        terminating_char = "\"" if line[0] == "\"" else "'"
+
         for i in range(1, len(line)):
             char = line[i]
             if esc:
+                # NetworkManager specifically needs \ to be escaped
+                if processing_for_nm and char == "\\":
+                    val += "\\"
                 val += char
                 esc = False
                 continue
 
-            if char == "\"" or char == "'":
+            if char == terminating_char:
                 break
 
             if char == "\\":
                 esc = True
                 continue
-
             val += char
-        return val.strip()
+
+        return val
 
     def parse_line(self, line) -> tuple | None:
         if re.search(r"^\s*#.*", line):
@@ -307,7 +314,9 @@ class ConfigFile():
 
         option_line = re.search(r"^\s*([a-zA-Z0-9_-]+)\s+(.+)$", line)
         if option_line:
-            return (option_line.group(1), self.process_quotes(option_line.group(2)))
+            key = option_line.group(1)
+            needs_network_manager_specific_parsing = self._metadata.get_setting(key).network_manager_value
+            return (key, self.process_quotes(option_line.group(2), processing_for_nm=needs_network_manager_specific_parsing))
 
         return None
 
@@ -403,4 +412,3 @@ def get_standard_config_group(extra_file_path: str = None) -> ConfigGroup():
     cg = create_standard_piaware_config_group(extra_file_path=extra_file_path)
     cg.load_configs()
     return cg
-
