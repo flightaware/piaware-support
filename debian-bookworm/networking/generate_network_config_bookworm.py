@@ -110,11 +110,23 @@ def get_wired_conn_file(config: ConfigGroup):
 
     return '\n'.join(file)
 
+def escape_backslashes_for_network_manager(value: str) -> str:
+    escaped_str = ""
+    for v in value:
+        if v == "\\":
+            escaped_str += "\\\\"
+        else:
+            escaped_str += v
+    return escaped_str
+
 def get_wireless_conn_file(config: ConfigGroup):
     uuid = UUID("acc6cf97-9575-4f41-ad85-65af044288df", version=4)
     ssid = config.get("wireless-ssid")
     psk = config.get("wireless-password")
     connect = "true" if config.get("wireless-network") else "false"
+
+    ssid = escape_backslashes_for_network_manager(ssid)
+    psk = escape_backslashes_for_network_manager(psk)
 
     file = [
         "[connection]",

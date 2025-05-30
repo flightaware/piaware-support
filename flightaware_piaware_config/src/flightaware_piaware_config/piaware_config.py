@@ -271,6 +271,7 @@ class ConfigFile():
         if len(line) == 0:
             return line
 
+        line = line.strip()
         if line[0] != "\"" and line[0] != "'":
             comment_index = line.find("#")
             if comment_index == -1:
@@ -280,6 +281,8 @@ class ConfigFile():
 
         val = ""
         esc = False
+        terminating_char = "\"" if line[0] == "\"" else "'"
+
         for i in range(1, len(line)):
             char = line[i]
             if esc:
@@ -287,15 +290,15 @@ class ConfigFile():
                 esc = False
                 continue
 
-            if char == "\"" or char == "'":
+            if char == terminating_char:
                 break
 
             if char == "\\":
                 esc = True
                 continue
-
             val += char
-        return val.strip()
+
+        return val
 
     def parse_line(self, line) -> tuple | None:
         if re.search(r"^\s*#.*", line):
@@ -403,4 +406,3 @@ def get_standard_config_group(extra_file_path: str = None) -> ConfigGroup():
     cg = create_standard_piaware_config_group(extra_file_path=extra_file_path)
     cg.load_configs()
     return cg
-
