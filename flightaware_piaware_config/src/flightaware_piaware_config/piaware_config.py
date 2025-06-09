@@ -268,11 +268,13 @@ class ConfigFile():
         self.values = {}
     
     def process_quotes(self, line: str) -> str:
+        line = line.strip()
+
         if len(line) == 0:
             return line
 
-        line = line.strip()
-        if line[0] != "\"" and line[0] != "'":
+
+        if line[0] != '"' and line[0] != "'":
             comment_index = line.find("#")
             if comment_index == -1:
                 return line
@@ -281,7 +283,7 @@ class ConfigFile():
 
         val = ""
         esc = False
-        terminating_char = "\"" if line[0] == "\"" else "'"
+        terminating_char = line[0]
 
         for i in range(1, len(line)):
             char = line[i]
@@ -300,7 +302,13 @@ class ConfigFile():
 
         return val
 
-    def parse_line(self, line) -> tuple | None:
+    def check_value(self, key: str, value: str) -> None:
+        if (re.search(r'\\ ', value)):
+            print(f"\n\nWARNING: You seem to have an unescaped \\ for key: {key}\n\n")
+        if re.search(r'".*[ a-zA-Z0-9]".*"', value):
+            print(f'\n\nWARNING: Do you have an unescaped " that\'s been quoted for key: {key}?\n\n')
+
+    def parse_line(self, line: str) -> tuple | None:
         if re.search(r"^\s*#.*", line):
             return None
 
@@ -310,7 +318,10 @@ class ConfigFile():
 
         option_line = re.search(r"^\s*([a-zA-Z0-9_-]+)\s+(.+)$", line)
         if option_line:
-            return (option_line.group(1), self.process_quotes(option_line.group(2)))
+            key = option_line.group(1)
+            value = option_line.group(2)
+            self.check_value(key, value)
+            return (key, self.process_quotes(value))
 
         return None
 

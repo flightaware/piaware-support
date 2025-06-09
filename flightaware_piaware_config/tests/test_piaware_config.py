@@ -198,36 +198,38 @@ class TestConfigFile(unittest.TestCase):
 
         ### Escape special characters in quotes/ticks
         # "commented\s\1"
-        assert testc.process_quotes("\"commented\\s\\1\"") == "commenteds1"
+        assert testc.process_quotes(r'"commented\s\1"') == "commenteds1"
 
-        # "back \ slash" -> "back \\ slash"
-        assert testc.process_quotes("\"back \\\\ slash\"") == "back \\ slash"
+        # "back \ slash"
+        assert testc.process_quotes(r'"back \\ slash"') == r"back \ slash"
 
-        # "some " thing" -> "some \" thing"
-        assert testc.process_quotes("\"some \\\" thing\"") == "some \" thing"
+        # "some " thing"
+        assert testc.process_quotes(r'"some \" thing"') == r'some " thing'
 
         # "some \" thing"
-        assert testc.process_quotes("\"some \\\" thing\"") == "some \" thing"
+        assert testc.process_quotes(r'"some \\\" thing"') == r'some \" thing'
 
-        # "some \' thing"
-        assert testc.process_quotes("\"some \\' thing\"") == "some ' thing"
-
+        # "some ' thing"
+        assert testc.process_quotes("\"some \' thing\"") == "some ' thing"
 
         # 'commented\s\1'
-        assert testc.process_quotes("'commented\\s\\1'") == "commenteds1"
+        assert testc.process_quotes(r"'commented\s\1'") == "commenteds1"
 
         # 'back \ slash'
-        assert testc.process_quotes("'back \\\\ slash'") == "back \\ slash"
+        assert testc.process_quotes(r"'back \\ slash'") == r"back \ slash"
 
         # 'some " thing'
-        assert testc.process_quotes("'some \\\" thing'") == "some \" thing"
+        assert testc.process_quotes(r"'some \" thing'") == r'some " thing'
 
-        # tick' mark -> 'tick\' mark'
-        assert testc.process_quotes("'tick\\\' mark'") == "tick' mark"
+        # tick' mark
+        assert testc.process_quotes(r"'tick\' mark'") == "tick' mark"
 
         # Te!st"\pas\s
-        assert testc.process_quotes("\"Te!st\\\"\\\\pas\\\\s\"") == "Te!st\"\\pas\\s"
+        assert testc.process_quotes(r'"Te!st\"\\pas\\s"') == r'Te!st"\pas\s'
 
+        ### Bad Cases
+        assert testc.process_quotes(r'"input with "unescaped quote"') == "input with "
+        assert testc.process_quotes(r'"input with \ backslash"') == "input with  backslash"
 
     def test_parse_line(self):
         testm = Metadata()
@@ -262,6 +264,18 @@ class TestConfigFile(unittest.TestCase):
         key, val = testc.parse_line("   option \"   yes   \" # comment")
         assert key == "option"
         assert val == "   yes   "
+
+        key, val = testc.parse_line(r'   option " \  yes   " # comment')
+        assert key == "option"
+        assert val == "   yes   "
+
+        key, val = testc.parse_line(r'   option \  yes  # comment')
+        assert key == "option"
+        assert val == r"\  yes"
+
+        key, val = testc.parse_line(r'   option \ " y"es " # comment')
+        assert key == "option"
+        assert val == r'\ " y"es "'
 
     def test_parse_config_from_list(self):
         testm = Metadata()
