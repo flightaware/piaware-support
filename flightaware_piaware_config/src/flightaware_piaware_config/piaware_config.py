@@ -303,10 +303,12 @@ class ConfigFile():
         return val
 
     def check_value(self, key: str, value: str) -> None:
-        if (re.search(r'\\ ', value)):
-            print(f"\n\nWARNING: You seem to have an unescaped \\ for key: {key}\n\n")
-        if re.search(r'".*[ a-zA-Z0-9]".*"', value):
-            print(f'\n\nWARNING: Do you have an unescaped " that\'s been quoted for key: {key}?\n\n')
+        # Emit warning if there's a backslash in a quoted values
+        if (re.search(r'".*\\.*"', value)):
+            print(f"\nWARNING: Make sure your backslash is escaped or modifying something for key: {key}\n")
+        # Emits warning if there's an unescaped " that's enclosed within quotes
+        if re.search(r'".*[^\\]".*"', value):
+            print(f'\nWARNING: Do you have an unescaped " that\'s been quoted for key: {key}?\n')
 
     def parse_line(self, line: str) -> tuple | None:
         if re.search(r"^\s*#.*", line):

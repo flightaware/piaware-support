@@ -265,17 +265,19 @@ class TestConfigFile(unittest.TestCase):
         assert key == "option"
         assert val == "   yes   "
 
-        key, val = testc.parse_line(r'   option " \  yes   " # comment')
-        assert key == "option"
-        assert val == "   yes   "
-
         key, val = testc.parse_line(r'   option \  yes  # comment')
         assert key == "option"
         assert val == r"\  yes"
 
-        key, val = testc.parse_line(r'   option \ " y"es " # comment')
+        # Test Cases should print out warnings
+
+        key, val = testc.parse_line(r'   option   " \  yes   " # comment')
         assert key == "option"
-        assert val == r'\ " y"es "'
+        assert val == "   yes   "
+
+        key, val = testc.parse_line(r'   option   \  " y"es " # comment')
+        assert key == "option"
+        assert val == r'\  " y"es "'
 
     def test_parse_config_from_list(self):
         testm = Metadata()
