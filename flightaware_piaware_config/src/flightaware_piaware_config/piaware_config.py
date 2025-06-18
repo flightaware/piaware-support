@@ -311,13 +311,14 @@ class ConfigFile():
             print(f'\nWARNING: Do you have an unescaped " that\'s been quoted for key: {key}?\n')
 
     def parse_line(self, line: str) -> tuple | None:
+        # Line is empty except for comment
         if re.search(r"^\s*#.*", line):
             return None
-
+        # Line has key but no value. Plus optional comment
         option_line = re.search(r"^\s*([a-zA-Z0-9_-]+)\s*(?:#.*)?$", line)
         if option_line:
             return (option_line.group(1), "")
-
+        # Line has key + value. Plus optional comment.
         option_line = re.search(r"^\s*([a-zA-Z0-9_-]+)\s+(.+)$", line)
         if option_line:
             key = option_line.group(1)
