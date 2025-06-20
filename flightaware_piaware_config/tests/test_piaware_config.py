@@ -4,6 +4,17 @@ import unittest
 from flightaware_piaware_config.src.flightaware_piaware_config.piaware_config import *
 from uuid import UUID
 
+class TestMetadataSettings(unittest.TestCase):
+    def test_initialization(seflf):
+        testm = MetadataSettings(IntegerProcessor)
+        assert testm.processor is not None
+        assert testm.setting_type is None
+        assert testm.default is None
+        assert testm.protect is None
+        assert testm.sdonly is None
+        assert testm.network is None
+        assert testm.deprecated is False
+
 class TestMetadata(unittest.TestCase):
     def test_get_setting(self):
         testm = Metadata()
@@ -178,16 +189,58 @@ class TestConfigFile(unittest.TestCase):
 
         assert testc.process_quotes("\"commented  1\"# 1 23 ") == "commented  1"
         assert testc.process_quotes("\"commented\\s  1\"# 1 23 ") == "commenteds  1"
-        assert testc.process_quotes("\"commented\\s\\1") == "commenteds1"
+
+        # pass'word
+        assert testc.process_quotes("pass'word") == "pass'word"
+
+        # pass"word
+        assert testc.process_quotes('pass"word') == 'pass"word'
+
+        ### Escape special characters in quotes/ticks
+        # "commented\s\1"
+        assert testc.process_quotes(r'"commented\s\1"') == "commenteds1"
+
+        # "back \ slash"
+        assert testc.process_quotes(r'"back \\ slash"') == r"back \ slash"
+
+        # "some " thing"
+        assert testc.process_quotes(r'"some \" thing"') == r'some " thing'
+
+        # "some \" thing"
+        assert testc.process_quotes(r'"some \\\" thing"') == r'some \" thing'
+
+        # "some ' thing"
+        assert testc.process_quotes("\"some \' thing\"") == "some ' thing"
+
+        # 'commented\s\1'
+        assert testc.process_quotes(r"'commented\s\1'") == "commenteds1"
+
+        # 'back \ slash'
+        assert testc.process_quotes(r"'back \\ slash'") == r"back \ slash"
+
+        # 'some " thing'
+        assert testc.process_quotes(r"'some \" thing'") == r'some " thing'
+
+        # tick' mark
+        assert testc.process_quotes(r"'tick\' mark'") == "tick' mark"
+
+        # Te!st"\pas\s
+        assert testc.process_quotes(r'"Te!st\"\\pas\\s"') == r'Te!st"\pas\s'
+
+        ### Bad Cases
+        assert testc.process_quotes(r'"input with "unescaped quote"') == "input with "
+        assert testc.process_quotes(r'"input with \ backslash"') == "input with  backslash"
 
     def test_parse_line(self):
-        testc = ConfigFile("file")
+        testm = Metadata()
+        testm.settings["option"] = MetadataSettings(StrProcessor)
+        testc = ConfigFile("file", metadata = testm)
 
         key, val = testc.parse_line("  option      # whiteout entry, updated by fa_piaware_config in settings")
         assert key == "option"
         assert val == ""
 
-        key, val = testc.parse_line("  option   \"   yes  \"    # updated by fa_piaware_config in settings")
+        key, val = testc.parse_line("  option   \"yes\"    # updated by fa_piaware_config in settings")
         assert key == "option"
         assert val == "yes"
 
@@ -204,17 +257,31 @@ class TestConfigFile(unittest.TestCase):
         assert key == "option"
         assert val == "yes"
 
-        key, val = testc.parse_line("option \"   yes    ")
+        key, val = testc.parse_line("option \"   yes   \"")
         assert key == "option"
-        assert val == "yes"
+        assert val == "   yes   "
 
-        key, val = testc.parse_line("   option \"   yes    ")
+        key, val = testc.parse_line("   option \"   yes   \" # comment")
         assert key == "option"
-        assert val == "yes"
+        assert val == "   yes   "
+
+        key, val = testc.parse_line(r'   option \  yes  # comment')
+        assert key == "option"
+        assert val == r"\  yes"
+
+        # Test Cases should print out warnings
+
+        key, val = testc.parse_line(r'   option   " \  yes   " # comment')
+        assert key == "option"
+        assert val == "   yes   "
+
+        key, val = testc.parse_line(r'   option   \  " y"es " # comment')
+        assert key == "option"
+        assert val == r'\  " y"es "'
 
     def test_parse_config_from_list(self):
         testm = Metadata()
-        testm.settings["test"] = MetadataSettings(IntegerProcessor(), deprecated=True)
+        testm.settings["test"] = MetadataSettings(IntegerProcessor, deprecated=True)
 
         test_cases = [
             {

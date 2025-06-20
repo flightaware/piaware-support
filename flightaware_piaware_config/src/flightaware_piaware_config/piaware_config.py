@@ -6,6 +6,7 @@
 from uuid import UUID, uuid4
 import re
 import os
+import sys
 from ipaddress import IPv4Network, NetmaskValueError
 
 COUNTRY = "country"
@@ -268,10 +269,13 @@ class ConfigFile():
         self.values = {}
     
     def process_quotes(self, line: str) -> str:
+        line = line.strip()
+
         if len(line) == 0:
             return line
 
-        if line[0] != "\"" and line[0] != "'":
+
+        if line[0] != '"' and line[0] != "'":
             comment_index = line.find("#")
             if comment_index == -1:
                 return line
@@ -280,6 +284,8 @@ class ConfigFile():
 
         val = ""
         esc = False
+        terminating_char = line[0]
+
         for i in range(1, len(line)):
             char = line[i]
             if esc:
@@ -287,27 +293,39 @@ class ConfigFile():
                 esc = False
                 continue
 
-            if char == "\"" or char == "'":
+            if char == terminating_char:
                 break
 
             if char == "\\":
                 esc = True
                 continue
-
             val += char
-        return val.strip()
 
-    def parse_line(self, line) -> tuple | None:
+        return val
+
+    def check_value(self, key: str, value: str) -> None:
+        # Emit warning if there's a backslash in a quoted values
+        if (re.search(r'".*\\.*"', value)):
+            sys.stderr.write(f"WARNING: Make sure your backslash is escaped or modifying something for key: {key}.\n")
+        # Emits warning if there's an unescaped " that's enclosed within quotes
+        if re.search(r'".*[^\\]".*"', value):
+            sys.stderr.write(f'WARNING: Do you have an unescaped " that\'s been quoted for key: {key}?\n')
+
+    def parse_line(self, line: str) -> tuple | None:
+        # Line is empty except for comment
         if re.search(r"^\s*#.*", line):
             return None
-
+        # Line has key but no value. Plus optional comment
         option_line = re.search(r"^\s*([a-zA-Z0-9_-]+)\s*(?:#.*)?$", line)
         if option_line:
             return (option_line.group(1), "")
-
+        # Line has key + value. Plus optional comment.
         option_line = re.search(r"^\s*([a-zA-Z0-9_-]+)\s+(.+)$", line)
         if option_line:
-            return (option_line.group(1), self.process_quotes(option_line.group(2)))
+            key = option_line.group(1)
+            value = option_line.group(2)
+            self.check_value(key, value)
+            return (key, self.process_quotes(value))
 
         return None
 
@@ -403,4 +421,3 @@ def get_standard_config_group(extra_file_path: str = None) -> ConfigGroup():
     cg = create_standard_piaware_config_group(extra_file_path=extra_file_path)
     cg.load_configs()
     return cg
-
