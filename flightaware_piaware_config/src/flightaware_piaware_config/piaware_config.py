@@ -6,6 +6,7 @@
 from uuid import UUID, uuid4
 import re
 import os
+import sys
 from ipaddress import IPv4Network, NetmaskValueError
 
 COUNTRY = "country"
@@ -305,10 +306,10 @@ class ConfigFile():
     def check_value(self, key: str, value: str) -> None:
         # Emit warning if there's a backslash in a quoted values
         if (re.search(r'".*\\.*"', value)):
-            print(f"\nWARNING: Make sure your backslash is escaped or modifying something for key: {key}\n")
+            sys.stderr.write(f"WARNING: Make sure your backslash is escaped or modifying something for key: {key}.\n")
         # Emits warning if there's an unescaped " that's enclosed within quotes
         if re.search(r'".*[^\\]".*"', value):
-            print(f'\nWARNING: Do you have an unescaped " that\'s been quoted for key: {key}?\n')
+            sys.stderr.write(f'WARNING: Do you have an unescaped " that\'s been quoted for key: {key}?\n')
 
     def parse_line(self, line: str) -> tuple | None:
         # Line is empty except for comment
