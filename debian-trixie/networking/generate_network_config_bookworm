@@ -1,0 +1,4 @@
+#!/usr/bin/env python3
+
+from generate_network_config_bookworm import run
+run()
