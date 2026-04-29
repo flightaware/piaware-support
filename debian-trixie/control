@@ -26,7 +26,7 @@ Depends: piaware-support (= ${binary:Version}),
  raspi-config, usbutils, nano,
  rtl-sdr, soapysdr-module-rtlsdr,
  socat, netcat-openbsd, plymouth, plymouth-themes,
- ntpsec, policykit-1 (>= 0.105-31+rpt1+deb11u1)
+ ntpsec, polkitd
 Conflicts: piaware-repository
 Replaces: piaware-repository
 Breaks: piaware-repository-testing (<< ${binary:Version})
