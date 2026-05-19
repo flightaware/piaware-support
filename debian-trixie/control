@@ -8,25 +8,25 @@ Homepage: https://github.com/flightaware
 
 Package: piaware-support
 Architecture: all
-Depends: piaware, wireless-tools, wpasupplicant, rfkill, atmel-firmware, firmware-atheros, firmware-brcm80211, firmware-intelwimax, firmware-iwlwifi, libertas-firmware, firmware-linux, firmware-ralink, firmware-realtek, firmware-ti-connectivity, firmware-zd1211, whois, network-manager, ${misc:Depends}
+Depends: piaware, wireless-tools, wpasupplicant, rfkill, atmel-firmware, firmware-atheros, firmware-brcm80211, firmware-iwlwifi, libertas-firmware, firmware-linux, firmware-ralink, firmware-realtek, firmware-ti-connectivity, firmware-zd1211, whois, network-manager, ${misc:Depends}
 Description: Support package for PiAware sdcard images.
  Handles boot-time configuration.
 
 Package: piaware-release
 Architecture: all
 Depends: piaware-support (= ${binary:Version}),
- piaware (= 11.0~dev~bpo12+1),
- beast-splitter (= 11.0~dev~bpo12+1),
- dump1090-fa (= 11.0~bpo12+1),
- dump978-fa (= 11.0~dev~bpo12+1), skyaware978 (= 11.0~dev~bpo12+1),
- piaware-web (= 11.0~dev~bpo12+1),
- piaware-configurator (= 11.0~dev~bpo12+1),
- piaware-ble-connect (= 11.0~dev~bpo12+1),
+ piaware (= 11.0~dev),
+ beast-splitter (= 11.0~dev),
+ dump1090-fa (= 11.0),
+ dump978-fa (= 11.0~dev), skyaware978 (= 11.0~dev),
+ piaware-web (= 11.0~dev),
+ piaware-configurator (= 11.0~dev),
+ piaware-ble-connect (= 11.0~dev),
  flightaware-apt-repository (>= 1.2),
  raspi-config, usbutils, nano,
  rtl-sdr, soapysdr-module-rtlsdr,
  socat, netcat-openbsd, plymouth, plymouth-themes,
- ntp, policykit-1 (>= 0.105-31+rpt1+deb11u1)
+ ntpsec, polkitd
 Conflicts: piaware-repository
 Replaces: piaware-repository
 Breaks: piaware-repository-testing (<< ${binary:Version})

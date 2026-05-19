@@ -1,3 +1,9 @@
+piaware-support (11.0~dev) UNRELEASED; urgency=medium
+
+  * In development
+
+ -- Ziquan Wang <ziquan.wang@flightaware.com>  Tue, 28 Apr 2026 10:34:20 -0500
+
 piaware-support (10.2) stable; urgency=medium
 
   * Add additional parsing logic for NetworkManager psk + ssid

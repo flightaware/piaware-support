@@ -1,0 +1,13 @@
+# This service generates a network configuration
+# based on the contents of /boot/firmware/piaware-config.txt
+
+[Unit]
+Description=Generate network configuration
+Before=NetworkManager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/piaware-support/generate_network_config_bookworm
+
+[Install]
+WantedBy=network.target
