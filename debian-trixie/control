@@ -17,7 +17,7 @@ Architecture: all
 Depends: piaware-support (= ${binary:Version}),
  piaware (= 11.1~alpha),
  beast-splitter (= 11.1~alpha),
- dump1090-fa (= 11.0~alpha),
+ dump1090-fa (= 11.1~alpha),
  dump978-fa (= 11.1~alpha), skyaware978 (= 11.1~alpha),
  piaware-web (= 11.1~alpha),
  piaware-configurator (= 11.1~alpha),
