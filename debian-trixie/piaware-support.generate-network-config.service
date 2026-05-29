@@ -7,7 +7,7 @@ Before=NetworkManager.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/lib/piaware-support/generate_network_config_bookworm
+ExecStart=/usr/lib/piaware-support/generate_network_config
 
 [Install]
 WantedBy=network.target
