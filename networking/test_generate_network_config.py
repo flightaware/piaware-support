@@ -7,7 +7,7 @@ import importlib
 import sys
 sys.path.append("./flightaware_piaware_config/src/flightaware_piaware_config/")
 
-from generate_network_config_bookworm import *
+from generate_network_config import *
 import uuid
 
 wired_template = """[connection]
@@ -170,7 +170,7 @@ class TestCases(unittest.TestCase):
     def mock_csn(*args):
         return ["sample_ip/24"]
 
-    @mock.patch("generate_network_config_bookworm.configure_static_network", side_effect=mock_csn)
+    @mock.patch("generate_network_config.configure_static_network", side_effect=mock_csn)
     def test_get_wired_conn_file(self, csn_mock):
         def get(k):
             if k == "wired-type":
@@ -193,7 +193,7 @@ class TestCases(unittest.TestCase):
         template = get_wired_conn_file(c)
         assert template == wired_template.format("method=auto")
 
-    @mock.patch("generate_network_config_bookworm.configure_static_network", side_effect=mock_csn)
+    @mock.patch("generate_network_config.configure_static_network", side_effect=mock_csn)
     def test_get_wireless_conn_file(self, csn_mock):
         c = Mock()
 
@@ -237,7 +237,7 @@ class TestCases(unittest.TestCase):
         brd = calculate_brd_by_hand("192.168.1.24", 31)
         assert brd == "192.168.1.25"
 
-    @mock.patch("generate_network_config_bookworm.print")
+    @mock.patch("generate_network_config.print")
     def test_verify_broadcast_address(self, print_mock):
         c = Mock()
         c.get = Mock(side_effect=[None])
