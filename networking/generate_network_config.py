@@ -113,12 +113,22 @@ def get_wired_conn_file(config: ConfigGroup):
 def escape_backslashes_for_network_manager(value: str) -> str:
     return value.replace("\\", "\\\\")
 
+def ssid_to_byte_format(ssid: str) -> str:
+    """Convert SSID to semicolon-separated byte values if it contains non-ASCII characters."""
+    try:
+        ssid.encode('ascii')
+        return ssid  # All ASCII, return as-is
+    except UnicodeEncodeError:
+        # Contains non-ASCII characters, convert to byte format
+        return ";".join(str(byte) for byte in ssid.encode('utf-8'))
+
 def get_wireless_conn_file(config: ConfigGroup):
     uuid = UUID("acc6cf97-9575-4f41-ad85-65af044288df", version=4)
     ssid = config.get("wireless-ssid")
     psk = config.get("wireless-password")
     connect = "true" if config.get("wireless-network") else "false"
 
+    ssid = ssid_to_byte_format(ssid)
     ssid = escape_backslashes_for_network_manager(ssid)
     psk = escape_backslashes_for_network_manager(psk)
 
