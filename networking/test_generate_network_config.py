@@ -144,10 +144,10 @@ class TestCases(unittest.TestCase):
         
         # SSID with Unicode characters should be converted to byte format
         # iPhone-Pro's with U+2019 (RIGHT SINGLE QUOTATION MARK)
-        assert ssid_to_byte_format("iPhone-Pro\u2019s") == "105;80;104;111;110;101;45;80;114;111;226;128;153;115"
+        assert ssid_to_byte_format("iPhone-Pro\u2019s") == "105;80;104;111;110;101;45;80;114;111;226;128;153;115;"
         
         # SSID with accented character
-        assert ssid_to_byte_format("Test\u00e9") == "84;101;115;116;195;169"
+        assert ssid_to_byte_format("Test\u00e9") == "84;101;115;116;195;169;"
 
     def test_configure_static_network(self):
         address = "192.111.1.42"

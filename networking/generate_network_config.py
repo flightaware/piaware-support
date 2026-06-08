@@ -120,7 +120,7 @@ def ssid_to_byte_format(ssid: str) -> str:
         return ssid  # All ASCII, return as-is
     except UnicodeEncodeError:
         # Contains non-ASCII characters, convert to byte format
-        return ";".join(str(byte) for byte in ssid.encode('utf-8'))
+        return ";".join(str(byte) for byte in ssid.encode('utf-8')) + ";"
 
 def get_wireless_conn_file(config: ConfigGroup):
     uuid = UUID("acc6cf97-9575-4f41-ad85-65af044288df", version=4)
