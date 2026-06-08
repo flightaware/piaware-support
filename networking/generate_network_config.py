@@ -7,6 +7,7 @@ import os
 import stat
 import ipaddress
 import re
+import codecs
 
 SYS_CON_DIR = "/etc/NetworkManager/system-connections"
 
@@ -116,13 +117,15 @@ def ssid_to_byte_format(ssid: str) -> str:
     """Convert SSID to semicolon-separated byte values if it contains non-ASCII characters
     or escaped Unicode sequences like \\u2019.
     """
-    # First check for escaped Unicode sequences 
-    if bool(re.search(r'[^\u0000-\u007F]', ssid)):
-        return ";".join(str(byte) for byte in ssid.encode('utf-8')) + ";"
-    
-    # Then check for actual non-ASCII Unicode characters
+    try:
+        decoded_ssid = codecs.decode(ssid, 'unicode_escape')
+    except Exception:
+        decoded_ssid = ssid
+   
+    if bool(re.search(r'[^\x00-\x7F]', decoded_ssid)):
+        return ";".join(str(byte) for byte in decoded_ssid.encode('utf-8')) + ";"
     else:
-        return ssid  
+        return ssid
     
 def get_wireless_conn_file(config: ConfigGroup):
     uuid = UUID("acc6cf97-9575-4f41-ad85-65af044288df", version=4)
