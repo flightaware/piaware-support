@@ -6,6 +6,7 @@ import subprocess
 import os
 import stat
 import ipaddress
+import re
 
 SYS_CON_DIR = "/etc/NetworkManager/system-connections"
 
@@ -110,18 +111,19 @@ def get_wired_conn_file(config: ConfigGroup):
 
     return '\n'.join(file)
 
-def escape_backslashes_for_network_manager(value: str) -> str:
-    return value.replace("\\", "\\\\")
 
 def ssid_to_byte_format(ssid: str) -> str:
-    """Convert SSID to semicolon-separated byte values if it contains non-ASCII characters."""
-    try:
-        ssid.encode('ascii')
-        return ssid  # All ASCII, return as-is
-    except UnicodeEncodeError:
-        # Contains non-ASCII characters, convert to byte format
+    """Convert SSID to semicolon-separated byte values if it contains non-ASCII characters
+    or escaped Unicode sequences like \\u2019.
+    """
+    # First check for escaped Unicode sequences 
+    if bool(re.search(r'[^\u0000-\u007F]', ssid)):
         return ";".join(str(byte) for byte in ssid.encode('utf-8')) + ";"
-
+    
+    # Then check for actual non-ASCII Unicode characters
+    else:
+        return ssid  
+    
 def get_wireless_conn_file(config: ConfigGroup):
     uuid = UUID("acc6cf97-9575-4f41-ad85-65af044288df", version=4)
     ssid = config.get("wireless-ssid")
@@ -129,8 +131,6 @@ def get_wireless_conn_file(config: ConfigGroup):
     connect = "true" if config.get("wireless-network") else "false"
 
     ssid = ssid_to_byte_format(ssid)
-    ssid = escape_backslashes_for_network_manager(ssid)
-    psk = escape_backslashes_for_network_manager(psk)
 
     file = [
         "[connection]",

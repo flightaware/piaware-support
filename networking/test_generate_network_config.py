@@ -134,8 +134,6 @@ class TestCases(unittest.TestCase):
         with self.assertRaises(ValueError):
             get_prefix("255.1.1.1", None)
 
-    def test_escape_backslashes_for_network_manager(self):
-        assert escape_backslashes_for_network_manager("value with \\") == "value with \\\\"
 
     def test_ssid_to_byte_format(self):
         # ASCII SSID should remain unchanged
