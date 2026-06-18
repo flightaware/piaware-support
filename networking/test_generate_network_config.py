@@ -29,13 +29,13 @@ wireless_template = """[connection]
 id=wireless
 uuid=acc6cf97-9575-4f41-ad85-65af044288df
 type=wifi
-autoconnect=false
+autoconnect={}
 [wifi]
 mode=infrastructure
-ssid=jukka
+ssid={}
 [wifi-security]
 key-mgmt=wpa-psk
-psk=sirasti
+psk={}
 [ipv4]
 {}
 [ipv6]
@@ -193,13 +193,15 @@ class TestCases(unittest.TestCase):
         template = get_wired_conn_file(c)
         assert template == wired_template.format("method=auto")
 
-    @mock.patch("generate_network_config.configure_static_network", side_effect=mock_csn)
-    def test_get_wireless_conn_file(self, csn_mock):
+    @mock.patch("generate_network_config_bookworm.configure_static_network", side_effect=mock_csn)
+    def test_get_wireless_conn_file_when_enabled(self, csn_mock):
         c = Mock()
 
         valid_netmask = "255.255.255.0"
         def get(k):
-            if k == "wireless-type":
+            if k == "wireless-network":
+                return True
+            elif k == "wireless-type":
                 return "static"
             elif k == "wireless-ssid":
                 return "jukka"
@@ -208,16 +210,17 @@ class TestCases(unittest.TestCase):
             elif k == "wireless-address":
                 return "192.1.1.1"
             elif k == "wireless-netmask":
-                return return_netmask
+                return valid_netmask
             else:
                 return None
         c.get = Mock(side_effect=get)
-        return_netmask = valid_netmask
         template = get_wireless_conn_file(c)
-        assert template == wireless_template.format(f"{self.mock_csn()[0]}\nmethod=manual")
+        assert template == wireless_template.format("true", "jukka", "sirasti", f"{self.mock_csn()[0]}\nmethod=manual")
 
         def get(k):
-            if k == "wireless-type":
+            if k == "wireless-network":
+                return True
+            elif k == "wireless-type":
                 return "NetworkManager"
             elif k == "wireless-ssid":
                 return "jukka"
@@ -225,8 +228,46 @@ class TestCases(unittest.TestCase):
                 return "sirasti"
         c.get = Mock(side_effect=get)
         template = get_wireless_conn_file(c)
-        assert template == wireless_template.format("method=auto")
+        assert template == wireless_template.format("true", "jukka", "sirasti", "method=auto")
     
+    @mock.patch("generate_network_config_bookworm.configure_static_network", side_effect=mock_csn)
+    def test_get_wireless_conn_file_when_disabled(self, csn_mock):
+        c = Mock()
+
+        valid_netmask = "255.255.255.0"
+        def get(k):
+            if k == "wireless-network":
+                return False
+            elif k == "wireless-type":
+                return "static"
+            elif k == "wireless-ssid":
+                return "jukka"
+            elif k == "wireless-password":
+                return "sirasti"
+            elif k == "wireless-address":
+                return "192.1.1.1"
+            elif k == "wireless-netmask":
+                return valid_netmask
+            else:
+                return None
+        c.get = Mock(side_effect=get)
+        template = get_wireless_conn_file(c)
+        assert template == wireless_template.format("false", "", "", f"{self.mock_csn()[0]}\nmethod=manual")
+
+        def get(k):
+            if k == "wireless-network":
+                return False
+            elif k == "wireless-type":
+                return "NetworkManager"
+            elif k == "wireless-ssid":
+                return "jukka"
+            elif k == "wireless-password":
+                return "sirasti"
+        c.get = Mock(side_effect=get)
+        template = get_wireless_conn_file(c)
+        assert template == wireless_template.format("false", "", "", "method=auto")
+    
+
     def test_calculate_brd_by_hand(self):
         brd = calculate_brd_by_hand("192.168.1.24", 8)
         assert brd == "192.255.255.255"
