@@ -145,10 +145,10 @@ def get_wireless_conn_file(config: ConfigGroup):
     psk = config.get("wireless-password")
     connect = "true" if config.get("wireless-network") else "false"
 
+    ssid = build_ssid_value(ssid)
+    
     ssid = escape_backslashes_for_network_manager(ssid)
     psk = escape_backslashes_for_network_manager(psk)
-
-    ssid = build_ssid_value(ssid)
 
     file = [
         "[connection]",
