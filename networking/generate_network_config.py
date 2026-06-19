@@ -6,8 +6,34 @@ import subprocess
 import os
 import stat
 import ipaddress
+import re
+
+HEX_ESCAPE_RE = re.compile(r'\\x([0-9A-Fa-f]{2})')
 
 SYS_CON_DIR = "/etc/NetworkManager/system-connections"
+
+def is_escaped_essid(essid: str) -> bool:
+    """True if the ESSID contains at least one \\xHH hex escape sequence."""
+    return HEX_ESCAPE_RE.search(essid) is not None
+
+def bytes_to_nm_ssid_value(raw: bytes) -> str:
+    return ";".join(str(b) for b in raw) + ";"
+
+def unescape_regex(essid: str) -> bytes:
+    """
+    Only touch \\xHH sequences with a targeted regex substitution, leave
+    every other character exactly as-is, then encode the result as Latin-1
+    (a 1:1 char -> byte mapping) to recover the raw bytes.
+    """
+    unescaped_chars = HEX_ESCAPE_RE.sub(lambda m: chr(int(m.group(1), 16)), essid)
+    return unescaped_chars.encode("latin-1")
+
+def build_ssid_value(raw_essid_from_iwlist: str) -> str:
+    """Return the exact text to put after 'ssid=' in the .nmconnection file."""
+    if is_escaped_essid(raw_essid_from_iwlist):
+        raw_bytes = unescape_regex(raw_essid_from_iwlist)
+        return bytes_to_nm_ssid_value(raw_bytes)
+    return raw_essid_from_iwlist
 
 def calculate_brd_by_hand(address: str, netmask: str) -> str:
     return format(ipaddress.IPv4Network(f"{address}/{netmask}", strict=False).broadcast_address)
@@ -121,6 +147,8 @@ def get_wireless_conn_file(config: ConfigGroup):
 
     ssid = escape_backslashes_for_network_manager(ssid)
     psk = escape_backslashes_for_network_manager(psk)
+
+    ssid = build_ssid_value(ssid)
 
     file = [
         "[connection]",
