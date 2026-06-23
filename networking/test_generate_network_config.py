@@ -193,7 +193,7 @@ class TestCases(unittest.TestCase):
         template = get_wired_conn_file(c)
         assert template == wired_template.format("method=auto")
 
-    @mock.patch("generate_network_config_bookworm.configure_static_network", side_effect=mock_csn)
+    @mock.patch("generate_network_config.configure_static_network", side_effect=mock_csn)
     def test_get_wireless_conn_file_when_enabled(self, csn_mock):
         c = Mock()
 
@@ -241,7 +241,7 @@ class TestCases(unittest.TestCase):
         template = get_wireless_conn_file(c)
         assert template == wireless_template.format("false", "", "", "method=auto")
     
-    @mock.patch("generate_network_config_bookworm.configure_static_network", side_effect=mock_csn)
+    @mock.patch("generate_network_config.configure_static_network", side_effect=mock_csn)
     def test_get_wireless_conn_file_when_disabled(self, csn_mock):
         c = Mock()
 
