@@ -357,7 +357,7 @@ class ConfigFile():
             key = key.lower()
             setting = self._metadata.get_setting(key)
             if setting.deprecated:
-                print(f"{self._filename}:{idx}: option {key} is deprecated.")
+                sys.stderr.write(f"{self._filename}:{idx}: option {key} is deprecated.")
             if val != "":
                 if not self._metadata.validate_value(key, val):
                     raise ValueError(f"{self._filename}:{idx}: invalid value for option {key}:{val}")

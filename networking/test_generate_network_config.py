@@ -229,6 +229,17 @@ class TestCases(unittest.TestCase):
         c.get = Mock(side_effect=get)
         template = get_wireless_conn_file(c)
         assert template == wireless_template.format("true", "jukka", "sirasti", "method=auto")
+
+        def get(k):
+            if k == "wireless-network":
+                return True
+            elif k == "wireless-type":
+                return "NetworkManager"
+            elif k == "wireless-password":
+                return "sirasti"
+        c.get = Mock(side_effect=get)
+        template = get_wireless_conn_file(c)
+        assert template == wireless_template.format("false", "", "", "method=auto")
     
     @mock.patch("generate_network_config_bookworm.configure_static_network", side_effect=mock_csn)
     def test_get_wireless_conn_file_when_disabled(self, csn_mock):

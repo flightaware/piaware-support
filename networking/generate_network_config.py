@@ -115,20 +115,17 @@ def escape_backslashes_for_network_manager(value: str) -> str:
 
 def get_wireless_conn_file(config: ConfigGroup):
     uuid = UUID("acc6cf97-9575-4f41-ad85-65af044288df", version=4)
+    ssid = ""
+    psk = ""
+    connect = "false"
+
     if config.get("wireless-network"):
-        if not config.get("wireless-ssid"):
-            raise Exception("wireless-network set to yes, but wireless-ssid not set")
-        if not config.get("wireless-password"):
-            raise Exception("wireless-network set to yes, but wireless-password not set")
-
-        ssid = escape_backslashes_for_network_manager(config.get("wireless-ssid"))
-        psk = escape_backslashes_for_network_manager(config.get("wireless-password"))
-
-        connect = "true"
-    else:
-        ssid = ""
-        psk = ""
-        connect = "false"
+        if config.get("wireless-ssid") and config.get("wireless-password"):
+            ssid = escape_backslashes_for_network_manager(config.get("wireless-ssid"))
+            psk = escape_backslashes_for_network_manager(config.get("wireless-password"))
+            connect = "true"
+        else:
+            print("Missing either wireless-ssid or wireless-password. Setting connect to false.")
 
     file = [
         "[connection]",
