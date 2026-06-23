@@ -7,3 +7,4 @@ splashscreen/rpi-logo.png
 .DS_Store
 /scripts/__pycache__
 /tests/__pycache__
+*.pyc
