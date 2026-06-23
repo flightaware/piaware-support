@@ -157,6 +157,29 @@ proc generate_dump1090_config {config} {
 			dict set opts NET_BEAST_OUTPUT_PORTS {}
 		}
 
+		pg2sdr {
+			dict set opts ENABLED yes
+			dict set opts RECEIVER soapy
+
+			set serial [$config get pg2sdr-serial]
+			if {$serial eq ""} {
+			    dict lappend opts EXTRA_OPTIONS "--device" "driver=pg2sdr"
+			} else {
+			    dict lappend opts EXTRA_OPTIONS "--device" "driver=pg2sdr,serial=$serial"
+			}
+
+			dict lappend opts EXTRA_OPTIONS "--device-setting" "decimation=2"
+
+			set gain [$config get pg2sdr-gain]
+			if {$gain eq "max"} {
+				dict set opts RECEIVER_GAIN 100
+			} else {
+				dict set opts RECEIVER_GAIN $gain
+			}
+
+			dict set opts NET_BEAST_OUTPUT_PORTS 30005
+		}
+
 		none - other {
 			dict set opts ENABLED no
 		}
