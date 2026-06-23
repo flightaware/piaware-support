@@ -30,7 +30,7 @@ PIAWARE_CONFIG_ENUMS = {
                 "SK","SL","SM","SN","SO","SR","SS","ST","SV","SX","SY","SZ","TC","TD","TF","TG","TH","TJ","TK","TL",
                 "TM","TN","TO","TR","TT","TV","TW","TZ","UA","UG","UM","US","UY","UZ","VA","VC","VE","VG","VI","VN",
                 "VU","WF","WS","YE","YT","ZA","ZM","ZW","00" ],
-    RECEIVER: ["rtlsdr", "sdr", "bladerf", "beast", "relay", "radarcape", "radarcape-local", "other", "none"],
+    RECEIVER: ["rtlsdr", "sdr", "bladerf", "beast", "relay", "radarcape", "radarcape-local", "pg2sdr", "other", "none"],
     UAT_RECEIVER: ["sdr", "stratuxv3", "other", "none"],
     NETWORK_TYPE: ["static", "dhcp"],
     SLOW_CPU: ["yes", "no", "auto"],
