@@ -226,7 +226,71 @@ class TestCases(unittest.TestCase):
         c.get = Mock(side_effect=get)
         template = get_wireless_conn_file(c)
         assert template == wireless_template.format("method=auto")
-    
+
+    @mock.patch("generate_network_config.configure_static_network", side_effect=mock_csn)
+    def test_get_wireless_conn_file_ascii_ssid(self, csn_mock):
+        """Test ASCII-only SSID like 'MyNetwork' from iwlist."""
+        c = Mock()
+
+        def get(k):
+            if k == "wireless-type":
+                return "dhcp"
+            elif k == "wireless-ssid":
+                return "MyNetwork"  # ASCII SSID
+            elif k == "wireless-password":
+                return "password123"
+            else:
+                return None
+        c.get = Mock(side_effect=get)
+
+        template = get_wireless_conn_file(c)
+        # Verify ssid=MyNetwork appears in output (ASCII SSIDs pass through unchanged)
+        assert "ssid=MyNetwork" in template
+        assert "psk=password123" in template
+        assert "method=auto" in template
+
+    @mock.patch("generate_network_config.configure_static_network", side_effect=mock_csn)
+    def test_get_wireless_conn_file_mixed_ssid(self, csn_mock):
+        """Test mixed ASCII and non-ASCII SSID."""
+        c = Mock()
+
+        def get(k):
+            if k == "wireless-type":
+                return "dhcp"
+            elif k == "wireless-ssid":
+                # München in UTF-8 hex escapes (as iwlist would output)
+                return r"M\xC3\xBCnchen"
+            elif k == "wireless-password":
+                return "password123"
+            else:
+                return None
+        c.get = Mock(side_effect=get)
+
+        template = get_wireless_conn_file(c)
+        # Verify ssid=77;195;188;110;99;104;101;110; (byte values for München)
+        assert "ssid=77;195;188;110;99;104;101;110;" in template
+
+    @mock.patch("generate_network_config.configure_static_network", side_effect=mock_csn)
+    def test_get_wireless_conn_file_non_ascii_ssid(self, csn_mock):
+        """Test non-ASCII SSID from iwlist hex-escaped output."""
+        c = Mock()
+
+        def get(k):
+            if k == "wireless-type":
+                return "dhcp"
+            elif k == "wireless-ssid":
+                # "😂" -(non-ASCII) 
+                return r"\xF0\x9F\x98\x82"
+            elif k == "wireless-password":
+                return "password123"
+            else:
+                return None
+        c.get = Mock(side_effect=get)
+
+        template = get_wireless_conn_file(c)
+        # Verify correct byte conversion for mixed SSID
+        assert "ssid=240;159;152;130;" in template
+
     def test_calculate_brd_by_hand(self):
         brd = calculate_brd_by_hand("192.168.1.24", 8)
         assert brd == "192.255.255.255"
