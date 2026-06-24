@@ -299,7 +299,7 @@ class TestCases(unittest.TestCase):
 
         c.get = Mock(side_effect=["192.111.1.255", None])
         verify_broadcast_address("wireless", c)
-        print_mock.assert_called_with("Tried to verify broadcast address, but static IP was not set.")
+        print_mock.assert_called_with("Tried to verify wireless broadcast address, but static IP was not set.")
         assert print_mock.call_count == 1
         assert c.get.call_count == 2
 

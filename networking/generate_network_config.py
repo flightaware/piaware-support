@@ -18,7 +18,7 @@ def verify_broadcast_address(network: str, config: ConfigGroup) -> bool:
         return
     address = config.get(f"{network}-address")
     if address is None:
-        print(f"Tried to verify broadcast address, but static IP was not set.")
+        print(f"Tried to verify {network} broadcast address, but static IP was not set.")
         return
 
     nm = get_prefix(address, config.get(f"{network}-netmask"))
