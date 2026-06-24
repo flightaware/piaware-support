@@ -28,7 +28,7 @@ def unescape_regex(essid: str) -> bytes:
     unescaped_chars = HEX_ESCAPE_RE.sub(lambda m: chr(int(m.group(1), 16)), essid)
     return unescaped_chars.encode("latin-1")
 
-def build_ssid_value(raw_essid_from_iwlist: str) -> str:
+def escaped_hex_to_bytes_string(raw_essid_from_iwlist: str) -> str:
     """Return the exact text to put after 'ssid=' in the .nmconnection file."""
     if is_escaped_essid(raw_essid_from_iwlist):
         raw_bytes = unescape_regex(raw_essid_from_iwlist)
@@ -145,7 +145,7 @@ def get_wireless_conn_file(config: ConfigGroup):
     psk = config.get("wireless-password")
     connect = "true" if config.get("wireless-network") else "false"
 
-    ssid = build_ssid_value(ssid)
+    ssid = escaped_hex_to_bytes_string(ssid)
     
     ssid = escape_backslashes_for_network_manager(ssid)
     psk = escape_backslashes_for_network_manager(psk)
