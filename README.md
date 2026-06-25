@@ -18,6 +18,6 @@ sdcard image:
 
 `pip install pytest`
 `pip install coverage`
-run `python3 -m pytest`
-run `coverage run -m pytest`
-run `coverage html`
+In root, run `python3 -m pytest`
+In root, run `coverage run -m pytest`
+In root, run `coverage html`

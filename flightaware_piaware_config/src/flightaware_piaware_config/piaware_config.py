@@ -306,10 +306,10 @@ class ConfigFile():
     def check_value(self, key: str, value: str) -> None:
         # Emit warning if there's a backslash in a quoted values
         if (re.search(r'".*\\.*"', value)):
-            sys.stderr.write(f"WARNING: Make sure your backslash is escaped or modifying something for key: {key}.\n")
+            print(f"WARNING: Make sure your backslash is escaped or modifying something for key: {key}.\n", file=sys.stderr)
         # Emits warning if there's an unescaped " that's enclosed within quotes
         if re.search(r'".*[^\\]".*"', value):
-            sys.stderr.write(f'WARNING: Do you have an unescaped " that\'s been quoted for key: {key}?\n')
+            print(f'WARNING: Do you have an unescaped " that\'s been quoted for key: {key}?\n', file=sys.stderr)
 
     def parse_line(self, line: str) -> tuple | None:
         # Line is empty except for comment
@@ -357,7 +357,7 @@ class ConfigFile():
             key = key.lower()
             setting = self._metadata.get_setting(key)
             if setting.deprecated:
-                raise ValueError(f"{self._filename}:{idx}: option {key} is deprecated.")
+                print(f"{self._filename}:{idx}: option {key} is deprecated.\n", file=sys.stderr)
             if val != "":
                 if not self._metadata.validate_value(key, val):
                     raise ValueError(f"{self._filename}:{idx}: invalid value for option {key}:{val}")

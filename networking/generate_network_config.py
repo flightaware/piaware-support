@@ -18,7 +18,7 @@ def verify_broadcast_address(network: str, config: ConfigGroup) -> bool:
         return
     address = config.get(f"{network}-address")
     if address is None:
-        print(f"Tried to verify broadcast address, but static IP was not set.")
+        print(f"Tried to verify {network} broadcast address, but static IP was not set.")
         return
 
     nm = get_prefix(address, config.get(f"{network}-netmask"))
@@ -115,12 +115,17 @@ def escape_backslashes_for_network_manager(value: str) -> str:
 
 def get_wireless_conn_file(config: ConfigGroup):
     uuid = UUID("acc6cf97-9575-4f41-ad85-65af044288df", version=4)
-    ssid = config.get("wireless-ssid")
-    psk = config.get("wireless-password")
-    connect = "true" if config.get("wireless-network") else "false"
+    ssid = ""
+    psk = ""
+    connect = "false"
 
-    ssid = escape_backslashes_for_network_manager(ssid)
-    psk = escape_backslashes_for_network_manager(psk)
+    if config.get("wireless-network"):
+        if config.get("wireless-ssid") and config.get("wireless-password"):
+            ssid = escape_backslashes_for_network_manager(config.get("wireless-ssid"))
+            psk = escape_backslashes_for_network_manager(config.get("wireless-password"))
+            connect = "true"
+        else:
+            print("Missing either wireless-ssid or wireless-password. Setting connect to false.")
 
     file = [
         "[connection]",
