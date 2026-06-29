@@ -1,7 +1,7 @@
 from unittest import mock
 import os
 import unittest
-from flightaware_piaware_config.src.flightaware_piaware_config.piaware_config import *
+from flightaware_piaware_config.piaware_config import *
 from uuid import UUID
 
 class TestMetadataSettings(unittest.TestCase):
@@ -19,7 +19,7 @@ class TestMetadata(unittest.TestCase):
     def test_get_setting(self):
         testm = Metadata()
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             testm.get_setting("doesnt exist")
 
         exists = testm.get_setting("use-gpsd")
@@ -123,7 +123,7 @@ class TestMetadata(unittest.TestCase):
         assert testm.parse_value("feeder-id", "e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c") == UUID("e8a2fe66-8ecd-4b91-b6d5-7700a6fe3e1c", version=4)
         assert testm.parse_value("rtlsdr-gain", "-10") == "max"
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             testm.parse_value("test", "dne")
 
     def test_validate_value(self):
@@ -142,18 +142,132 @@ class TestMetadata(unittest.TestCase):
         for t in tests:
             assert t == True
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             testm.validate_value("test", "dne")
 
-class TestConfigFile(unittest.TestCase):
+class TestConfigParser(unittest.TestCase):
+    def test_parse_value(self):
+        assert parse_config_value("") == ""
+        assert parse_config_value("\"thing\"") == "thing"
+        assert parse_config_value("commented  # 1 23 ") == "commented"
 
+        assert parse_config_value("\"commented  1\"# 1 23 ") == "commented  1"
+        assert parse_config_value("\"commented\\s  1\"# 1 23 ") == "commenteds  1"
+
+        # pass'word
+        assert parse_config_value("pass'word") == "pass'word"
+
+        # pass"word
+        assert parse_config_value('pass"word') == 'pass"word'
+
+        ### Escape special characters in quotes/ticks
+        # "commented\s\1"
+        assert parse_config_value(r'"commented\s\1"') == "commenteds1"
+
+        # "back \ slash"
+        assert parse_config_value(r'"back \\ slash"') == r"back \ slash"
+
+        # "some " thing"
+        assert parse_config_value(r'"some \" thing"') == r'some " thing'
+
+        # "some \" thing"
+        assert parse_config_value(r'"some \\\" thing"') == r'some \" thing'
+
+        # "some ' thing"
+        assert parse_config_value("\"some \' thing\"") == "some ' thing"
+
+        # 'commented\s\1'
+        assert parse_config_value(r"'commented\s\1'") == "commenteds1"
+
+        # 'back \ slash'
+        assert parse_config_value(r"'back \\ slash'") == r"back \ slash"
+
+        # 'some " thing'
+        assert parse_config_value(r"'some \" thing'") == r'some " thing'
+
+        # tick' mark
+        assert parse_config_value(r"'tick\' mark'") == "tick' mark"
+
+        # Te!st"\pas\s
+        assert parse_config_value(r'"Te!st\"\\pas\\s"') == r'Te!st"\pas\s'
+
+        ### Bad Cases
+        assert parse_config_value(r'"input with "unescaped quote"') == "input with "
+        assert parse_config_value(r'"input with \ backslash"') == "input with  backslash"
+
+    def test_parse_line(self):
+        # a test wrapper around parse_config_line to capture any calls
+        # to the warning function and return a "saw warning" flag as
+        # part of the returned tuple
+        def _parse(line):
+            saw_warning = False
+            def warn(msg: str):
+                nonlocal saw_warning
+                saw_warning = True
+            key, val = parse_config_line(line, warn)
+            return key, val, saw_warning
+
+        key, val, warning = _parse("  option      # whiteout entry, updated by fa_piaware_config in settings")
+        assert key == "option"
+        assert val == ""
+        assert not warning
+
+        key, val, warning = _parse("  option   \"yes\"    # updated by fa_piaware_config in settings")
+        assert key == "option"
+        assert val == "yes"
+        assert not warning
+
+        assert parse_config_line("    # commented") is None
+        key, val, warning = _parse("option ")
+        assert key == "option"
+        assert val == ""
+        assert not warning
+
+        key, val, warning = _parse("option yes")
+        assert key == "option"
+        assert val == "yes"
+        assert not warning
+
+        key, val, warning = _parse("option \"yes\"")
+        assert key == "option"
+        assert val == "yes"
+        assert not warning
+
+        key, val, warning = _parse("option \"   yes   \"")
+        assert key == "option"
+        assert val == "   yes   "
+        assert not warning
+
+        key, val, warning = _parse("   option \"   yes   \" # comment")
+        assert key == "option"
+        assert val == "   yes   "
+        assert not warning
+
+        key, val, warning = _parse(r'   option \  yes  # comment')
+        assert key == "option"
+        assert val == r"\  yes"
+        assert not warning
+
+        # Test Cases should print out warnings
+
+        key, val, warning = _parse(r'   option   " \  yes   " # comment')
+        assert key == "option"
+        assert val == "   yes   "
+        assert warning
+
+        key, val, warning = _parse(r'   option   \  " y"es " # comment')
+        assert key == "option"
+        assert val == r'\  " y"es "'
+        assert warning
+
+class TestConfigFile(unittest.TestCase):
     def mock_config_file(*args):
         class Example:
             def __enter__(self):
-                return ["image-type image\n", 
-                "adaptive-min-gain -1\n" , 
-                "manage-config 1232\n", 
-                "adept-serverport 2\n", 
+                return ["image-type image\n",
+                "adaptive-min-gain -1\n",
+                "manage-config 1232\n",
+                "adept-serverport 2\n",
                 "adept-serverport 5\n",
                 "wireless-netmask 255.255.255.0\n",
                 "adept-serverhosts test.usa.flightaware.com\n",
@@ -167,7 +281,7 @@ class TestConfigFile(unittest.TestCase):
 
     @mock.patch("builtins.open", side_effect=mock_config_file)
     def test_read_config_into_list(self, open_mock):
-        f = ConfigFile("test.txt")        
+        f = ConfigFile("test.txt")
         l = f.read_config_into_list()
         assert len(l) == 8
         assert l[0] == "image-type image"
@@ -179,142 +293,34 @@ class TestConfigFile(unittest.TestCase):
         assert l[6] =="adept-serverhosts test.usa.flightaware.com"
         assert l[7] =="use-gpsd"
 
-
-    def test_process_quotes(self):
-        testc = ConfigFile("file")
-
-        assert testc.process_quotes("") == ""
-        assert testc.process_quotes("\"thing\"") == "thing"
-        assert testc.process_quotes("commented  # 1 23 ") == "commented"
-
-        assert testc.process_quotes("\"commented  1\"# 1 23 ") == "commented  1"
-        assert testc.process_quotes("\"commented\\s  1\"# 1 23 ") == "commenteds  1"
-
-        # pass'word
-        assert testc.process_quotes("pass'word") == "pass'word"
-
-        # pass"word
-        assert testc.process_quotes('pass"word') == 'pass"word'
-
-        ### Escape special characters in quotes/ticks
-        # "commented\s\1"
-        assert testc.process_quotes(r'"commented\s\1"') == "commenteds1"
-
-        # "back \ slash"
-        assert testc.process_quotes(r'"back \\ slash"') == r"back \ slash"
-
-        # "some " thing"
-        assert testc.process_quotes(r'"some \" thing"') == r'some " thing'
-
-        # "some \" thing"
-        assert testc.process_quotes(r'"some \\\" thing"') == r'some \" thing'
-
-        # "some ' thing"
-        assert testc.process_quotes("\"some \' thing\"") == "some ' thing"
-
-        # 'commented\s\1'
-        assert testc.process_quotes(r"'commented\s\1'") == "commenteds1"
-
-        # 'back \ slash'
-        assert testc.process_quotes(r"'back \\ slash'") == r"back \ slash"
-
-        # 'some " thing'
-        assert testc.process_quotes(r"'some \" thing'") == r'some " thing'
-
-        # tick' mark
-        assert testc.process_quotes(r"'tick\' mark'") == "tick' mark"
-
-        # Te!st"\pas\s
-        assert testc.process_quotes(r'"Te!st\"\\pas\\s"') == r'Te!st"\pas\s'
-
-        ### Bad Cases
-        assert testc.process_quotes(r'"input with "unescaped quote"') == "input with "
-        assert testc.process_quotes(r'"input with \ backslash"') == "input with  backslash"
-
-    def test_parse_line(self):
-        testm = Metadata()
-        testm.settings["option"] = MetadataSettings(StrProcessor)
-        testc = ConfigFile("file", metadata = testm)
-
-        key, val = testc.parse_line("  option      # whiteout entry, updated by fa_piaware_config in settings")
-        assert key == "option"
-        assert val == ""
-
-        key, val = testc.parse_line("  option   \"yes\"    # updated by fa_piaware_config in settings")
-        assert key == "option"
-        assert val == "yes"
-
-        assert testc.parse_line("    # commented") is None
-        key, val = testc.parse_line("option ")
-        assert key == "option"
-        assert val == ""
-
-        key, val = testc.parse_line("option yes")
-        assert key == "option"
-        assert val == "yes"
-
-        key, val = testc.parse_line("option \"yes\"")
-        assert key == "option"
-        assert val == "yes"
-
-        key, val = testc.parse_line("option \"   yes   \"")
-        assert key == "option"
-        assert val == "   yes   "
-
-        key, val = testc.parse_line("   option \"   yes   \" # comment")
-        assert key == "option"
-        assert val == "   yes   "
-
-        key, val = testc.parse_line(r'   option \  yes  # comment')
-        assert key == "option"
-        assert val == r"\  yes"
-
-        # Test Cases should print out warnings
-
-        key, val = testc.parse_line(r'   option   " \  yes   " # comment')
-        assert key == "option"
-        assert val == "   yes   "
-
-        key, val = testc.parse_line(r'   option   \  " y"es " # comment')
-        assert key == "option"
-        assert val == r'\  " y"es "'
-
     def test_parse_config_from_list(self):
         testm = Metadata()
         testm.settings["test"] = MetadataSettings(IntegerProcessor, deprecated=True)
 
-        test_cases = [
-            {
-                "config": [
-                    "wireless-netmask 255.255.255.0",
-                    "doesnt_exist nothing"
-                ],
-                "raises_error": True,
-                "error_type": ValueError
-            },
-            {
-                "config": [
-                    "wireless-netmask 255.255.255.0",
-                    "test nothing"
-                ],
-                "raises_error": True,
-                "error_type": ValueError
-            },
-            {
-                "config": [
-                    "wireless-netmask 255.255.255.0",
-                    "rfkill not_bool"
-                ],
-                "raises_error": True,
-                "error_type": ValueError
-            }
+        warning_test_cases = [
+            # unknown option
+            [ "doesnt_exist nothing" ],
+            # deprecated option
+            [ "test 42" ],
+            # invalid option value
+            [ "rfkill not_bool" ],
+            # duplicated option
+            [ "rfkill yes",
+              "rfkill no" ]
         ]
 
-        for test in test_cases:
+        for testcase in warning_test_cases:
             f = ConfigFile("file", metadata = testm)
-            if test["raises_error"]:
-                with self.assertRaises(test["error_type"]):
-                    f.parse_config_from_list(test["config"])
+
+            # patch in a replacement for ConfigFile.warn()
+            saw_warning = False
+            def capture_warning(lineno, msg):
+                nonlocal saw_warning
+                saw_warning = True
+            f.warn = capture_warning
+
+            f.parse_config_from_list(testcase)
+            assert saw_warning
 
         f = ConfigFile("file", metadata = Metadata())
         f.parse_config_from_list([
@@ -339,7 +345,6 @@ class TestConfigFile(unittest.TestCase):
         assert f.get("allow-ble-setup") == "yes"
 
 class TestConfigGroup(unittest.TestCase):
-
     def default_config_data(self):
         return ["image-type image", "adaptive-min-gain -1"]
 
