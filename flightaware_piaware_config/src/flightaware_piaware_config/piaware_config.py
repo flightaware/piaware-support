@@ -39,7 +39,7 @@ PIAWARE_CONFIG_ENUMS = {
 PIAWARE_IMAGE_CONF = "/usr/share/piaware-support/piaware-image-config.txt"
 PIAWARE_CONF = "/etc/piaware.conf"
 BOOT_PIAWARE_CONF = "/boot/firmware/piaware-config.txt"
-WHITEOUT = "WHITEOUT"
+WHITEOUT = object()
 
 class EnumProcessor():
     def __init__(self, enum: str):
@@ -389,7 +389,7 @@ class ConfigGroup():
     def get(self, setting_key: str) -> any:
         for file in self.files:
             val = file.get(setting_key)
-            if val == WHITEOUT:
+            if val is WHITEOUT:
                 break
             if val is not None:
                 return val
