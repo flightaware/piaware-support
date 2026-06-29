@@ -378,13 +378,18 @@ class ConfigGroup():
             file.load_config_from_file()
 
     def get(self, setting_key: str) -> any:
-        for file in self.files:
-            val = file.get(setting_key)
+        for config_file in self.files:
+            val = config_file.get(setting_key)
+            if val is None:
+                # no setting for that key in this file, continue search
+                continue
+
             if val is WHITEOUT:
+                # explicit whiteout, use default
                 break
-            if val is not None:
-                return val
-        
+
+            return val
+
         return self._metadata.get_setting(setting_key).default
 
 # Create a standard piaware config group from these 3 default locations.
