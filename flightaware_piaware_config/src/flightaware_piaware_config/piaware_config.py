@@ -241,23 +241,14 @@ class Metadata():
     }
 
     def get_setting(self, key: str) -> MetadataSettings:
-        if key not in self.settings:
-            raise ValueError(f"Getting {key}. Could not find {key} in settings")
-        
-        return self.settings[key]
+        return self.settings[key]     # might raise KeyError
     
     def parse_value(self, key: str, val: str) -> any:
-        if key not in self.settings:
-            raise ValueError(f"Parsing value {val} for setting {key}. Could not find {key} in settings")
-
-        setting = self.settings[key]
+        setting = self.settings[key]  # might raise KeyError
         return setting.processor.parse(val)
 
     def validate_value(self, key: str, val: str) -> bool:
-        if key not in self.settings:
-            raise ValueError(f"Validating value {val} for setting {key}. Could not find {key} in settings")
-
-        setting = self.settings[key]
+        setting = self.settings[key]  # might raise KeyError
         return setting.processor.validate(val)
 
 class ConfigFile():
