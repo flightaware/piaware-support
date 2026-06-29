@@ -8,6 +8,7 @@ import re
 import os
 import sys
 from ipaddress import IPv4Network, NetmaskValueError
+from typing import Callable
 
 COUNTRY = "country"
 RECEIVER = "receiver"
@@ -251,6 +252,71 @@ class Metadata():
         setting = self.settings[key]  # might raise KeyError
         return setting.processor.validate(val)
 
+    
+def parse_config_line(line: str, warn: Callable[[str],None] = lambda x:None) -> tuple | None:
+    # Line is empty except for comment
+    if re.search(r"^\s*#.*", line):
+        return None
+
+    # Line has key but no value. Plus optional comment
+    option_line = re.search(r"^\s*([a-zA-Z0-9_-]+)\s*(?:#.*)?$", line)
+    if option_line:
+        return (option_line.group(1), "")
+
+    # Line has key + value. Plus optional comment.
+    option_line = re.search(r"^\s*([a-zA-Z0-9_-]+)\s+(.+)$", line)
+    if option_line:
+        key = option_line.group(1)
+        value = option_line.group(2)
+
+        # Emit warning if there's a backslash in a quoted values
+        if (re.search(r'".*\\.*"', value)):
+            warn(f'Make sure your backslash is escaped or modifying something for key: {key}.')
+        # Emits warning if there's an unescaped quote that's enclosed within quotes
+        if re.search(r'".*[^\\]".*"', value):
+            warn(f'Do you have an unescaped " that\'s been quoted for key: {key}?')
+
+        return (key, parse_config_value(value))
+
+    return None
+
+def parse_config_value(value: str) -> str:
+    value = value.strip()
+
+    if len(value) == 0:
+        return value
+
+    if value[0] != '"' and value[0] != "'":
+        # Unquoted value
+        comment_index = value.find("#")
+        if comment_index == -1:
+            return value
+        else:
+            return value[0:comment_index].strip()
+
+    # Quoted value with escape processing
+    val = ""
+    esc = False
+    terminating_char = value[0]
+
+    for i in range(1, len(value)):
+        char = value[i]
+        if esc:
+            val += char
+            esc = False
+            continue
+
+        if char == terminating_char:
+            break
+
+        if char == "\\":
+            esc = True
+            continue
+
+        val += char
+
+    return val
+
 class ConfigFile():
     def __init__(self, filename: str, metadata: Metadata = None, priority: int =0, readonly: bool = True) -> None:
         self._metadata = metadata
@@ -258,74 +324,13 @@ class ConfigFile():
         self._readonly = readonly
         self._filename = filename
         self.values = {}
-    
-    def process_quotes(self, line: str) -> str:
-        line = line.strip()
-
-        if len(line) == 0:
-            return line
-
-
-        if line[0] != '"' and line[0] != "'":
-            comment_index = line.find("#")
-            if comment_index == -1:
-                return line
-            else:
-                return line[0:comment_index].strip()
-
-        val = ""
-        esc = False
-        terminating_char = line[0]
-
-        for i in range(1, len(line)):
-            char = line[i]
-            if esc:
-                val += char
-                esc = False
-                continue
-
-            if char == terminating_char:
-                break
-
-            if char == "\\":
-                esc = True
-                continue
-            val += char
-
-        return val
-
-    def check_value(self, key: str, value: str) -> None:
-        # Emit warning if there's a backslash in a quoted values
-        if (re.search(r'".*\\.*"', value)):
-            print(f"WARNING: Make sure your backslash is escaped or modifying something for key: {key}.\n", file=sys.stderr)
-        # Emits warning if there's an unescaped " that's enclosed within quotes
-        if re.search(r'".*[^\\]".*"', value):
-            print(f'WARNING: Do you have an unescaped " that\'s been quoted for key: {key}?\n', file=sys.stderr)
-
-    def parse_line(self, line: str) -> tuple | None:
-        # Line is empty except for comment
-        if re.search(r"^\s*#.*", line):
-            return None
-        # Line has key but no value. Plus optional comment
-        option_line = re.search(r"^\s*([a-zA-Z0-9_-]+)\s*(?:#.*)?$", line)
-        if option_line:
-            return (option_line.group(1), "")
-        # Line has key + value. Plus optional comment.
-        option_line = re.search(r"^\s*([a-zA-Z0-9_-]+)\s+(.+)$", line)
-        if option_line:
-            key = option_line.group(1)
-            value = option_line.group(2)
-            self.check_value(key, value)
-            return (key, self.process_quotes(value))
-
-        return None
 
     def get(self, setting_key: str) -> any:
-        if setting_key in self.values:
-            return self.values[setting_key]
-        else:
-            return None
-    
+        return self.values.get(setting_key, None)
+
+    def warn(self, lineno: int, msg: str) -> None:
+        print(f'{self._filename}:{lineno}: warning: {msg}', file=sys.stderr)
+
     def load_config_from_file(self) -> None:
         config = self.read_config_into_list()
         self.parse_config_from_list(config)
@@ -339,26 +344,36 @@ class ConfigFile():
         return return_value
 
     def parse_config_from_list(self, config) -> None:
-        for idx, line in enumerate(config):
-            l = self.parse_line(line)
+        for lineno, line in enumerate(config, start=1):
+            warn = lambda msg: self.warn(lineno, msg)
+
+            l = parse_config_line(line)
             if not l:
                 continue
             
             key, val = l
             key = key.lower()
-            setting = self._metadata.get_setting(key)
-            if setting.deprecated:
-                print(f"{self._filename}:{idx}: option {key} is deprecated.\n", file=sys.stderr)
-            if val != "":
-                if not self._metadata.validate_value(key, val):
-                    raise ValueError(f"{self._filename}:{idx}: invalid value for option {key}:{val}")
+            try:
+                setting = self._metadata.get_setting(key)
+            except KeyError:
+                warn(f"unknown option {key} ignored")
+                continue
 
-                if key in self.values:
-                    print(f"{self._filename}:{idx}: {key} with value {val} overrides an existing instance of {key}")
-                self.values[key] = self._metadata.parse_value(key, val)
-            else:
+            if setting.deprecated:
+                warn(f"option {key} is deprecated")
+            if key in self.values:
+                warn("duplicated option {key}")
+
+            if val == "":
+                # Whiteout entry (force use of default)
                 self.values[key] = WHITEOUT
-                        
+                continue
+
+            if not self._metadata.validate_value(key, val):
+                warn(f"invalid value for option {key}:{val}, option ignored")
+                continue
+
+            self.values[key] = self._metadata.parse_value(key, val)
 
 class ConfigGroup():
     files: list[ConfigFile]
