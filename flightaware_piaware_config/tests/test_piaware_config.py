@@ -329,7 +329,7 @@ class TestConfigFile(unittest.TestCase):
             "allow-ble-setup yes"
         ])
         assert f.get("wireless-netmask") == "255.255.255.0"
-        assert f.get("rkfill") is None
+        assert f.get("rfkill") is WHITEOUT
         assert f.get("image-type") == "image"
         assert f.get("adaptive-min-gain") == -12.12
         assert f.get("adept-serverhosts") == "test.usa.flightaware.com"
