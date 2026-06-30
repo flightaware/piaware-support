@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 import re
 import os
 import sys
+import io
 from ipaddress import IPv4Network, NetmaskValueError
 from typing import Callable
 
@@ -58,11 +59,37 @@ class EnumProcessor():
 class StrProcessor():
     @staticmethod
     def validate(val) -> bool:
-        return True
+        # Regular string values should be 7-bit ASCII only
+        try:
+            val.encode('us-ascii', errors='strict')
+        except ValueError:
+            return False
+        else:
+            return True
 
     @staticmethod
     def parse(val) -> str:
         return val
+
+class BytesProcessor:
+    @staticmethod
+    def validate(val: str) -> bool:
+        # Anything outside U+0000 .. U+00FF isn't valid here
+        # (Should never happen with a well-behaved caller, but..)
+        try:
+            val.encode('iso-8859-1', errors='strict')
+        except ValueError:
+            return False
+        else:
+            return True
+
+    @staticmethod
+    def parse(val: str) -> bytes:
+        # Intermediate strings are always effectively
+        # limited to U+0000 .. U+00FF, which has a
+        # 1:1 mapping to ISO-8859-1. Just re-encode
+        # as ISO-8859-1 to recover the original bytes.
+        return val.encode('iso-8859-1', errors='strict')
 
 class IntegerProcessor():
     @staticmethod
@@ -192,7 +219,7 @@ class Metadata():
         "wired-nameservers":                MetadataSettings(StrProcessor, default="8.8.8.8 8.8.4.4", sdonly=True, network=True, setting_type="str"),
 
         "wireless-network":                 MetadataSettings(BoolProcessor, setting_type="bool", default=False, sdonly=True, network=True),
-        "wireless-ssid":                    MetadataSettings(StrProcessor, sdonly=True, network=True, setting_type="str"),
+        "wireless-ssid":                    MetadataSettings(BytesProcessor, sdonly=True, network=True, setting_type="bytes"),
         "wireless-password":                MetadataSettings(StrProcessor, protect=True, sdonly=True, network=True, setting_type="str"),
         "wireless-type":                    MetadataSettings(EnumProcessor(NETWORK_TYPE), setting_type="network_type", default="dhcp", sdonly=True, network=True),
         "wireless-address":                 MetadataSettings(StrProcessor, sdonly=True, network=True, setting_type="str"),
@@ -253,7 +280,7 @@ class Metadata():
         return setting.processor.validate(val)
 
     
-def parse_config_line(line: str, warn: Callable[[str],None] = lambda x:None) -> tuple | None:
+def parse_config_line(line: str, warn: Callable[[str],None]) -> tuple[str,str] | None:
     # Line is empty except for comment
     if re.search(r"^\s*#.*", line):
         return None
@@ -268,54 +295,99 @@ def parse_config_line(line: str, warn: Callable[[str],None] = lambda x:None) -> 
     if option_line:
         key = option_line.group(1)
         value = option_line.group(2)
-
-        # Emit warning if there's a backslash in a quoted values
-        if (re.search(r'".*\\.*"', value)):
-            warn(f'Make sure your backslash is escaped or modifying something for key: {key}.')
-        # Emits warning if there's an unescaped quote that's enclosed within quotes
-        if re.search(r'".*[^\\]".*"', value):
-            warn(f'Do you have an unescaped " that\'s been quoted for key: {key}?')
-
-        return (key, parse_config_value(value))
+        return (key, parse_config_value(value, warn))
 
     return None
 
-def parse_config_value(value: str) -> str:
+
+def parse_config_value(value: str, warn: Callable[[str],None]) -> str:
     value = value.strip()
 
-    if len(value) == 0:
-        return value
+    if not value:
+        return ''
 
     if value[0] != '"' and value[0] != "'":
         # Unquoted value
         comment_index = value.find("#")
-        if comment_index == -1:
-            return value
-        else:
-            return value[0:comment_index].strip()
+        if comment_index != -1:
+            value = value[:comment_index]
+        return value.strip()
 
     # Quoted value with escape processing
-    val = ""
-    esc = False
+    result = ''
     terminating_char = value[0]
 
-    for i in range(1, len(value)):
+    i = 1
+    char = None
+    while i < len(value):
         char = value[i]
-        if esc:
-            val += char
-            esc = False
-            continue
+        i += 1
 
-        if char == terminating_char:
-            break
+        match char:
+            case '\\':
+                count, unescaped = parse_escape(value[i:], warn)
+                result += unescaped
+                i += count
 
-        if char == "\\":
-            esc = True
-            continue
+            case '"' | "'":
+                if char == terminating_char:
+                    break
+                result += char
 
-        val += char
+            case _:
+                result += char
 
-    return val
+    residual = value[i:].strip()
+    if len(residual) > 0 and residual[0] != '#':
+        warn(f'extra trailing data after closing quote ignored (did you need to backslash-escape that quote?)')
+    if char != terminating_char:
+        warn('no closing quote found in quoted value')
+
+    return result
+
+def parse_escape(esc: str, warn:Callable[[str],None]) -> (int, str):
+    # Parse an escape sequence 'esc', where esc[0] is the first character
+    # following the backslash.
+    #
+    # Return (count, unescaped) where 'count' is the length of the escape
+    # sequence to consume (excluding the backslash) and 'unescaped' is
+    # the result of interpreting the escape sequence.
+    #
+    # If the escape sequence is not recognized, parse_escape calls
+    # warn() with a suitable warning message and returns (0, '\\')
+    # i.e.  the caller should emit the backslash unchanged and not
+    # skip over any further characters.
+
+    if not esc:
+        warn('trailing backslash not interpreted as a line continuation')
+        return (0, '\\')
+
+    match esc[0]:
+        case 'x':
+            # \xNN -> literal byte with hex value NN (only really
+            # useful in byte-oriented config values like
+            # wireless-ssid).  We're exclusively using U+0000 ..
+            # U+00FF in our strings so these just map 1:1 to that
+            # range.
+            try:
+                hexdigits = esc[1:3]
+                hexval = int(hexdigits, 16)
+                if hexval < 0 or hexval > 255:  # >255 should be impossible, but anyway..
+                    raise ValueError()
+                return (3, chr(hexval))
+            except ValueError as e:
+                warn(f'unrecognized escape \\x{hexdigits}')
+                return (0, '\\')
+
+        case '\\' | '"' | "'":
+            # \\ -> \
+            # \" -> "
+            # \' -> '
+            return (1, esc[0])
+
+        case _:
+            warn(f'unrecognized escape \\{esc[0]}')
+            return (0, '\\')
 
 class ConfigFile():
     def __init__(self, filename: str, metadata: Metadata = None, priority: int =0, readonly: bool = True) -> None:
@@ -324,6 +396,17 @@ class ConfigFile():
         self._readonly = readonly
         self._filename = filename
         self.values = {}
+
+    def _open(self):
+        # Open and return the underlying file in binary mode.
+        # This is broken out to let unit tests directly provide
+        # a BinaryIO, rather than needing to mock builtins.open
+        # or put a file on disk
+
+        # (this could be handled better with some restructuring of
+        # how/when the class acquires the file object, but this
+        # will do for now I guess)
+        return open(self._filename, 'rb')
 
     def get(self, setting_key: str) -> any:
         return self.values.get(setting_key, None)
@@ -337,7 +420,24 @@ class ConfigFile():
 
     def read_config_into_list(self) -> list:
         return_value = []
-        with open(self._filename, "r") as config:
+
+        # We read the config file using an ISO-8859-1 encoding,
+        # which will produce a 1:1 mapping between bytes and
+        # unicode codepoints in the range U+0000 .. U+00FF.
+        #
+        # Later, after processing any escapes, we either:
+        #  * reject anything not in the U+0000 .. U+00FF range,
+        #    for values that are meant to be regular strings; or
+        #  * re-encode the string using ISO-8859-1 to recover
+        #    the original bytes, for values that are meant to be
+        #    raw bytes (currently only wireless-ssid)
+        #
+        # This is a middle ground between "require only 7-bit
+        # ASCII" and "specify a particular encoding". Bytes-
+        # oriented values will follow whatever encoding was
+        # actually used in the config file, be it UTF-8 or
+        # whatever -- no transcoding is done.
+        with io.TextIOWrapper(self._open(), encoding='iso-8859-1') as config:
             for line in config:
                 return_value.append(line.strip())
         
@@ -347,7 +447,7 @@ class ConfigFile():
         for lineno, line in enumerate(config, start=1):
             warn = lambda msg: self.warn(lineno, msg)
 
-            l = parse_config_line(line)
+            l = parse_config_line(line, warn)
             if not l:
                 continue
             
