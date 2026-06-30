@@ -1,5 +1,6 @@
 from unittest import mock
 import os
+import io
 import unittest
 from flightaware_piaware_config.piaware_config import *
 from uuid import UUID
@@ -113,6 +114,32 @@ class TestMetadata(unittest.TestCase):
 
         assert n.parse("255.255.255.0") == "255.255.255.0"
 
+    def test_str_processor(self):
+        s = StrProcessor
+        for testcase in [ '',              # empty string
+                          'abcd',          # regular ASCII
+                          'abcd\u0000', ]: # non-printable ASCII
+            with self.subTest(testcase=testcase):
+                self.assertTrue(s.validate(testcase))
+                self.assertEqual(s.parse(testcase), testcase)
+
+        for testcase in [ 'abcd\u0099',    # refuse bytes > 127
+                          'abcd\u11FF', ]: # refuse out of range unicode code points
+            with self.subTest(testcase=testcase):
+                self.assertFalse(s.validate(testcase))
+
+    def test_bytes_processor(self):
+        bp = BytesProcessor
+        for value, expected in [ ('',           b''),                # empty string
+                                 ('abcd',       b'abcd'),            # regular ASCII
+                                 ('abcd\u0000', b'abcd\x00'),        # non-printable ASCII
+                                 ('abcd\u0099', b'abcd\x99'), ]:     # bytes >127
+            with self.subTest(value=value, expected=expected):
+                self.assertTrue(bp.validate(value))
+                self.assertEqual(bp.parse(value), expected)
+
+        self.assertFalse(bp.validate('abcd\u11FF'))  # refuse out of range unicode code points
+
     def test_parse_value(self):
         testm = Metadata()
         assert testm.parse_value("image-type", "test_type") == "test_type"
@@ -147,127 +174,175 @@ class TestMetadata(unittest.TestCase):
 
 class TestConfigParser(unittest.TestCase):
     def test_parse_value(self):
-        testcases = [ ("", ""),
-                      ("\"thing\"", "thing"),
-                      ("commented  # 1 23 ","commented"),
-                      ("\"commented  1\"# 1 23 ", "commented  1"),
-                      ("\"commented\\s  1\"# 1 23 ", "commenteds  1"),
+        # a test wrapper around parse_config_value to capture any calls
+        # to the warning function and return a "saw warning" flag as
+        # part of the returned tuple
+        def _parse(line):
+            saw_warning = None
+            def warn(msg: str):
+                nonlocal saw_warning
+                saw_warning = msg
+            result = parse_config_value(line, warn)
+            return result, saw_warning
 
-                      # pass'word
-                      ("pass'word", "pass'word"),
+        # input -> expected result (no warnings)
+        testcases = [
+            # Unquoted values
+            ("", ""),                           # Empty value
+            ("thing", "thing"),                 # Unquoted value
+            ("thing  ", "thing"),               # Unquoted value with trailing whitespace
+            ("thing  # comment", "thing"),      # Unquoted value with trailing comment
+            ("th\\ing", "th\\ing"),             # Unquoted value with escape that should be ignored
+            ("th\\'ing", "th\\'ing"),           # Unquoted value with escape that should be ignored
+            ("th\\x37ing", "th\\x37ing"),       # Unquoted value with escape that should be ignored
+            ("M\u00FCnchen", "M\u00FCnchen"),   # Unquoted value with iso-8859-1 passthrough
 
-                      # pass"word
-                      ('pass"word', 'pass"word'),
+            # Double-quoted values
+            ('"thing"', "thing"),               # Quoted value
+            ('"  thing"', "  thing"),           # Quoted value with quoted leading whitespace
+            ('"thing"  ', "thing"),             # Quoted value with unquoted trailing whitespace
+            ('"thing  "', "thing  "),           # Quoted value with quoted trailing whitespace
+            ('"thing # abc"', "thing # abc"),   # Quoted value with embedded comment char
+            ('"thing"  # abc', "thing"),        # Quoted value with trailing comment
+            ('"th\'ing"', "th'ing"),            # Doublequoted value with embedded unescaped single quote
+            ('"M\u00FCnchen"', "M\u00FCnchen"), # Quoted value with iso-8859-1 passthrough
 
-                      ### Escape special characters in quotes/ticks
-                      # "commented\s\1"
-                      (r'"commented\s\1"', "commenteds1"),
+            # Single-quoted values
+            ("'thing'", 'thing'),               # Quoted value
+            ("'  thing'", '  thing'),           # Quoted value with quoted leading whitespace
+            ("'thing'  ", 'thing'),             # Quoted value with unquoted trailing whitespace
+            ("'thing  '", 'thing  '),           # Quoted value with quoted trailing whitespace
+            ("'thing # abc'", "thing # abc"),   # Quoted value with embedded comment char
+            ("'thing'  # abc", 'thing'),        # Quoted value with trailing comment
+            ("'th\"ing'", 'th"ing'),            # Singlequoted value with embedded unescaped doublequote
+            ('"M\u00FCnchen"', 'M\u00FCnchen'), # Quoted value with iso-8859-1 passthrough
 
-                      # "back \ slash"
-                      (r'"back \\ slash"', r"back \ slash"),
-
-                      # "some " thing"
-                      (r'"some \" thing"', r'some " thing'),
-
-                      # "some \" thing"
-                      (r'"some \\\" thing"', r'some \" thing'),
-
-                      # "some ' thing"
-                      ("\"some \' thing\"", "some ' thing"),
-
-                      # 'commented\s\1'
-                      (r"'commented\s\1'", "commenteds1"),
-
-                      # 'back \ slash'
-                      (r"'back \\ slash'", r"back \ slash"),
-
-                      # 'some " thing'
-                      (r"'some \" thing'", r'some " thing'),
-
-                      # tick' mark
-                      (r"'tick\' mark'", "tick' mark"),
-
-                      # Te!st"\pas\s
-                      (r'"Te!st\"\\pas\\s"', r'Te!st"\pas\s'),
-
-                      ### Bad Cases
-                      (r'"input with "unescaped quote"', "input with "),
-                      (r'"input with \ backslash"', "input with  backslash"),
-                    ]
+            # Escape sequences
+            ('"thi\\\\ng"',  "thi\\ng"),        # \\ -> \ escape
+            ('"thi\\\'ng"',  "thi\'ng"),        # \' -> ' escape
+            ('"thi\\"ng"',   'thi"ng'),         # \" -> " escape
+            ('"thi\\x37ng"', 'thi7ng'),         # \x37 -> chr(0x37) hex escape
+            ('"thi\\x87ng"', 'thi\u0087ng'),    # \x87 -> chr(0x87) hex escape
+        ]
 
         for value, expected in testcases:
             with self.subTest(value=value, expected=expected):
-                assert parse_config_value(value) == expected
+                result, warning = _parse(value)
+                self.assertEqual(result, expected)
+                self.assertIsNone(warning)
+
+        # malformed input -> expected result (with a warning)
+        warning_testcases = [
+            ('"quoted', "quoted"),             # Doublequoted string with no terminating quote
+            ('"quoted" abc', "quoted"),        # Doublequoted string with trailing non-comment garbage
+
+            ("'quoted", "quoted"),             # Singlequoted string with no terminating quote
+            ("'quoted' abc", "quoted"),        # Singlequoted string with trailing non-comment garbage
+
+            ("'quoted\\", "quoted\\"),         # Single backslash at end of line (not interpreted as a continuation!)
+            ("'quoted\\xAZ'", "quoted\\xAZ"),  # Non-hex \x sequence
+            ("'quoted\\x-A'", "quoted\\x-A"),  # Negative hex \x sequence
+            ("'quoted\\x'", "quoted\\x"),      # Truncated \x sequence
+            ("'quoted\\q'", "quoted\\q"),      # Unknown escape
+        ]
+
+        for value, expected in warning_testcases:
+            with self.subTest(value=value, expected=expected):
+                result, warning = _parse(value)
+                self.assertEqual(result, expected)
+                self.assertIsNotNone(warning)
+
 
     def test_parse_line(self):
         # a test wrapper around parse_config_line to capture any calls
         # to the warning function and return a "saw warning" flag as
         # part of the returned tuple
         def _parse(line):
-            saw_warning = False
+            saw_warning = None
             def warn(msg: str):
                 nonlocal saw_warning
-                saw_warning = True
+                saw_warning = msg
             result = parse_config_line(line, warn)
             return result, saw_warning
 
         # input, expected_keyvalue, expected_warning
-        testcases = [ ("    # commented",    None, False),
+        testcases = [ ("",                   None, False),         # empty line
+                      ("    # commented",    None, False),         # empty line with comment
 
                       ("  option      # whiteout entry, updated by fa_piaware_config in settings", ("option", ""),    False),
                       ("  option   \"yes\"    # updated by fa_piaware_config in settings",         ("option", "yes"), False),
 
-                      ("option ",            ("option", ""),    False),
-                      ("option yes",         ("option", "yes"), False),
-                      ("option \"yes\"",     ("option", "yes"), False),
+                      # simple option values
+                      ("option ",            ("option", ""),    False),   # whiteout
+                      ("option #abc",        ("option", ""),    False),   # whiteout with trailing comment
+                      ("option yes",         ("option", "yes"), False),   # simple value
+                      ("option   yes  ",     ("option", "yes"), False),   # simple value with whitespace to strip
+                      ("option   yes # abc", ("option", "yes"), False),   # simple value with trailing comment
 
-                      ("option \"   yes   \"",              ("option", "   yes   "), False),
-                      ("   option \"   yes   \" # comment", ("option", "   yes   "), False),
-                      (r'   option \  yes  # comment',      ("option", r"\  yes"),   False),
-
-                      # Warning cases
-                      (r'   option   " \  yes   " # comment', ("option", "   yes   "),    True),
-                      (r'   option   \  " y"es " # comment',  ("option", r'\  " y"es "'), True),
+                      # quoted option values using double-quote
+                      ('option "yes"',          ("option", "yes"), False),     # simplest case
+                      ('option ""',             ("option", ""),    False),     # whiteout
+                      ('option "yes"   ',       ("option", "yes"), False),     # trailing whitespace, ignored
+                      ('option "yes"  # abc ',  ("option", "yes"), False),     # trailing comment
+                      ('option "yes"  abc',     ("option", "yes"), True),      # trailing garbage (with warning)
+                      ('option "  yes"',        ("option", "  yes"), False),   # leading whitespace within value
+                      ('option "yes  "',        ("option", "yes  "), False),   # trailing whitespace within value
+                      ('option "yes',           ("option", "yes"), True),      # unclosed quote (with warning)
+                      ('option "ab \\" cd"',    ("option", 'ab " cd'), False), # escaped quote
+                      ('option "ab \' cd"',     ("option", "ab ' cd"), False), # unescaped single quote
+                      
+                      # quoted option values using single-quote
+                      ("option 'yes'",          ('option', 'yes'), False),     # simplest case
+                      ("option ''",             ('option', ''), False),        # whiteout
+                      ("option 'yes'   ",       ('option', 'yes'), False),     # trailing whitespace, ignored
+                      ("option 'yes'  # abc ",  ('option', 'yes'), False),     # trailing comment
+                      ("option 'yes'  abc",     ('option', 'yes'), True),      # trailing garbage (with warning)
+                      ("option '  yes'",        ('option', '  yes'), False),   # leading whitespace within value
+                      ("option 'yes  '",        ('option', 'yes  '), False),   # trailing whitespace within value
+                      ("option 'yes",           ('option', 'yes'), True),      # unclosed quote (with warning)
+                      ("option 'ab \\' cd'",    ('option', "ab ' cd"), False), # escaped quote
+                      ("option 'ab \" cd'",     ('option', 'ab " cd'), False), # unescaped double quote
                      ]
 
         for input, expected_keyvalue, expected_warning in testcases:
             with self.subTest(input=input, expected_keyvalue=expected_keyvalue, expected_warning=expected_warning):
                 keyvalue, warning = _parse(input)
-                assert keyvalue == expected_keyvalue
-                assert warning == expected_warning
+                if expected_warning:
+                    self.assertIsNotNone(warning)
+                else:
+                    self.assertIsNone(warning)
+                self.assertEqual(keyvalue, expected_keyvalue)
 
 class TestConfigFile(unittest.TestCase):
-    def mock_config_file(*args):
-        class Example:
-            def __enter__(self):
-                return ["image-type image\n",
-                "adaptive-min-gain -1\n",
-                "manage-config 1232\n",
-                "adept-serverport 2\n",
-                "adept-serverport 5\n",
-                "wireless-netmask 255.255.255.0\n",
-                "adept-serverhosts test.usa.flightaware.com\n",
-                "use-gpsd\n"
-                ]
+    def test_read_config_into_list(self):
+        test_input = io.BytesIO(b"""image-type image
+adaptive-min-gain -1
+manage-config 1232
+adept-serverport 2
+adept-serverport 5
+wireless-netmask 255.255.255.0
+adept-serverhosts test.usa.flightaware.com
+use-gpsd
+wireless-ssid M\xFCnchen
+""")
 
-            def __exit__(self, exc_type, exc_val, exc_tb):
-                pass
-
-        return Example()
-
-    @mock.patch("builtins.open", side_effect=mock_config_file)
-    def test_read_config_into_list(self, open_mock):
+        
         f = ConfigFile("test.txt")
+        f._open = lambda: test_input
+        f.warn = lambda lineno,msg: None
+
         l = f.read_config_into_list()
-        assert len(l) == 8
-        assert l[0] == "image-type image"
-        assert l[1] =="adaptive-min-gain -1"
-        assert l[2] =="manage-config 1232"
-        assert l[3] =="adept-serverport 2"
-        assert l[4] =="adept-serverport 5"
-        assert l[5] =="wireless-netmask 255.255.255.0"
-        assert l[6] =="adept-serverhosts test.usa.flightaware.com"
-        assert l[7] =="use-gpsd"
+        self.assertEqual(l, [
+            "image-type image",
+            "adaptive-min-gain -1", 
+            "manage-config 1232",
+            "adept-serverport 2",
+            "adept-serverport 5",
+            "wireless-netmask 255.255.255.0",
+            "adept-serverhosts test.usa.flightaware.com",
+            "use-gpsd",
+            "wireless-ssid M\u00FCnchen"
+        ])
 
     def test_parse_config_from_list(self):
         testm = Metadata()
@@ -288,36 +363,50 @@ class TestConfigFile(unittest.TestCase):
             f = ConfigFile("file", metadata = testm)
 
             # patch in a replacement for ConfigFile.warn()
-            saw_warning = False
+            saw_warning = None
             def capture_warning(lineno, msg):
                 nonlocal saw_warning
-                saw_warning = True
+                saw_warning = msg
             f.warn = capture_warning
 
             f.parse_config_from_list(testcase)
-            assert saw_warning
+            self.assertIsNotNone(saw_warning)
 
+        # various value tests:
+        #   line, key, expected value for key
+        testcases = [
+            ("wireless-netmask 255.255.255.0", "wireless-netmask", "255.255.255.0"),
+            ("image-type image", "image-type", "image"),
+            ("adaptive-min-gain -12.12", "adaptive-min-gain", -12.12),
+            ("adept-serverhosts test.usa.flightaware.com", "adept-serverhosts", "test.usa.flightaware.com"),
+            ("use-gpsd yes", "use-gpsd", True),
+            ("slow-cpu auto", "slow-cpu", "auto"),
+            ("priority 1", "priority", 1),
+            ("allow-ble-setup yes", "allow-ble-setup", "yes"),
+            ("wireless-ssid M\u00FCnchen", "wireless-ssid", b"M\xFCnchen"),
+            ("wireless-ssid 'M\\xFCnchen'", "wireless-ssid", b"M\xFCnchen")
+        ]
+            
+        for line, key, expected in testcases:
+            with self.subTest(line=line, key=key, expected=expected):
+                f = ConfigFile("file", metadata = Metadata())
+
+                # patch in a replacement for ConfigFile.warn()
+                saw_warning = None
+                def capture_warning(lineno, msg):
+                    nonlocal saw_warning
+                    saw_warning = msg
+                f.warn = capture_warning
+
+                f.parse_config_from_list([line])
+                
+                self.assertEqual(f.get(key), expected)
+                self.assertIsNone(saw_warning)
+
+        # whiteout test (with is, not equal)
         f = ConfigFile("file", metadata = Metadata())
-        f.parse_config_from_list([
-            "wireless-netmask 255.255.255.0",
-            "rfkill",
-            "image-type image",
-            "adaptive-min-gain -12.12",
-            "adept-serverhosts test.usa.flightaware.com",
-            "use-gpsd yes",
-            "slow-cpu auto",
-            "priority 1",
-            "allow-ble-setup yes"
-        ])
-        assert f.get("wireless-netmask") == "255.255.255.0"
-        assert f.get("rfkill") is WHITEOUT
-        assert f.get("image-type") == "image"
-        assert f.get("adaptive-min-gain") == -12.12
-        assert f.get("adept-serverhosts") == "test.usa.flightaware.com"
-        assert f.get("use-gpsd") is True
-        assert f.get("slow-cpu") == "auto"
-        assert f.get("priority") == 1
-        assert f.get("allow-ble-setup") == "yes"
+        f.parse_config_from_list(["rfkill"])
+        self.assertIs(f.get("rfkill"), WHITEOUT)
 
 class TestConfigGroup(unittest.TestCase):
     def default_config_data(self):
