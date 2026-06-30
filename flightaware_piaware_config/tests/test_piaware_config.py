@@ -295,13 +295,12 @@ class TestConfigFile(unittest.TestCase):
 
     def test_parse_config_from_list(self):
         testm = Metadata()
-        testm.settings["test"] = MetadataSettings(IntegerProcessor, deprecated=True)
 
         warning_test_cases = [
             # unknown option
             [ "doesnt_exist nothing" ],
             # deprecated option
-            [ "test 42" ],
+            [ "wireless-broadcast 192.168.1.255" ],
             # invalid option value
             [ "rfkill not_bool" ],
             # duplicated option

@@ -172,7 +172,7 @@ class MetadataSettings():
         self.processor = processor
 
 class Metadata():
-    settings: MetadataSettings = {
+    _settings: MetadataSettings = {
         "priority":                         MetadataSettings(IntegerProcessor),
         "image-type":                       MetadataSettings(StrProcessor),
         "manage-config":                    MetadataSettings(BoolProcessor, setting_type="bool", default=False),
@@ -242,14 +242,14 @@ class Metadata():
     }
 
     def get_setting(self, key: str) -> MetadataSettings:
-        return self.settings[key]     # might raise KeyError
+        return self._settings[key]     # might raise KeyError
     
     def parse_value(self, key: str, val: str) -> any:
-        setting = self.settings[key]  # might raise KeyError
+        setting = self._settings[key]  # might raise KeyError
         return setting.processor.parse(val)
 
     def validate_value(self, key: str, val: str) -> bool:
-        setting = self.settings[key]  # might raise KeyError
+        setting = self._settings[key]  # might raise KeyError
         return setting.processor.validate(val)
 
     
