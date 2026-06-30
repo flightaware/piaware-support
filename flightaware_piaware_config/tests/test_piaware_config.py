@@ -147,53 +147,57 @@ class TestMetadata(unittest.TestCase):
 
 class TestConfigParser(unittest.TestCase):
     def test_parse_value(self):
-        assert parse_config_value("") == ""
-        assert parse_config_value("\"thing\"") == "thing"
-        assert parse_config_value("commented  # 1 23 ") == "commented"
+        testcases = [ ("", ""),
+                      ("\"thing\"", "thing"),
+                      ("commented  # 1 23 ","commented"),
+                      ("\"commented  1\"# 1 23 ", "commented  1"),
+                      ("\"commented\\s  1\"# 1 23 ", "commenteds  1"),
 
-        assert parse_config_value("\"commented  1\"# 1 23 ") == "commented  1"
-        assert parse_config_value("\"commented\\s  1\"# 1 23 ") == "commenteds  1"
+                      # pass'word
+                      ("pass'word", "pass'word"),
 
-        # pass'word
-        assert parse_config_value("pass'word") == "pass'word"
+                      # pass"word
+                      ('pass"word', 'pass"word'),
 
-        # pass"word
-        assert parse_config_value('pass"word') == 'pass"word'
+                      ### Escape special characters in quotes/ticks
+                      # "commented\s\1"
+                      (r'"commented\s\1"', "commenteds1"),
 
-        ### Escape special characters in quotes/ticks
-        # "commented\s\1"
-        assert parse_config_value(r'"commented\s\1"') == "commenteds1"
+                      # "back \ slash"
+                      (r'"back \\ slash"', r"back \ slash"),
 
-        # "back \ slash"
-        assert parse_config_value(r'"back \\ slash"') == r"back \ slash"
+                      # "some " thing"
+                      (r'"some \" thing"', r'some " thing'),
 
-        # "some " thing"
-        assert parse_config_value(r'"some \" thing"') == r'some " thing'
+                      # "some \" thing"
+                      (r'"some \\\" thing"', r'some \" thing'),
 
-        # "some \" thing"
-        assert parse_config_value(r'"some \\\" thing"') == r'some \" thing'
+                      # "some ' thing"
+                      ("\"some \' thing\"", "some ' thing"),
 
-        # "some ' thing"
-        assert parse_config_value("\"some \' thing\"") == "some ' thing"
+                      # 'commented\s\1'
+                      (r"'commented\s\1'", "commenteds1"),
 
-        # 'commented\s\1'
-        assert parse_config_value(r"'commented\s\1'") == "commenteds1"
+                      # 'back \ slash'
+                      (r"'back \\ slash'", r"back \ slash"),
 
-        # 'back \ slash'
-        assert parse_config_value(r"'back \\ slash'") == r"back \ slash"
+                      # 'some " thing'
+                      (r"'some \" thing'", r'some " thing'),
 
-        # 'some " thing'
-        assert parse_config_value(r"'some \" thing'") == r'some " thing'
+                      # tick' mark
+                      (r"'tick\' mark'", "tick' mark"),
 
-        # tick' mark
-        assert parse_config_value(r"'tick\' mark'") == "tick' mark"
+                      # Te!st"\pas\s
+                      (r'"Te!st\"\\pas\\s"', r'Te!st"\pas\s'),
 
-        # Te!st"\pas\s
-        assert parse_config_value(r'"Te!st\"\\pas\\s"') == r'Te!st"\pas\s'
+                      ### Bad Cases
+                      (r'"input with "unescaped quote"', "input with "),
+                      (r'"input with \ backslash"', "input with  backslash"),
+                    ]
 
-        ### Bad Cases
-        assert parse_config_value(r'"input with "unescaped quote"') == "input with "
-        assert parse_config_value(r'"input with \ backslash"') == "input with  backslash"
+        for value, expected in testcases:
+            with self.subTest(value=value, expected=expected):
+                assert parse_config_value(value) == expected
 
     def test_parse_line(self):
         # a test wrapper around parse_config_line to capture any calls
@@ -204,61 +208,33 @@ class TestConfigParser(unittest.TestCase):
             def warn(msg: str):
                 nonlocal saw_warning
                 saw_warning = True
-            key, val = parse_config_line(line, warn)
-            return key, val, saw_warning
+            result = parse_config_line(line, warn)
+            return result, saw_warning
 
-        key, val, warning = _parse("  option      # whiteout entry, updated by fa_piaware_config in settings")
-        assert key == "option"
-        assert val == ""
-        assert not warning
+        # input, expected_keyvalue, expected_warning
+        testcases = [ ("    # commented",    None, False),
 
-        key, val, warning = _parse("  option   \"yes\"    # updated by fa_piaware_config in settings")
-        assert key == "option"
-        assert val == "yes"
-        assert not warning
+                      ("  option      # whiteout entry, updated by fa_piaware_config in settings", ("option", ""),    False),
+                      ("  option   \"yes\"    # updated by fa_piaware_config in settings",         ("option", "yes"), False),
 
-        assert parse_config_line("    # commented") is None
-        key, val, warning = _parse("option ")
-        assert key == "option"
-        assert val == ""
-        assert not warning
+                      ("option ",            ("option", ""),    False),
+                      ("option yes",         ("option", "yes"), False),
+                      ("option \"yes\"",     ("option", "yes"), False),
 
-        key, val, warning = _parse("option yes")
-        assert key == "option"
-        assert val == "yes"
-        assert not warning
+                      ("option \"   yes   \"",              ("option", "   yes   "), False),
+                      ("   option \"   yes   \" # comment", ("option", "   yes   "), False),
+                      (r'   option \  yes  # comment',      ("option", r"\  yes"),   False),
 
-        key, val, warning = _parse("option \"yes\"")
-        assert key == "option"
-        assert val == "yes"
-        assert not warning
+                      # Warning cases
+                      (r'   option   " \  yes   " # comment', ("option", "   yes   "),    True),
+                      (r'   option   \  " y"es " # comment',  ("option", r'\  " y"es "'), True),
+                     ]
 
-        key, val, warning = _parse("option \"   yes   \"")
-        assert key == "option"
-        assert val == "   yes   "
-        assert not warning
-
-        key, val, warning = _parse("   option \"   yes   \" # comment")
-        assert key == "option"
-        assert val == "   yes   "
-        assert not warning
-
-        key, val, warning = _parse(r'   option \  yes  # comment')
-        assert key == "option"
-        assert val == r"\  yes"
-        assert not warning
-
-        # Test Cases should print out warnings
-
-        key, val, warning = _parse(r'   option   " \  yes   " # comment')
-        assert key == "option"
-        assert val == "   yes   "
-        assert warning
-
-        key, val, warning = _parse(r'   option   \  " y"es " # comment')
-        assert key == "option"
-        assert val == r'\  " y"es "'
-        assert warning
+        for input, expected_keyvalue, expected_warning in testcases:
+            with self.subTest(input=input, expected_keyvalue=expected_keyvalue, expected_warning=expected_warning):
+                keyvalue, warning = _parse(input)
+                assert keyvalue == expected_keyvalue
+                assert warning == expected_warning
 
 class TestConfigFile(unittest.TestCase):
     def mock_config_file(*args):
