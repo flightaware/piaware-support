@@ -5,7 +5,8 @@ import os
 import unittest
 import importlib  
 import sys
-sys.path.append("./flightaware_piaware_config/src/flightaware_piaware_config/")
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "../flightaware_piaware_config/src/flightaware_piaware_config/"))
 
 from generate_network_config import *
 import uuid
@@ -121,9 +122,9 @@ class TestCases(unittest.TestCase):
         ]
 
         for n, t in enumerate(test_cases):
-            print(f"test case {n}")
-            nm = get_prefix(*t["se"])
-            assert nm == t["ex"]
+            with self.subTest(n=n, t=n):
+                nm = get_prefix(*t["se"])
+                self.assertEqual(nm, t["ex"])
 
         with self.assertRaises(NetmaskValueError):
             get_prefix(address, "2221ds")
@@ -134,8 +135,54 @@ class TestCases(unittest.TestCase):
         with self.assertRaises(ValueError):
             get_prefix("255.1.1.1", None)
 
-    def test_escape_backslashes_for_network_manager(self):
-        assert escape_backslashes_for_network_manager("value with \\") == "value with \\\\"
+    def test_escape_string_for_network_manager(self):
+        testcases = [
+            ("", ""),                   # empty string
+            ("abc", "abc"),             # simplest case
+            ("abc def", "abc def"),     # embedded whitespace
+            ("abc   ", "abc   "),       # trailing whitespace
+            ("   abc", r"\s  abc"),     # leading whitespace (must avoid it getting stripped)
+            ("abc\\def", "abc\\\\def"), # backslash
+            ("abc\ndef", "abc\\ndef"),  # embedded LF
+            ("abc\rdef", "abc\\rdef"),  # embedded CR
+            ("abc\tdef", "abc\\tdef"),  # embedded tab
+        ]
+
+        for unescaped, expected in testcases:
+            with self.subTest(unescaped=unescaped, expected=expected):
+                self.assertEqual(escape_string_for_network_manager(unescaped), expected)
+
+    def test_escape_ssid_for_network_manager(self):
+        testcases = [
+            (b"", ""),                  # empty SSID
+
+            # pure ascii cases
+            (b'\x61\x62\x63',             r'abc'),      # simplest case
+            (b'\x20\x20',                 r'\s '),      # whitespace only
+            (b'\x5c',                     r'\\'),       # one backslash
+            (b'\x5c\x5c',                 r'\\\\'),     # two backslashes
+            (b'\x22',                     r'"'),        # ascii doublequote
+            (b'\x5c\x78\x34\x30',         r'\\x40'),    # \x40 (4 bytes, not an escape sequence)
+            (b'\x5c\x75\x30\x30\x34\x30', r'\\u0040'),  # \u0040 (6 bytes, not an escape sequence)
+            (b'\x5c\x78\x41\x5a',         r'\\xAZ'),    # \xAZ (4 bytes, not an escape sequence)
+            (b'\x5c\x75\x41\x5a\x42\x5a', r'\\uAZBZ'),  # \uAZBZ (6 bytes, not an escape sequence)
+            (b'\x20\x61\x62\x63\x20',     r'\sabc '),   # leading/trailing whitespace
+            (b'\x33\x31\x33\x30\x33\x31\x33\x42', r'3130313B'),  # SSID that could be interpreted as hex bytes
+
+            # cases that require decimal-byte-list encoding
+            (b'\x00\x00\x00\x00', "0;0;0;0;"),                                         # all NULs
+            (b'\x0d\x0a', "13;10;"),                                                   # CR LF
+            (b'\xe2\x80\x9c\xe2\x80\x9d', "226;128;156;226;128;157;"),                 # U+201C U+201D (“”), UTF-8 encoding
+            (b'\xe2\x80\x98\xe2\x80\x99', "226;128;152;226;128;153;"),                 # U+2018 U+2019 (‘’), UTF-8 encoding
+            (b'\x4D\xC3\xBC\x6E\x63\x68\x65\x6E', "77;195;188;110;99;104;101;110;"),   # München, UTF-8 encoding
+            (b'\x4D\xFC\x6E\x63\x68\x65\x6E', "77;252;110;99;104;101;110;"),           # München, ISO-8859-1 encoding
+            (b'\xF0\x9F\x98\x80', "240;159;152;128;"),                                 # U+1F600 GRINNING FACE, UTF-8 encoding
+            (b'\x31\x30\x30\x3b', "49;48;48;59;"),                                     # 100; (4 bytes, not a decimal-byte-list)
+        ]
+
+        for ssid_bytes, expected in testcases:
+            with self.subTest(ssid_bytes=ssid_bytes, expected=expected):
+                self.assertEqual(escape_ssid_for_network_manager(ssid_bytes), expected)
 
     def test_configure_static_network(self):
         address = "192.111.1.42"
@@ -204,7 +251,7 @@ class TestCases(unittest.TestCase):
             elif k == "wireless-type":
                 return "static"
             elif k == "wireless-ssid":
-                return "jukka"
+                return b"jukka"
             elif k == "wireless-password":
                 return "sirasti"
             elif k == "wireless-address":
@@ -215,7 +262,7 @@ class TestCases(unittest.TestCase):
                 return None
         c.get = Mock(side_effect=get)
         template = get_wireless_conn_file(c)
-        assert template == wireless_template.format("true", "jukka", "sirasti", f"{self.mock_csn()[0]}\nmethod=manual")
+        self.assertEqual(template, wireless_template.format("true", "jukka", "sirasti", f"{self.mock_csn()[0]}\nmethod=manual"))
 
         def get(k):
             if k == "wireless-network":
@@ -223,12 +270,14 @@ class TestCases(unittest.TestCase):
             elif k == "wireless-type":
                 return "NetworkManager"
             elif k == "wireless-ssid":
-                return "jukka"
+                return b"jukka"
             elif k == "wireless-password":
                 return "sirasti"
+            else:
+                return None
         c.get = Mock(side_effect=get)
         template = get_wireless_conn_file(c)
-        assert template == wireless_template.format("true", "jukka", "sirasti", "method=auto")
+        self.assertEqual(template, wireless_template.format("true", "jukka", "sirasti", "method=auto"))
 
         def get(k):
             if k == "wireless-network":
@@ -237,9 +286,11 @@ class TestCases(unittest.TestCase):
                 return "NetworkManager"
             elif k == "wireless-password":
                 return "sirasti"
+            else:
+                return None
         c.get = Mock(side_effect=get)
         template = get_wireless_conn_file(c)
-        assert template == wireless_template.format("false", "", "", "method=auto")
+        self.assertEqual(template, wireless_template.format("false", "", "", "method=auto"))
     
     @mock.patch("generate_network_config.configure_static_network", side_effect=mock_csn)
     def test_get_wireless_conn_file_when_disabled(self, csn_mock):
@@ -252,7 +303,7 @@ class TestCases(unittest.TestCase):
             elif k == "wireless-type":
                 return "static"
             elif k == "wireless-ssid":
-                return "jukka"
+                return b"jukka"
             elif k == "wireless-password":
                 return "sirasti"
             elif k == "wireless-address":
@@ -263,7 +314,7 @@ class TestCases(unittest.TestCase):
                 return None
         c.get = Mock(side_effect=get)
         template = get_wireless_conn_file(c)
-        assert template == wireless_template.format("false", "", "", f"{self.mock_csn()[0]}\nmethod=manual")
+        self.assertEqual(template, wireless_template.format("false", "", "", f"{self.mock_csn()[0]}\nmethod=manual"))
 
         def get(k):
             if k == "wireless-network":
@@ -271,12 +322,12 @@ class TestCases(unittest.TestCase):
             elif k == "wireless-type":
                 return "NetworkManager"
             elif k == "wireless-ssid":
-                return "jukka"
+                return b"jukka"
             elif k == "wireless-password":
                 return "sirasti"
         c.get = Mock(side_effect=get)
         template = get_wireless_conn_file(c)
-        assert template == wireless_template.format("false", "", "", "method=auto")
+        self.assertEqual(template, wireless_template.format("false", "", "", "method=auto"))
     
 
     def test_calculate_brd_by_hand(self):
