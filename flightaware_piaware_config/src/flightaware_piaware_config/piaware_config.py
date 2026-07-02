@@ -206,8 +206,8 @@ class Metadata():
         "http-proxy-user":                  MetadataSettings(StrProcessor, network=True, setting_type="str"),
         "http-proxy-password":              MetadataSettings(StrProcessor, protect=True, network=True, setting_type="str"),
         "adept-serverhosts":                MetadataSettings(StrProcessor, default=["piaware.flightaware.com", "piaware.flightaware.com", 
-        ["206.253.80.196", "206.253.80.197", "206.253.80.198", "206.253.80.199", "206.253.80.200", "206.253.80.201"], 
-        ["206.253.84.193", "206.253.84.194", "206.253.84.195", "206.253.84.196", "206.253.84.197", "206.253.84.198"]], setting_type="str"),
+        ["206.253.80.202", "206.253.80.203", "206.253.80.204", "206.253.80.205", "206.253.80.206", "206.253.80.207"],
+        ["206.253.84.200", "206.253.84.201", "206.253.84.202", "206.253.84.203", "206.253.84.204", "206.253.84.205"]], setting_type="str"),
 
         "adept-serverport":                 MetadataSettings(IntegerProcessor, setting_type="int", default=1200),
         "rfkill":                           MetadataSettings(BoolProcessor, setting_type="bool", default=False, sdonly=True),
