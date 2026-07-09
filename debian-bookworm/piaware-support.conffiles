@@ -1,1 +1,7 @@
 /boot/firmware/piaware-config.txt
+remove-on-upgrade /etc/initramfs/post-update.d/rpi-bootconfig
+remove-on-upgrade /etc/initramfs/post-update.d/zz-update-bootconfig
+remove-on-upgrade /etc/kernel/postinst.d/rpi-bootconfig
+remove-on-upgrade /etc/kernel/postinst.d/zz-update-bootconfig
+remove-on-upgrade /etc/kernel/postrm.d/rpi-bootconfig
+remove-on-upgrade /etc/kernel/postrm.d/zz-update-bootconfig
