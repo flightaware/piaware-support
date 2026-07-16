@@ -1,8 +1,13 @@
-piaware-support (11.1~alpha) UNRELEASED; urgency=medium
+piaware-support (11.1) stable; urgency=medium
 
-  * In development
+  * Adds support for Debian Trixie and remove obselete package dependencies
+  * Genericize networking config for NetworkManager
+  * Add support for pg2sdr receiver-type
+  * Bugfix for generate_network_config crash when deprecated wireless-broadcast config is set
+  * Update fallback IPs for adept servers
+  * Remove rpi-bootconfig for Trixie and Bookworm
 
- -- Ziquan Wang <ziquan.wang@flightaware.com>  Thu, 28 May 2026 14:39:24 -0500
+ -- Eric Tran <eric.tran@flightaware.com>  Thu, 16 Jul 2026 15:24:24 -0500
 
 piaware-support (10.2) stable; urgency=medium
 
