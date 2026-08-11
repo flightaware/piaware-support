@@ -1,3 +1,9 @@
+piaware-support (11.2~alpha) UNRELEASED; urgency=medium
+
+  * In development
+
+ -- Eric Tran <eric.tran@flightaware.com>  Tue, 11 Aug 2026 22:46:24 -0500
+
 piaware-support (11.1) stable; urgency=medium
 
   * Adds support for Debian Trixie and remove obselete package dependencies
