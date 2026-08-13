@@ -1,8 +1,9 @@
-piaware-support (11.2~alpha) UNRELEASED; urgency=medium
+piaware-support (11.2) stable; urgency=medium
 
-  * In development
+  * No changes to underlying piaware-support packages
+  * Bump version for SD card image with fix to unblock bluetooth for Pi Zero hardware
 
- -- Eric Tran <eric.tran@flightaware.com>  Tue, 11 Aug 2026 22:46:24 -0500
+ -- Eric Tran <eric.tran@flightaware.com>  Wed, 12 Aug 2026 21:50:24 -0500
 
 piaware-support (11.1) stable; urgency=medium
 
